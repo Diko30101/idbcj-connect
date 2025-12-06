@@ -1,30 +1,34 @@
 import { createClient } from "@/lib/supabase/server";
-import { type EmailOtpType } from "@supabase/supabase-js";
-import { redirect } from "next/navigation";
-import { type NextRequest } from "next/server";
+import { NextResponse } from "next/server";
+import { cookies } from "next/headers";
 
-export async function GET(request: NextRequest) {
-  const { searchParams } = new URL(request.url);
-  const token_hash = searchParams.get("token_hash");
-  const type = searchParams.get("type") as EmailOtpType | null;
-  const next = searchParams.get("next") ?? "/";
+export async function GET(request: Request) {
+    const { searchParams, origin } = new URL(request.url);
+    const code = searchParams.get("code");
+    const next = searchParams.get("next") ?? "/dashboard";
 
-  if (token_hash && type) {
-    const supabase = await createClient();
+    if (code) {
+        // FIX: We must pass the cookies store to createClient
+        const cookieStore = await cookies();
+        const supabase = createClient(cookieStore);
 
-    const { error } = await supabase.auth.verifyOtp({
-      type,
-      token_hash,
-    });
-    if (!error) {
-      // redirect user to specified redirect URL or root of app
-      redirect(next);
-    } else {
-      // redirect the user to an error page with some instructions
-      redirect(`/auth/error?error=${error?.message}`);
+        const { error } = await supabase.auth.exchangeCodeForSession(code);
+
+        if (!error) {
+            const forwardedHost = request.headers.get("x-forwarded-host"); // original origin before load balancer
+            const isLocalEnv = process.env.NODE_ENV === "development";
+
+            if (isLocalEnv) {
+                // we can be sure that there is no load balancer in between, so no need to watch for X-Forwarded-Host
+                return NextResponse.redirect(`${origin}${next}`);
+            } else if (forwardedHost) {
+                return NextResponse.redirect(`https://${forwardedHost}${next}`);
+            } else {
+                return NextResponse.redirect(`${origin}${next}`);
+            }
+        }
     }
-  }
 
-  // redirect the user to an error page with some instructions
-  redirect(`/auth/error?error=No token hash or type`);
+    // return the user to an error page with instructions
+    return NextResponse.redirect(`${origin}/auth/auth-code-error`);
 }
