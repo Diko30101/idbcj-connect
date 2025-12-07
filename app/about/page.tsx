@@ -66,7 +66,7 @@ export default function AboutPage() {
             <h3 className="font-bold text-blue-900 mb-2">We Remained Faithful</h3>
             <p className="text-blue-800 text-sm italic">
               "We, represented by idbcj.org and its affiliated locales (including Canada), 
-              are the members who remained faithful to the original 1954 registration (SEC 13708), 
+              are the members who remained faithful to the original 1958 registration (SEC 13708), 
               doctrine, and leadership structure established by Mr. Avelino C. Santiago."
             </p>
             <p className="mt-4 text-blue-900 font-semibold text-sm">
