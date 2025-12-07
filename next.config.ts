@@ -1,20 +1,26 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-    // 1. We turned off the experimental feature earlier
-    experimental: {
-        ppr: false,
-    },
+  // 1. Existing settings
+  experimental: {
+    ppr: false,
+  },
+  typescript: {
+    ignoreBuildErrors: true,
+  },
+  eslint: {
+    ignoreDuringBuilds: true,
+  },
 
-    // 2. ADD THIS: Ignore TypeScript errors during build
-    typescript: {
-        ignoreBuildErrors: true,
-    },
-
-    // 3. ADD THIS: Ignore Linting errors during build
-    eslint: {
-        ignoreDuringBuilds: true,
-    },
+  // 2. NEW: Allow images from the hosting site i.ibb.co
+  images: {
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'i.ibb.co',
+      },
+    ],
+  },
 };
 
 export default nextConfig;
