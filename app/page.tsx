@@ -44,7 +44,7 @@ export default function Home() {
                 </div>
 
                 <h1 className="text-4xl font-extrabold tracking-tight text-gray-900 sm:text-6xl mb-6">
-                    Welcome Home
+                    IDBCJ
                 </h1>
 
                 <p className="text-xl text-gray-600 max-w-2xl mb-10">
