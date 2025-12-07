@@ -55,12 +55,10 @@ export default function Home() {
 
         {/* Responsive Text Sizes */}
         <h1 className="text-3xl md:text-6xl font-extrabold tracking-tight text-gray-900 mb-4 md:mb-6">
-          Welcome Home
+          Welcome to IDBCJ
         </h1>
         <p className="text-lg md:text-xl text-gray-600 max-w-2xl mb-8 md:mb-10 px-2">
-          We are a community dedicated to faith, hope, and love. 
-          Whether you are new to the area or looking for a place to belong, 
-          you are welcome here.
+          We, represented by idbcj.org and its affiliated locales (including Canada), are the members who remained faithful to the original 1958 registration (SEC 13708), doctrine, and leadership structure established by Mr. Avelino C. Santiago. We did not join the new 2008 registration or the group led by Danilo and Ruel Santiago. We believe the true Church of the Living God remains steadfast in the truth of God's Word without human changes in leadership.We continue to actively worship, study the Bible, and spread the Gospel worldwide.
         </p>
         <div className="flex gap-4 w-full md:w-auto justify-center">
           <Link href="/sign-in" className="w-full md:w-auto">
