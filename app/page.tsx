@@ -7,13 +7,11 @@ export default function Home() {
     <div className="flex min-h-screen flex-col bg-white">
       
       {/* --- RESPONSIVE NAVIGATION BAR --- */}
-      {/* 'flex-col' means stack vertically by default (Mobile) */}
-      {/* 'md:flex-row' means switch to side-by-side on Medium screens (Tablets/Laptops) */}
       <nav className="flex flex-col md:flex-row items-center justify-between p-4 md:p-6 border-b border-gray-100 shadow-sm gap-4">
         
-        {/* LOGO AND NAME */}
-        <div className="flex items-center gap-3 text-center md:text-left">
-          {/* The Logo Image - Shrinks slightly on mobile to fit better */}
+        {/* 1. LOGO AND NAME */}
+        {/* Clicking the Logo redirects to Home ("/") automatically */}
+        <Link href="/" className="flex items-center gap-3 text-center md:text-left hover:opacity-80 transition">
           <div className="relative h-10 w-10 md:h-12 md:w-12 overflow-hidden rounded-full border border-gray-200 shrink-0">
              <Image 
                src="/logo.png" 
@@ -22,16 +20,30 @@ export default function Home() {
                className="object-cover"
              />
           </div>
-          
-          {/* The Church Name */}
           <div className="text-base md:text-lg font-bold text-gray-800 leading-tight">
             Iglesia ng Dios na Buhay kay Cristo Jesus
           </div>
+        </Link>
+
+        {/* 2. NEW MENU ITEMS (Center) */}
+        <div className="flex flex-wrap justify-center gap-6 text-sm font-medium text-gray-600">
+          <Link href="/" className="hover:text-black transition">
+            Home
+          </Link>
+          <Link href="/sermons" className="hover:text-black transition">
+            Sermons
+          </Link>
+          <Link href="/events" className="hover:text-black transition">
+            Events
+          </Link>
+          <Link href="/about" className="hover:text-black transition">
+            About Us
+          </Link>
         </div>
 
-        {/* BUTTONS */}
+        {/* 3. LOGIN BUTTONS (Right) */}
         <div className="flex w-full md:w-auto gap-3 justify-center">
-          <Link href="/sign-in" className="w-full md:w-auto">
+          <Link href="/auth/login" className="w-full md:w-auto">
             <Button variant="outline" className="w-full md:w-auto">Member Login</Button>
           </Link>
           <Link href="/sign-in" className="w-full md:w-auto">
@@ -42,20 +54,12 @@ export default function Home() {
 
       {/* --- HERO SECTION --- */}
       <section className="flex flex-col items-center justify-center text-center py-16 md:py-24 px-4 bg-slate-50">
-        
-        {/* Big Logo */}
         <div className="mb-6 md:mb-8 relative w-24 h-24 md:w-32 md:h-32">
-           <Image 
-             src="/logo.png" 
-             alt="IDBCJ Logo" 
-             fill
-             className="object-contain"
-           />
+           <Image src="/logo.png" alt="IDBCJ Logo" fill className="object-contain" />
         </div>
 
-        {/* Responsive Text Sizes */}
         <h1 className="text-3xl md:text-6xl font-extrabold tracking-tight text-gray-900 mb-4 md:mb-6">
-          Welcome to IDBCJ
+          Welcome Home
         </h1>
         <p className="text-lg md:text-xl text-gray-600 max-w-2xl mb-8 md:mb-10 px-2">
           We, represented by idbcj.org and its affiliated locales (including Canada), are the members who remained faithful to the original 1958 registration (SEC 13708), doctrine, and leadership structure established by Mr. Avelino C. Santiago. We did not join the new 2008 registration or the group led by Danilo and Ruel Santiago. We believe the true Church of the Living God remains steadfast in the truth of God's Word without human changes in leadership.We continue to actively worship, study the Bible, and spread the Gospel worldwide.
@@ -67,11 +71,9 @@ export default function Home() {
         </div>
       </section>
 
-      {/* --- SERVICE TIMES (Responsive Grid) --- */}
+      {/* --- SERVICE TIMES --- */}
       <section className="py-12 md:py-20 px-4 md:px-6">
-        {/* grid-cols-1 (Mobile) -> md:grid-cols-2 (Desktop) */}
         <div className="max-w-4xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-10">
-          
           <div className="bg-white p-6 md:p-8 rounded-2xl shadow-sm border border-gray-100">
             <h2 className="text-xl md:text-2xl font-bold text-gray-900 mb-4">Service Times</h2>
             <ul className="space-y-3 text-base md:text-lg text-gray-600">
@@ -89,22 +91,17 @@ export default function Home() {
           <div className="bg-white p-6 md:p-8 rounded-2xl shadow-sm border border-gray-100">
             <h2 className="text-xl md:text-2xl font-bold text-gray-900 mb-4">Visit Us</h2>
             <p className="text-base md:text-lg text-gray-600 mb-4">
-              Medina Magallanes<br />
-              Cavite, Philippines
+              123 Faith Avenue<br />
+              Cityname, State 54321
             </p>
-            <div className="h-32 bg-gray-100 rounded-lg flex items-center justify-center text-gray-400 text-sm">
-              (Map View Placeholder)
-            </div>
           </div>
-
         </div>
       </section>
 
       {/* --- FOOTER --- */}
       <footer className="py-8 md:py-10 text-center text-gray-500 text-xs md:text-sm border-t px-4">
-        &copy; 2025 Iglesia ng Dios na Buhay kay Cristo Jesus. EST 1954 All rights reserved.
+        &copy; 2025 Iglesia ng Dios na Buhay kay Cristo Jesus. All rights reserved.
       </footer>
-
     </div>
   );
 }
