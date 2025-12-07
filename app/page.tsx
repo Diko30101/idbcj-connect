@@ -89,8 +89,8 @@ export default function Home() {
           <div className="bg-white p-6 md:p-8 rounded-2xl shadow-sm border border-gray-100">
             <h2 className="text-xl md:text-2xl font-bold text-gray-900 mb-4">Visit Us</h2>
             <p className="text-base md:text-lg text-gray-600 mb-4">
-              123 Faith Avenue<br />
-              Cityname, State 54321
+              Medina Magallanes<br />
+              Cavite, Philippines
             </p>
             <div className="h-32 bg-gray-100 rounded-lg flex items-center justify-center text-gray-400 text-sm">
               (Map View Placeholder)
@@ -102,7 +102,7 @@ export default function Home() {
 
       {/* --- FOOTER --- */}
       <footer className="py-8 md:py-10 text-center text-gray-500 text-xs md:text-sm border-t px-4">
-        &copy; 2025 Iglesia ng Dios na Buhay kay Cristo Jesus. All rights reserved.
+        &copy; 2025 Iglesia ng Dios na Buhay kay Cristo Jesus. EST 1954 All rights reserved.
       </footer>
 
     </div>
