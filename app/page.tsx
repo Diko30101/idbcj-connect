@@ -1,3 +1,4 @@
+import { ContactForm } from "@/components/contact-form";
 import Link from "next/link";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
@@ -209,6 +210,17 @@ export default function Home() {
         </div>
       </section>
 
+{/* --- CONTACT SECTION --- */}
+      <section className="py-20 px-6 bg-slate-50 border-t border-gray-200">
+        <div className="max-w-4xl mx-auto text-center mb-10">
+          <h2 className="text-3xl font-bold text-gray-900">Contact Us</h2>
+          <p className="text-gray-600 mt-2">
+            Reach out to our leadership directly. Your messages are sent securely to our email.
+          </p>
+        </div>
+        
+        <ContactForm />
+      </section>
       {/* --- FOOTER --- */}
       <footer className="py-8 bg-emerald-950 text-center text-emerald-400 text-sm border-t border-emerald-900">
         <p>&copy; 2025 Iglesia ng Dios na Buhay kay Cristo Jesus (SEC 13708).</p> 
