@@ -6,102 +6,215 @@ export default function Home() {
   return (
     <div className="flex min-h-screen flex-col bg-white">
       
-      {/* --- RESPONSIVE NAVIGATION BAR --- */}
-      <nav className="flex flex-col md:flex-row items-center justify-between p-4 md:p-6 border-b border-gray-100 shadow-sm gap-4">
+      {/* --- NAVIGATION BAR --- */}
+      <nav className="sticky top-0 z-50 bg-white/95 backdrop-blur-sm flex flex-col md:flex-row items-center justify-between p-4 md:px-8 border-b border-green-100 shadow-sm">
         
-        {/* 1. LOGO AND NAME */}
-        {/* Clicking the Logo redirects to Home ("/") automatically */}
-        <Link href="/" className="flex items-center gap-3 text-center md:text-left hover:opacity-80 transition">
-          <div className="relative h-10 w-10 md:h-12 md:w-12 overflow-hidden rounded-full border border-gray-200 shrink-0">
-             <Image 
-               src="/logo.png" 
-               alt="IDBCJ Logo" 
-               fill 
-               className="object-cover"
-             />
+        {/* LOGO */}
+        <Link href="/" className="flex items-center gap-3 hover:opacity-80 transition">
+          <div className="relative h-12 w-12 overflow-hidden rounded-full border-2 border-emerald-100 shrink-0 shadow-sm">
+             <Image src="/logo.png" alt="IDBCJ Logo" fill className="object-cover" />
           </div>
-          <div className="text-base md:text-lg font-bold text-gray-800 leading-tight">
+          <div className="text-sm md:text-base font-bold text-emerald-950 leading-tight max-w-[220px]">
             Iglesia ng Dios na Buhay kay Cristo Jesus
           </div>
         </Link>
 
-        {/* 2. NEW MENU ITEMS (Center) */}
-        <div className="flex flex-wrap justify-center gap-6 text-sm font-medium text-gray-600">
-          <Link href="/" className="hover:text-black transition">
-            Home
-          </Link>
-          <Link href="/sermons" className="hover:text-black transition">
-            Sermons
-          </Link>
-          <Link href="/events" className="hover:text-black transition">
-            Events
-          </Link>
-          <Link href="/about" className="hover:text-black transition">
-            About Us
-          </Link>
+        {/* MENU */}
+        <div className="flex flex-wrap justify-center gap-6 text-sm font-semibold text-gray-600 my-4 md:my-0">
+          <Link href="/" className="text-emerald-700">Home</Link>
+          <Link href="/sermons" className="hover:text-emerald-600 transition">Sermons</Link>
+          <Link href="/about" className="hover:text-emerald-600 transition">Our History</Link>
+          <Link href="/events" className="hover:text-emerald-600 transition">Events</Link>
         </div>
 
-        {/* 3. LOGIN BUTTONS (Right) */}
-        <div className="flex w-full md:w-auto gap-3 justify-center">
-          <Link href="/auth/login" className="w-full md:w-auto">
-            <Button variant="outline" className="w-full md:w-auto">Member Login</Button>
+        {/* BUTTONS */}
+        <div className="flex gap-3">
+          <Link href="/sign-in">
+            <Button variant="outline" className="border-emerald-600 text-emerald-700 hover:bg-emerald-50">
+              Member Login
+            </Button>
           </Link>
-          <Link href="/sign-in" className="w-full md:w-auto">
-            <Button className="w-full md:w-auto">Join Us</Button>
+          <Link href="/sign-in">
+            <Button className="bg-emerald-600 hover:bg-emerald-700 text-white shadow-md">
+              Join Us
+            </Button>
           </Link>
         </div>
       </nav>
 
-      {/* --- HERO SECTION --- */}
-      <section className="flex flex-col items-center justify-center text-center py-16 md:py-24 px-4 bg-slate-50">
-        <div className="mb-6 md:mb-8 relative w-24 h-24 md:w-32 md:h-32">
-           <Image src="/logo.png" alt="IDBCJ Logo" fill className="object-contain" />
-        </div>
+      {/* --- HERO SECTION (Background Image) --- */}
+      <section className="relative h-[550px] flex items-center justify-center text-center px-4 overflow-hidden">
+        {/* Background Image */}
+        <Image 
+          src="/background.jpg"
+          alt="Church Worship"
+          fill
+          className="object-cover"
+          priority
+        />
+        {/* Green Overlay Gradient */}
+        <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-emerald-900/40 to-emerald-900/80" />
 
-        <h1 className="text-3xl md:text-6xl font-extrabold tracking-tight text-gray-900 mb-4 md:mb-6">
-          Welcome Home
-        </h1>
-        <p className="text-lg md:text-xl text-gray-600 max-w-2xl mb-8 md:mb-10 px-2">
-          We, represented by idbcj.org and its affiliated locales (including Canada), are the members who remained faithful to the original 1958 registration (SEC 13708), doctrine, and leadership structure established by Mr. Avelino C. Santiago. We did not join the new 2008 registration or the group led by Danilo and Ruel Santiago. We believe the true Church of the Living God remains steadfast in the truth of God's Word without human changes in leadership.We continue to actively worship, study the Bible, and spread the Gospel worldwide.
-        </p>
-        <div className="flex gap-4 w-full md:w-auto justify-center">
-          <Link href="/sign-in" className="w-full md:w-auto">
-            <Button className="h-12 px-8 text-lg w-full md:w-auto">Plan a Visit</Button>
-          </Link>
+        {/* Text Content */}
+        <div className="relative z-10 max-w-4xl space-y-6 animate-in fade-in zoom-in duration-1000">
+          <div className="inline-block px-4 py-1 rounded-full bg-emerald-500/20 border border-emerald-400/30 text-emerald-50 backdrop-blur-sm text-sm font-medium mb-2">
+            Welcome to IDBCJ.ORG
+          </div>
+          <h1 className="text-4xl md:text-7xl font-extrabold tracking-tight text-white drop-shadow-md">
+            Walking in Faith,<br/> Living in Truth
+          </h1>
+          <p className="text-lg md:text-xl text-gray-100 max-w-2xl mx-auto drop-shadow-sm">
+            The pillar and ground of the truth. Join us as we worship the Living God.
+          </p>
+          <div className="flex gap-4 justify-center pt-4">
+            <Link href="/about">
+              <Button className="h-12 px-8 text-lg bg-emerald-500 hover:bg-emerald-600 text-white border-none shadow-lg">
+                Our History
+              </Button>
+            </Link>
+            <Link href="/sermons">
+              <Button variant="outline" className="h-12 px-8 text-lg text-white border-white bg-transparent hover:bg-white hover:text-emerald-900">
+                Watch Sermons
+              </Button>
+            </Link>
+          </div>
         </div>
       </section>
 
-      {/* --- SERVICE TIMES --- */}
-      <section className="py-12 md:py-20 px-4 md:px-6">
-        <div className="max-w-4xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-10">
-          <div className="bg-white p-6 md:p-8 rounded-2xl shadow-sm border border-gray-100">
-            <h2 className="text-xl md:text-2xl font-bold text-gray-900 mb-4">Service Times</h2>
-            <ul className="space-y-3 text-base md:text-lg text-gray-600">
-              <li className="flex justify-between border-b pb-2 border-gray-50 last:border-0">
+      {/* --- MISSION STATEMENT (Founder Portrait Section) --- */}
+      <section className="py-20 px-6 bg-emerald-50">
+        <div className="max-w-5xl mx-auto flex flex-col md:flex-row items-center gap-12">
+          
+          {/* PHOTO COLUMN */}
+          <div className="w-full md:w-1/3 flex justify-center">
+             <div className="relative w-56 h-72 md:w-64 md:h-80 shadow-2xl rounded-lg overflow-hidden border-4 border-white rotate-2 hover:rotate-0 transition duration-500">
+                <Image 
+                  src="/founder.jpg" 
+                  alt="Mr. Avelino C. Santiago" 
+                  fill 
+                  className="object-cover" 
+                />
+                
+                <div className="absolute bottom-0 inset-x-0 bg-black/60 text-white text-center py-2 text-xs backdrop-blur-sm">
+                  Mr. Avelino C. Santiago
+                </div>
+             </div>
+          </div>
+
+          {/* TEXT COLUMN */}
+          <div className="w-full md:w-2/3 space-y-6 text-center md:text-left">
+            <h2 className="text-3xl font-bold text-emerald-900">Faithful to the Original Foundation</h2>
+            <div className="h-1 w-20 bg-emerald-500 mx-auto md:mx-0 rounded-full"></div>
+            <p className="text-lg text-gray-700 leading-relaxed">
+              We, represented by <strong>idbcj.org</strong> and its affiliated locales (including Canada), 
+              are the members who remained faithful to the original <strong>1958 registration (SEC 13708)</strong>, 
+              doctrine, and leadership structure established by our founder, <strong>Mr. Avelino C. Santiago</strong>.
+            </p>
+            <p className="text-lg text-gray-700 leading-relaxed">
+              We believe the true Church of the Living God remains steadfast in the truth 
+              of God's Word without human changes in leadership. We continue to actively 
+              worship, study the Bible, and spread the Gospel worldwide.
+            </p>
+            <div className="pt-2">
+              <Link href="/about">
+                 <Button variant="outline" className="border-emerald-600 text-emerald-700 hover:bg-emerald-100">
+                   Read Our History
+                 </Button>
+              </Link>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* --- CARDS SECTION (Ministries) --- */}
+      <section className="py-20 px-6 bg-white">
+        <div className="max-w-6xl mx-auto">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl font-bold text-gray-900">Connect With Us</h2>
+            <p className="text-gray-500 mt-2">Discover how you can get involved.</p>
+          </div>
+
+          <div className="grid md:grid-cols-3 gap-8">
+            {/* Card 1 */}
+            <div className="group rounded-2xl overflow-hidden shadow-lg border border-gray-100 hover:shadow-2xl transition duration-300">
+              <div className="relative h-56 w-full">
+                <Image src="https://images.unsplash.com/photo-1510936111840-65e151ad71bb?q=80&w=2090&auto=format&fit=crop" alt="Bible Study" fill className="object-cover group-hover:scale-105 transition duration-500" />
+              </div>
+              <div className="p-6 bg-white">
+                <h3 className="text-xl font-bold text-emerald-900 mb-2">Our Sermons</h3>
+                <p className="text-gray-600 mb-4">Listen to the word of God and grow in your faith journey.</p>
+                <Link href="/sermons" className="text-emerald-600 font-bold hover:underline">Listen Now →</Link>
+              </div>
+            </div>
+
+            {/* Card 2 */}
+            <div className="group rounded-2xl overflow-hidden shadow-lg border border-gray-100 hover:shadow-2xl transition duration-300">
+              <div className="relative h-56 w-full">
+                <Image src="/founder.jpg" alt="History" fill className="object-cover object-top group-hover:scale-105 transition duration-500" />
+              </div>
+              <div className="p-6 bg-white">
+                <h3 className="text-xl font-bold text-emerald-900 mb-2">Our History</h3>
+                <p className="text-gray-600 mb-4">Learn about our founder Avelino C. Santiago and our 1954 legacy.</p>
+                <Link href="/about" className="text-emerald-600 font-bold hover:underline">Read More →</Link>
+              </div>
+            </div>
+
+            {/* Card 3 */}
+            <div className="group rounded-2xl overflow-hidden shadow-lg border border-gray-100 hover:shadow-2xl transition duration-300">
+              <div className="relative h-56 w-full">
+                <Image src="https://images.unsplash.com/photo-1529070538774-1843cb3265df?q=80&w=2070&auto=format&fit=crop" alt="Events" fill className="object-cover group-hover:scale-105 transition duration-500" />
+              </div>
+              <div className="p-6 bg-white">
+                <h3 className="text-xl font-bold text-emerald-900 mb-2">Upcoming Events</h3>
+                <p className="text-gray-600 mb-4">Join us for worship, bible studies, and community gatherings.</p>
+                <Link href="/events" className="text-emerald-600 font-bold hover:underline">See Calendar →</Link>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* --- SERVICE TIMES & LOCATION --- */}
+      <section className="py-20 px-6 bg-emerald-900 text-white">
+        <div className="max-w-4xl mx-auto grid gap-10 md:grid-cols-2 items-center">
+          
+          <div className="bg-emerald-800/50 p-8 rounded-2xl backdrop-blur-sm border border-emerald-700">
+            <h2 className="text-2xl font-bold mb-6 text-emerald-100">Service Times</h2>
+            <ul className="space-y-4 text-lg text-emerald-50">
+              <li className="flex justify-between border-b border-emerald-700 pb-2">
                 <span>Sunday Worship</span>
-                <span className="font-semibold">10:00 AM</span>
+                <span className="font-bold">10:00 AM</span>
               </li>
-              <li className="flex justify-between border-b pb-2 border-gray-50 last:border-0">
+              <li className="flex justify-between border-b border-emerald-700 pb-2">
                 <span>Wednesday Bible Study</span>
-                <span className="font-semibold">7:00 PM</span>
+                <span className="font-bold">7:00 PM</span>
               </li>
             </ul>
           </div>
 
-          <div className="bg-white p-6 md:p-8 rounded-2xl shadow-sm border border-gray-100">
-            <h2 className="text-xl md:text-2xl font-bold text-gray-900 mb-4">Visit Us</h2>
-            <p className="text-base md:text-lg text-gray-600 mb-4">
-              Medina, Magallanes<br />
-              Cavite, Philippines 
+          <div className="space-y-4 text-center md:text-left">
+            <h2 className="text-3xl font-bold">Join Us This Week</h2>
+            <p className="text-emerald-100 text-lg">
+              We would love to see you. Parking is available and we have programs for all ages.
             </p>
+            <div className="text-xl font-semibold mt-4">
+              Medina, Magallanes<br />
+              Cavite, Philippines
+            </div>
+            <Button className="mt-4 bg-white text-emerald-900 hover:bg-gray-100 font-bold">
+              Get Directions
+            </Button>
           </div>
+
         </div>
       </section>
 
       {/* --- FOOTER --- */}
-      <footer className="py-8 md:py-10 text-center text-gray-500 text-xs md:text-sm border-t px-4">
-        &copy; 2025 Iglesia ng Dios na Buhay kay Cristo Jesus. Est 1954 - All rights reserved.
+      <footer className="py-8 bg-emerald-950 text-center text-emerald-400 text-sm border-t border-emerald-900">
+        <p>&copy; 2025 Iglesia ng Dios na Buhay kay Cristo Jesus (SEC 13708).</p> 
+        <p className="mt-1 opacity-60">Founded 1954. All rights reserved.</p>
       </footer>
+
     </div>
   );
 }

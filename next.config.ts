@@ -12,15 +12,13 @@ const nextConfig: NextConfig = {
     ignoreDuringBuilds: true,
   },
 
-  // 2. NEW: Allow images from the hosting site i.ibb.co
+  // 2. Allow images from hosting sites
   images: {
     remotePatterns: [
-      {
-        protocol: 'https',
-        hostname: 'i.ibb.co',
-      },
+      { protocol: 'https', hostname: 'i.ibb.co' },
+      { protocol: 'https', hostname: 'images.unsplash.com' },
     ],
   },
-};
+}; // <--- THIS WAS MISSING!
 
 export default nextConfig;
