@@ -29,12 +29,12 @@ export default function Home() {
 
         {/* BUTTONS */}
         <div className="flex gap-3">
-          <Link href="/sign-in">
+          <Link href="/auth/login">
             <Button variant="outline" className="border-emerald-600 text-emerald-700 hover:bg-emerald-50">
               Member Login
             </Button>
           </Link>
-          <Link href="/sign-in">
+          <Link href="/auth/login">
             <Button className="bg-emerald-600 hover:bg-emerald-700 text-white shadow-md">
               Join Us
             </Button>
