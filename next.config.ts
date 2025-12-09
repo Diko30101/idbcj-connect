@@ -8,10 +8,7 @@ const nextConfig: NextConfig = {
   typescript: {
     ignoreBuildErrors: true,
   },
-  eslint: {
-    ignoreDuringBuilds: true,
-  },
-
+  
   // 2. Allow images from hosting sites
   images: {
     remotePatterns: [
