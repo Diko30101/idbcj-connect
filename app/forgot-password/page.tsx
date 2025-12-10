@@ -23,7 +23,7 @@ export default function ForgotPassword() {
 
     // Send the password reset email
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: `${window.location.origin}/auth/callback?next=/dashboard/update-password`,
+      redirectTo: `${window.location.origin}/auth/confirm?next=/dashboard/update-password`,
     });
 
     if (error) {
@@ -70,7 +70,7 @@ export default function ForgotPassword() {
               </Button>
 
               <div className="text-center text-sm">
-                <Link href="/auth/login" className="text-emerald-600 hover:underline">
+                <Link href="/sign-in" className="text-emerald-600 hover:underline">
                   Back to Login
                 </Link>
               </div>
