@@ -70,7 +70,7 @@ export default function ForgotPassword() {
               </Button>
 
               <div className="text-center text-sm">
-                <Link href="/sign-in" className="text-emerald-600 hover:underline">
+                <Link href="/auth/login" className="text-emerald-600 hover:underline">
                   Back to Login
                 </Link>
               </div>

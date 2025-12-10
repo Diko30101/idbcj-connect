@@ -63,7 +63,7 @@ export default function Home() {
           <div className="flex gap-4 justify-center pt-4">
             
             {/* JOIN US Button (Moved here) */}
-            <Link href="/sign-in">
+            <Link href="/auth/login">
               <Button className="h-12 px-8 text-lg bg-emerald-500 hover:bg-emerald-600 text-white border-none shadow-lg">
                 Join Us
               </Button>
