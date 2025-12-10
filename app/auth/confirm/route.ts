@@ -19,9 +19,17 @@ export async function GET(request: NextRequest) {
     })
     
     if (!error) {
+      // --- THE FIX ---
+      // If this is a password recovery, FORCE them to the update page
+      if (type === 'recovery') {
+        return NextResponse.redirect(new URL('/dashboard/update-password', request.url))
+      }
+      
+      // Otherwise, go where they wanted
       return NextResponse.redirect(new URL(next, request.url))
     }
   }
 
+  // If error, redirect to error page
   return NextResponse.redirect(new URL('/auth/auth-code-error', request.url))
 }
