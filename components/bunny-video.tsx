@@ -1,9 +1,9 @@
 "use client";
 
 interface BunnyVideoProps {
-  libraryId: string; // Keep this as 'string'
-  videoId: string;   // Keep this as 'string'
-  title?: string;    // Keep this as 'string'
+  libraryId: string;
+  videoId: string;
+  title?: string;
 }
 
 export function BunnyVideo({ libraryId, videoId, title }: BunnyVideoProps) {
@@ -18,6 +18,9 @@ export function BunnyVideo({ libraryId, videoId, title }: BunnyVideoProps) {
           src={embedUrl}
           loading="lazy"
           className="absolute top-0 left-0 w-full h-full border-0"
+          // --- THIS IS THE FIX ---
+          referrerPolicy="origin" 
+          // -----------------------
           allow="accelerometer; gyroscope; autoplay; encrypted-media; picture-in-picture;"
           allowFullScreen={true}
         ></iframe>

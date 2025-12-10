@@ -47,7 +47,7 @@ export default async function Dashboard() {
                         <span>Member Portal</span>
                     </div>
                     
-                    <form action="/auth/sign-out" method="post">
+                    <form action="/auth/login" method="post">
                         <button className="flex items-center gap-2 text-sm font-medium text-gray-500 hover:text-red-600 transition border px-4 py-2 rounded-lg hover:bg-red-50">
                             Sign Out
                         </button>

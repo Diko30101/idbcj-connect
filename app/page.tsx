@@ -1,7 +1,7 @@
-import { ContactForm } from "@/components/contact-form";
 import Link from "next/link";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
+import { ContactForm } from "@/components/contact-form";
 
 export default function Home() {
   return (
@@ -11,7 +11,7 @@ export default function Home() {
       <nav className="sticky top-0 z-50 bg-white/95 backdrop-blur-sm flex flex-col md:flex-row items-center justify-between p-4 md:px-8 border-b border-green-100 shadow-sm">
         
         {/* LOGO */}
-        <Link href="/" className="flex items-center gap-3 hover:opacity-80 transition">
+        <Link href="/" className="flex items-center gap-3 hover:opacity-80 transition mb-4 md:mb-0">
           <div className="relative h-12 w-12 overflow-hidden rounded-full border-2 border-emerald-100 shrink-0 shadow-sm">
              <Image src="/logo.png" alt="IDBCJ Logo" fill className="object-cover" />
           </div>
@@ -20,25 +20,16 @@ export default function Home() {
           </div>
         </Link>
 
-        {/* MENU */}
-        <div className="flex flex-wrap justify-center gap-6 text-sm font-semibold text-gray-600 my-4 md:my-0">
+        {/* MENU (Now includes Member Login) */}
+        <div className="flex flex-wrap justify-center items-center gap-6 text-sm font-semibold text-gray-600">
           <Link href="/" className="text-emerald-700">Home</Link>
           <Link href="/sermons" className="hover:text-emerald-600 transition">Sermons</Link>
           <Link href="/about" className="hover:text-emerald-600 transition">Our History</Link>
           <Link href="/events" className="hover:text-emerald-600 transition">Events</Link>
-        </div>
-
-        {/* BUTTONS */}
-        <div className="flex gap-3">
-          <Link href="/auth/login">
-            <Button variant="outline" className="border-emerald-600 text-emerald-700 hover:bg-emerald-50">
-              Member Login
-            </Button>
-          </Link>
-          <Link href="/auth/login">
-            <Button className="bg-emerald-600 hover:bg-emerald-700 text-white shadow-md">
-              Join Us
-            </Button>
+          
+          {/* Moved Member Login Here */}
+          <Link href="/auth/login" className="text-emerald-600 hover:text-emerald-800 transition flex items-center gap-1 border-l border-gray-300 pl-6 ml-2">
+            <span>🔒</span>Login
           </Link>
         </div>
       </nav>
@@ -54,7 +45,7 @@ export default function Home() {
           priority
         />
         {/* Green Overlay Gradient */}
-        <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-emerald-900/40 to-emerald-900/80" />
+        <div className="absolute inset-0 bg-gradient-to-b from-black/50 via-emerald-900/30 to-emerald-900/80" />
 
         {/* Text Content */}
         <div className="relative z-10 max-w-4xl space-y-6 animate-in fade-in zoom-in duration-1000">
@@ -67,12 +58,18 @@ export default function Home() {
           <p className="text-lg md:text-xl text-gray-100 max-w-2xl mx-auto drop-shadow-sm">
             The pillar and ground of the truth. Join us as we worship the Living God.
           </p>
+          
+          {/* HERO BUTTONS (Updated) */}
           <div className="flex gap-4 justify-center pt-4">
-            <Link href="/about">
+            
+            {/* JOIN US Button (Moved here) */}
+            <Link href="/sign-in">
               <Button className="h-12 px-8 text-lg bg-emerald-500 hover:bg-emerald-600 text-white border-none shadow-lg">
-                Our History
+                Join Us
               </Button>
             </Link>
+
+            {/* Watch Sermons Button */}
             <Link href="/sermons">
               <Button variant="outline" className="h-12 px-8 text-lg text-white border-white bg-transparent hover:bg-white hover:text-emerald-900">
                 Watch Sermons
@@ -108,7 +105,7 @@ export default function Home() {
             <div className="h-1 w-20 bg-emerald-500 mx-auto md:mx-0 rounded-full"></div>
             <p className="text-lg text-gray-700 leading-relaxed">
               We, represented by <strong>idbcj.org</strong> and its affiliated locales (including Canada), 
-              are the members who remained faithful to the original <strong>1958 registration (SEC 13708)</strong>, 
+              are the members who remained faithful to the original <strong>1954 registration (SEC 13708)</strong>, 
               doctrine, and leadership structure established by our founder, <strong>Mr. Avelino C. Santiago</strong>.
             </p>
             <p className="text-lg text-gray-700 leading-relaxed">
@@ -199,8 +196,8 @@ export default function Home() {
               We would love to see you. Parking is available and we have programs for all ages.
             </p>
             <div className="text-xl font-semibold mt-4">
-              Medina, Magallanes<br />
-              Cavite, Philippines
+              123 Faith Avenue<br />
+              Cityname, State 54321
             </div>
             <Button className="mt-4 bg-white text-emerald-900 hover:bg-gray-100 font-bold">
               Get Directions
@@ -210,7 +207,7 @@ export default function Home() {
         </div>
       </section>
 
-{/* --- CONTACT SECTION --- */}
+      {/* --- CONTACT SECTION --- */}
       <section className="py-20 px-6 bg-slate-50 border-t border-gray-200">
         <div className="max-w-4xl mx-auto text-center mb-10">
           <h2 className="text-3xl font-bold text-gray-900">Contact Us</h2>
@@ -221,6 +218,7 @@ export default function Home() {
         
         <ContactForm />
       </section>
+
       {/* --- FOOTER --- */}
       <footer className="py-8 bg-emerald-950 text-center text-emerald-400 text-sm border-t border-emerald-900">
         <p>&copy; 2025 Iglesia ng Dios na Buhay kay Cristo Jesus (SEC 13708).</p> 
