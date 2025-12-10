@@ -7,6 +7,8 @@ export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url)
   const token_hash = searchParams.get('token_hash')
   const type = searchParams.get('type') as EmailOtpType | null
+  
+  // Default destination
   const next = searchParams.get('next') ?? '/dashboard'
 
   if (token_hash && type) {
@@ -19,17 +21,18 @@ export async function GET(request: NextRequest) {
     })
     
     if (!error) {
-      // --- THE FIX ---
-      // If this is a password recovery, FORCE them to the update page
+      // --- THE CRITICAL FIX ---
+      // If the user is resetting their password, FORCE them to the update page
+      // regardless of what the "next" parameter says.
       if (type === 'recovery') {
         return NextResponse.redirect(new URL('/dashboard/update-password', request.url))
       }
       
-      // Otherwise, go where they wanted
+      // Otherwise, go to dashboard
       return NextResponse.redirect(new URL(next, request.url))
     }
   }
 
-  // If error, redirect to error page
+  // If verification failed, go to error page
   return NextResponse.redirect(new URL('/auth/auth-code-error', request.url))
 }
