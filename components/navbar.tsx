@@ -32,6 +32,11 @@ export function Navbar() {
             <Link href="/" className="text-sm font-semibold text-emerald-700 hover:text-emerald-500 transition">
               Home
             </Link>
+
+          {/* --- ADD THIS NEW LINK --- */}
+          <Link href="/ministries" className="text-sm font-medium hover:text-emerald-600 transition-colors">
+              Ministries
+            </Link>
             <Link href="/sermons" className="text-sm font-semibold text-gray-600 hover:text-emerald-600 transition">
               Sermons
             </Link>
@@ -74,6 +79,11 @@ export function Navbar() {
             
             <Link href="/" onClick={closeMenu} className="text-lg font-semibold text-emerald-900 py-2 border-b border-gray-50 hover:bg-emerald-50 rounded-lg">
               Home
+            </Link>
+
+            {/* --- PASTE THE NEW LINK HERE --- */}
+            <Link href="/ministries" onClick={closeMenu} className="text-lg font-semibold text-gray-600 py-2 border-b border-gray-50 hover:bg-emerald-50 rounded-lg">
+              Ministries
             </Link>
             <Link href="/sermons" onClick={closeMenu} className="text-lg font-semibold text-gray-600 py-2 border-b border-gray-50 hover:bg-emerald-50 rounded-lg">
               Sermons
