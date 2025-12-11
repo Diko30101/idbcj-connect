@@ -1,38 +1,43 @@
-import { type EmailOtpType } from '@supabase/supabase-js'
-import { type NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@/lib/supabase/server'
-import { cookies } from 'next/headers'
+import { createClient } from "@/lib/supabase/server";
+import { NextResponse } from "next/server";
+import { cookies } from "next/headers";
 
-export async function GET(request: NextRequest) {
-  const { searchParams } = new URL(request.url)
-  const token_hash = searchParams.get('token_hash')
-  const type = searchParams.get('type') as EmailOtpType | null
-  
-  // Default destination
-  const next = searchParams.get('next') ?? '/dashboard'
+export async function GET(request: Request) {
+  const { searchParams, origin } = new URL(request.url);
+  const code = searchParams.get("code");
+  // Check if there is a 'next' param, or default to dashboard
+  const next = searchParams.get("next") ?? "/dashboard";
+  // Check the TYPE of email link (e.g., 'recovery', 'signup', 'invite')
+  const type = searchParams.get("type");
 
-  if (token_hash && type) {
-    const cookieStore = await cookies()
-    const supabase = createClient(cookieStore as any)
-
-    const { error } = await supabase.auth.verifyOtp({
-      type,
-      token_hash,
-    })
+  if (code) {
+    const cookieStore = await cookies();
+    const supabase = createClient(cookieStore);
+    
+    // Exchange the code for a session (logs the user in)
+    const { error } = await supabase.auth.exchangeCodeForSession(code);
     
     if (!error) {
-      // --- THE CRITICAL FIX ---
-      // If the user is resetting their password, FORCE them to the update page
-      // regardless of what the "next" parameter says.
-      if (type === 'recovery') {
-        return NextResponse.redirect(new URL('/dashboard/update-password', request.url))
+      // --- THE FIX ---
+      // If this was a Password Reset link, send them to the reset page
+      if (type === "recovery") {
+        return NextResponse.redirect(`${origin}/reset-password`);
       }
+
+      // Otherwise, proceed as normal
+      const forwardedHost = request.headers.get("x-forwarded-host");
+      const isLocalEnv = process.env.NODE_ENV === "development";
       
-      // Otherwise, go to dashboard
-      return NextResponse.redirect(new URL(next, request.url))
+      if (isLocalEnv) {
+        return NextResponse.redirect(`${origin}${next}`);
+      } else if (forwardedHost) {
+        return NextResponse.redirect(`https://${forwardedHost}${next}`);
+      } else {
+        return NextResponse.redirect(`${origin}${next}`);
+      }
     }
   }
 
-  // If verification failed, go to error page
-  return NextResponse.redirect(new URL('/auth/auth-code-error', request.url))
+  // If error, send to error page
+  return NextResponse.redirect(`${origin}/auth/auth-code-error`);
 }

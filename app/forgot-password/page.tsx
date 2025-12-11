@@ -47,7 +47,7 @@ export default function ForgotPassword() {
           {message ? (
             <div className="text-center space-y-4">
               <p className="text-green-600 font-medium bg-green-50 p-3 rounded">{message}</p>
-              <Link href="/sign-in">
+              <Link href="/auth/login">
                 <Button variant="outline" className="w-full">Back to Login</Button>
               </Link>
             </div>

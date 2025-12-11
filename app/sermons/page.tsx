@@ -11,10 +11,10 @@ const ALL_SERMONS = [
   {
     id: 1,
     title: "Walking in Faith, Not by Sight",
-    speaker: "Ptr. Avelino C. Santiago",
-    date: "December 3, 2025",
+    speaker: "Elder Bro. Rod S. Villaverde",
+    date: "December 9, 2025",
     series: "Faith Series",
-    videoUrl: "https://www.youtube.com/embed/dQw4w9WgXcQ", // Replace with real YouTube Embed Link
+    videoUrl: "https://www.youtube.com/embed/oEBwRr2aILc?si=ybehzjKuT8KLjmB5", // Replace with real YouTube Embed Link
     description: "Discover what it means to truly trust God when the path ahead is unclear.",
     thumbnail: "https://images.unsplash.com/photo-1438232992991-995b7058bbb3?q=80&w=2073&auto=format&fit=crop"
   },
