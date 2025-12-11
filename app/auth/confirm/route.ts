@@ -13,7 +13,7 @@ export async function GET(request: NextRequest) {
   
   const next = searchParams.get("next") ?? "/dashboard";
 
-  const cookieStore = await cookies();
+  const cookieStore = cookies();
   const supabase = createClient(cookieStore);
 
   // CASE A: It is a PKCE Code (Most likely what you are getting)
