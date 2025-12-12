@@ -1,5 +1,5 @@
 "use client";
-
+import Link from "next/link"; // <--- Add this at the top
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -50,11 +50,22 @@ export default function ContactPage() {
         <CardContent>
           
           {result === "Success" ? (
-            <div className="text-center py-10">
+             <div className="text-center py-10">
               <div className="text-5xl mb-4">✅</div>
               <h3 className="text-xl font-bold text-green-600 mb-2">Message Sent!</h3>
-              <p className="text-gray-600">Thank you for contacting us. Check your email for a reply shortly.</p>
-              <Button onClick={() => setResult(null)} className="mt-6" variant="outline">Send Another</Button>
+              <p className="text-gray-600 mb-6">Thank you for contacting us. Check your email for a reply shortly.</p>
+              
+              {/* --- NEW BUTTONS SECTION --- */}
+              <div className="flex gap-4 justify-center">
+                <Button onClick={() => setResult(null)} variant="outline">
+                  Send Another
+                </Button>
+                
+                <Link href="/">
+                   <Button>Back to Home</Button>
+                </Link>
+              </div>
+
             </div>
           ) : (
             <form onSubmit={handleSubmit} className="space-y-6">

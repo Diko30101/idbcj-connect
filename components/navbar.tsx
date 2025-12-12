@@ -22,9 +22,18 @@ export function Navbar() {
             <div className="relative h-10 w-10 md:h-12 md:w-12 overflow-hidden rounded-full border-2 border-emerald-100 shrink-0 shadow-sm">
               <Image src="/logo.png" alt="IDBCJ Logo" fill className="object-cover" />
             </div>
-            <div className="text-sm md:text-base font-bold text-emerald-950 leading-tight max-w-[200px]">
+            {/* The Church Name - Responsive */}
+          <div className="font-bold text-gray-800 leading-tight">
+            {/* Show this on Mobile/Tablet (Small) */}
+            <span className="lg:hidden text-xl">
+              IDBCJ
+            </span>
+            
+            {/* Show this on Desktop (Large) */}
+            <span className="hidden lg:block text-lg">
               Iglesia ng Dios na Buhay kay Cristo Jesus
-            </div>
+            </span>
+          </div>
           </Link>
 
           {/* --- DESKTOP MENU (Hidden on Mobile) --- */}

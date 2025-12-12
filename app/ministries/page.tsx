@@ -112,7 +112,7 @@ export default function MinistriesPage() {
         {/* Call to Action */}
         <div className="mt-16 text-center">
           <p className="text-lg text-gray-600 mb-4">Want to serve in one of these areas?</p>
-          <Link href="/sign-in">
+          <Link href="/contact">
              <Button size="lg">Join a Ministry</Button>
           </Link>
         </div>
