@@ -39,7 +39,7 @@ export default function Home() {
                 About Us
               </Button>
             </Link>
-            <Link href="/sermons">
+            <Link href="https://idbcj.online.church/">
               <Button variant="outline" className="h-12 px-8 text-lg text-white border-white bg-transparent hover:bg-white hover:text-emerald-900 rounded-full">
                 Watch Sermons
               </Button>
