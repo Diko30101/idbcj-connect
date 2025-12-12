@@ -60,9 +60,9 @@ export function Navbar() {
               <Link href="/auth/login" className="text-sm font-semibold text-emerald-600 hover:text-emerald-800 transition flex items-center gap-1">
                 <span>🔒</span> Login
               </Link>
-              <Link href="/auth/login">
+              <Link href="/contact">
                 <Button className="bg-emerald-600 hover:bg-emerald-700 text-white shadow-md rounded-full px-6">
-                  Join Us
+                  Contact Us
                 </Button>
               </Link>
             </div>
@@ -110,9 +110,9 @@ export function Navbar() {
                   Member Login
                 </Button>
               </Link>
-              <Link href="/auth/login" onClick={closeMenu}>
+              <Link href="/contact" onClick={closeMenu}>
                 <Button className="w-full bg-emerald-600 hover:bg-emerald-700 text-white">
-                  Join Us
+                  Contact Us
                 </Button>
               </Link>
             </div>

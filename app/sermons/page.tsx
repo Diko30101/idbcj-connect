@@ -21,7 +21,7 @@ const ALL_SERMONS = [
   {
     id: 2,
     title: "The Power of Prayer",
-    speaker: "Bro. Juan Dela Cruz",
+    speaker: "Bro. Abon Mangubat",
     date: "November 26, 2025",
     series: "Prayer Works",
     videoUrl: "https://www.youtube.com/embed/dQw4w9WgXcQ",
@@ -31,7 +31,7 @@ const ALL_SERMONS = [
   {
     id: 3,
     title: "Living a Life of Gratitude",
-    speaker: "Sis. Maria Santos",
+    speaker: "Bro. Abon Mangubat",
     date: "November 19, 2025",
     series: "Thanksgiving",
     videoUrl: "https://www.youtube.com/embed/dQw4w9WgXcQ",
@@ -41,7 +41,7 @@ const ALL_SERMONS = [
   {
     id: 4,
     title: "Overcoming Fear with Love",
-    speaker: "Ptr. Avelino C. Santiago",
+    speaker: "Bro. Abon Mangubat",
     date: "November 12, 2025",
     series: "Freedom",
     videoUrl: "https://www.youtube.com/embed/dQw4w9WgXcQ",
