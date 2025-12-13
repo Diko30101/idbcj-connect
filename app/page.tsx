@@ -68,7 +68,7 @@ export default function Home() {
               doctrine, and leadership structure established by our founder, <strong>Mr. Avelino C. Santiago</strong>.
             </p>
             <div className="pt-2">
-              <Link href="/about">
+              <Link href="/history">
                  <Button variant="outline" className="border-emerald-600 text-emerald-700 hover:bg-emerald-100 rounded-full">
                    Read Our History
                  </Button>
