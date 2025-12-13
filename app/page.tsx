@@ -89,7 +89,7 @@ export default function Home() {
             {/* Card 1 */}
             <div className="group rounded-2xl overflow-hidden shadow-lg border border-gray-100 hover:shadow-2xl transition duration-300">
               <div className="relative h-56 w-full">
-                <Image src="https://images.unsplash.com/photo-1510936111840-65e151ad71bb?q=80&w=2090&auto=format&fit=crop" alt="Bible Study" fill className="object-cover group-hover:scale-105 transition duration-500" />
+                <Image src="/rod.png" alt="Bible Study" fill className="object-cover group-hover:scale-105 transition duration-500" />
               </div>
               <div className="p-6 bg-white">
                 <h3 className="text-xl font-bold text-emerald-900 mb-2">Our Sermons</h3>
@@ -100,7 +100,7 @@ export default function Home() {
             {/* Card 2 */}
             <div className="group rounded-2xl overflow-hidden shadow-lg border border-gray-100 hover:shadow-2xl transition duration-300">
               <div className="relative h-56 w-full">
-                <Image src="/founder.jpg" alt="History" fill className="object-cover object-top group-hover:scale-105 transition duration-500" />
+                <Image src="/founder.jpg" alt="History" fill className="object-contain bg-gray-200" />
               </div>
               <div className="p-6 bg-white">
                 <h3 className="text-xl font-bold text-emerald-900 mb-2">Our History</h3>
@@ -111,7 +111,7 @@ export default function Home() {
             {/* Card 3 */}
             <div className="group rounded-2xl overflow-hidden shadow-lg border border-gray-100 hover:shadow-2xl transition duration-300">
               <div className="relative h-56 w-full">
-                <Image src="https://images.unsplash.com/photo-1529070538774-1843cb3265df?q=80&w=2070&auto=format&fit=crop" alt="Events" fill className="object-cover group-hover:scale-105 transition duration-500" />
+                <Image src="/sermon-pic.jpg" alt="Events" fill className="object-cover group-hover:scale-105 transition duration-500" />
               </div>
               <div className="p-6 bg-white">
                 <h3 className="text-xl font-bold text-emerald-900 mb-2">Upcoming Events</h3>
