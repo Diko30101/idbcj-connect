@@ -24,7 +24,7 @@ const ALL_SERMONS = [
     speaker: "Bro. Abon Mangubat",
     date: "November 26, 2025",
     series: "Prayer Works",
-    videoUrl: "https://www.youtube.com/embed/dQw4w9WgXcQ",
+    videoUrl: "https://www.youtube.com/watch?v=FwhLi7YOOSs",
     description: "Prayer is not just asking; it is connecting with the heart of the Father.",
     thumbnail: "https://images.unsplash.com/photo-1510936111840-65e151ad71bb?q=80&w=2090&auto=format&fit=crop"
   },

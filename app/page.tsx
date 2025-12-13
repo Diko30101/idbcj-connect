@@ -41,7 +41,7 @@ export default function Home() {
             </Link>
             <Link href="https://idbcj.online.church/">
               <Button variant="outline" className="h-12 px-8 text-lg text-white border-white bg-transparent hover:bg-white hover:text-emerald-900 rounded-full">
-                Watch Sermons
+                Join Live Stream
               </Button>
             </Link>
           </div>
@@ -94,7 +94,7 @@ export default function Home() {
               <div className="p-6 bg-white">
                 <h3 className="text-xl font-bold text-emerald-900 mb-2">Our Sermons</h3>
                 <p className="text-gray-600 mb-4">Listen to the word of God and grow in your faith journey.</p>
-                <Link href="/sermons" className="text-emerald-600 font-bold hover:underline">Listen Now →</Link>
+                <Link href="/sermons" className="text-emerald-600 font-bold hover:underline">Watch Now →</Link>
               </div>
             </div>
             {/* Card 2 */}
