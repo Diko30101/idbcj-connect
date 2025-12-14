@@ -17,7 +17,7 @@ export default function AboutPage() {
 
       {/* --- PAGE TITLE --- */}
       <section className="text-center py-10 px-4">
-        <h1 className="text-4xl font-extrabold text-gray-900 mb-4">About Us</h1>
+        <h1 className="text-4xl font-extrabold text-gray-900 mb-4">Our History & Legacy</h1>
         <p className="text-xl text-gray-500">Founded on Truth, Established in Love</p>
       </section>
 

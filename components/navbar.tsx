@@ -97,7 +97,7 @@ export function Navbar() {
             <Link href="/sermons" onClick={closeMenu} className="text-lg font-semibold text-gray-600 py-2 border-b border-gray-50 hover:bg-emerald-50 rounded-lg">
               Sermons
             </Link>
-            <Link href="/about" onClick={closeMenu} className="text-lg font-semibold text-gray-600 py-2 border-b border-gray-50 hover:bg-emerald-50 rounded-lg">
+            <Link href="/history" onClick={closeMenu} className="text-lg font-semibold text-gray-600 py-2 border-b border-gray-50 hover:bg-emerald-50 rounded-lg">
               Our History
             </Link>
             <Link href="/events" onClick={closeMenu} className="text-lg font-semibold text-gray-600 py-2 border-b border-gray-50 hover:bg-emerald-50 rounded-lg">
