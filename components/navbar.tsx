@@ -49,7 +49,7 @@ export function Navbar() {
             <Link href="/sermons" className="text-sm font-semibold text-gray-600 hover:text-emerald-600 transition">
               Sermons
             </Link>
-            <Link href="/about" className="text-sm font-semibold text-gray-600 hover:text-emerald-600 transition">
+            <Link href="/history" className="text-sm font-semibold text-gray-600 hover:text-emerald-600 transition">
               Our History
             </Link>
             <Link href="/events" className="text-sm font-semibold text-gray-600 hover:text-emerald-600 transition">
