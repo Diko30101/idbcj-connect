@@ -53,8 +53,8 @@ export default function AboutPage() {
 
             <p className="text-lg text-gray-700 leading-relaxed">
               From humble beginnings, the church has grown into a vibrant community dedicated to spreading 
-              the Gospel and living out the teachings of Christ. We remain faithful to the original 
-              registration (SEC Reg. No. 13708, 1958), doctrine, and leadership structure established by our founder.
+              the Gospel and living out the teachings of Christ. We remain faithful to the doctrine and 
+              leadership structure established by our founder, and to the original registration (SEC Reg. No. 13708, 1958).
             </p>
 
             <div className="pt-4">

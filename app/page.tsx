@@ -64,8 +64,8 @@ export default function Home() {
             <div className="h-1 w-20 bg-emerald-500 mx-auto md:mx-0 rounded-full"></div>
             <p className="text-lg text-gray-700 leading-relaxed">
               We, represented by <strong>idbcj.org</strong> and its affiliated locales, 
-              are the members who remained faithful to the original <strong>registration (SEC Reg. No. 13708, 1958)</strong>, 
-              doctrine, and leadership structure established by our founder, <strong>Mr. Avelino C. Santiago</strong>.
+              are the members who remained faithful to the doctrine and leadership structure 
+              established by our founder, <strong>Mr. Avelino C. Santiago</strong>, and to the original <strong>registration (SEC Reg. No. 13708, 1958)</strong>.
             </p>
             <div className="pt-2">
               <Link href="/history">

@@ -7,7 +7,7 @@ export default function AboutPage() {
     <div className="flex min-h-screen flex-col bg-slate-50">
 
       {/* --- BACK BUTTON (Top Left) --- */}
-      <div className="max-w-6xl mx-auto px-6 pt-8">
+      <div className="w-full max-w-6xl mx-auto px-6 pt-8">
         <Link href="/">
           <Button variant="ghost" className="text-gray-600 hover:text-gray-900 pl-0 hover:bg-transparent">
             ← Back to Home
@@ -75,8 +75,8 @@ export default function AboutPage() {
             <h3 className="font-bold text-blue-900 mb-2">We Remained Faithful</h3>
             <p className="text-blue-800 text-sm italic">
               "We, represented by idbcj.org and its affiliated locales (including Canada), 
-              are the members who remained faithful to the original 1958 registration (SEC 13708), 
-              doctrine, and leadership structure established by Mr. Avelino C. Santiago."
+              are the members who remained faithful to the doctrine and leadership structure 
+              established by Mr. Avelino C. Santiago, and to the original registration (SEC Reg. No. 13708, 1958)."
             </p>
             <p className="mt-4 text-blue-900 font-semibold text-sm">
               We did not join the new 2008 registration or the groups that departed from the original teachings.
@@ -110,15 +110,7 @@ export default function AboutPage() {
           <p className="text-gray-300">
             Founded by Avelino C. Santiago
           </p>
-          <p className="text-sm text-gray-400 bg-gray-800 inline-block px-4 py-2 rounded-full">
-            Not affiliated with the 2008 group (CN200800458) or Ruel Santiago
-          </p>
           
-          <div className="pt-8">
-            <Link href="/">
-              <Button variant="secondary" size="sm">Return Home</Button>
-            </Link>
-          </div>
         </div>
       </footer>
 
