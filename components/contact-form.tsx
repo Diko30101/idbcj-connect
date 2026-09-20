@@ -9,28 +9,37 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 export function ContactForm() {
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
+  const [error, setError] = useState(false);
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setLoading(true);
+    setError(false);
 
-    const formData = new FormData(e.currentTarget);
-    
-    // *** PASTE YOUR ACCESS KEY HERE ***
-    formData.append("access_key", "926bfee8-dddb-404a-b270-bf677f026812"); 
+    const form = e.currentTarget;
+    const formData = new FormData(form);
 
-    const response = await fetch("https://api.web3forms.com/submit", {
-      method: "POST",
-      body: formData
-    });
+    // Web3Forms access key (public by design; see Web3Forms FAQ)
+    formData.append("access_key", "926bfee8-dddb-404a-b270-bf677f026812");
 
-    const data = await response.json();
+    try {
+      const response = await fetch("https://api.web3forms.com/submit", {
+        method: "POST",
+        body: formData
+      });
 
-    if (data.success) {
-      setSuccess(true);
-      (e.target as HTMLFormElement).reset();
-    } else {
-      console.log("Error", data);
+      const data = await response.json();
+
+      if (data.success) {
+        setSuccess(true);
+        form.reset();
+      } else {
+        console.error("Error", data);
+        setError(true);
+      }
+    } catch (err) {
+      console.error("Error", err);
+      setError(true);
     }
     setLoading(false);
   }
@@ -46,7 +55,7 @@ export function ContactForm() {
           <div className="text-center py-10 animate-in fade-in zoom-in">
             <div className="text-5xl mb-4">✨</div>
             <h3 className="text-xl font-bold text-emerald-800">Message Sent!</h3>
-            <p className="text-gray-600">Thank you. We will get back to you at dikovillaverde@gmail.com soon.</p>
+            <p className="text-gray-600">Salamat! Natanggap na namin ang iyong mensahe. Babalikan ka namin sa email na inilagay mo.</p>
             <Button onClick={() => setSuccess(false)} variant="outline" className="mt-6">
               Send Another
             </Button>
@@ -81,8 +90,16 @@ export function ContactForm() {
               {loading ? "Sending..." : "Send Message"}
             </Button>
             
-            <p className="text-xs text-center text-gray-400 mt-2">
-              Protected by reCAPTCHA
+            {error && (
+              <p className="text-red-500 text-center text-sm font-bold">
+                Something went wrong. Please try again later. (Hindi naipadala ang mensahe.)
+              </p>
+            )}
+
+            <p className="text-xs text-center text-gray-500 mt-2">
+              By sending, you agree that your name, email, and message will be received by the church
+              leadership by email (through the Web3Forms service) so we can reply to you. Please avoid
+              sharing details you do not want shared.
             </p>
           </form>
         )}

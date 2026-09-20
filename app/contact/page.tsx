@@ -94,11 +94,11 @@ export default function ContactPage() {
               {/* Subject Field */}
               <div className="grid gap-2">
                  <Label htmlFor="subject">Subject</Label>
-                 <select name="subject" className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm">
-                    <option value="General Inquiry">General Inquiry</option>
-                    <option value="Prayer Request">Prayer Request</option>
-                    <option value="Ministry Question">Ministry Question</option>
-                    <option value="Pastoral Care">Pastoral Care</option>
+                 <select name="subject" id="subject" className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm">
+                    <option value="Website: General Inquiry">General Inquiry</option>
+                    <option value="Website: Prayer Request">Prayer Request</option>
+                    <option value="Website: Ministry Question">Ministry Question</option>
+                    <option value="Website: Pastoral Care">Pastoral Care</option>
                  </select>
               </div>
 
@@ -115,8 +115,13 @@ export default function ContactPage() {
               </div>
 
               {/* Hidden settings for Web3Forms */}
-              <input type="hidden" name="subject" value="New Message from Church Website" />
               <input type="hidden" name="from_name" value="Church Website" />
+
+              <p className="text-xs text-center text-gray-500">
+                By sending, you agree that your name, email, and message will be received by the church
+                leadership by email (through the Web3Forms service) so we can reply to you. Please avoid
+                sharing details you do not want shared.
+              </p>
 
               <Button type="submit" className="w-full text-lg" disabled={loading}>
                 {loading ? "Sending..." : "Send Message"}
