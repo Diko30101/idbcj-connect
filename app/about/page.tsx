@@ -53,8 +53,8 @@ export default function AboutPage() {
 
             <p className="text-lg text-gray-700 leading-relaxed">
               From humble beginnings, the church has grown into a vibrant community dedicated to spreading 
-              the Gospel and living out the teachings of Christ. We remain faithful to the doctrine and 
-              leadership structure established by our founder, and to the original registration (SEC Reg. No. 13708, 1958).
+              the Gospel and living out the teachings of Christ. The church was registered with the SEC 
+              in 1958 (SEC Reg. No. 13708).
             </p>
 
             <div className="pt-4">
@@ -79,7 +79,7 @@ export default function AboutPage() {
           <div className="p-6 border rounded-xl">
             <div className="text-4xl mb-4">📖</div>
             <h4 className="font-bold mb-2">Truth</h4>
-            <p className="text-gray-600 text-sm">Upholding the original doctrines and teachings.</p>
+            <p className="text-gray-600 text-sm">Upholding the doctrines and teachings of the church.</p>
           </div>
           <div className="p-6 border rounded-xl">
             <div className="text-4xl mb-4">❤️</div>

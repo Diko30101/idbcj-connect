@@ -21,7 +21,7 @@ export default function AboutPage() {
           Our History & Legacy
         </h1>
         <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-          Standing firm on the original foundation laid in 1954.
+          Standing firm on the foundation laid in 1954.
         </p>
       </section>
 
@@ -60,37 +60,13 @@ export default function AboutPage() {
           </div>
         </div>
 
-        {/* 2. THE TRANSITION & STAND */}
+        {/* 2. WHO WE ARE TODAY */}
         <div className="bg-white p-8 rounded-xl shadow-sm border border-gray-100 space-y-4">
-          <h2 className="text-2xl font-bold text-gray-900">Our Stand on Leadership</h2>
+          <h2 className="text-2xl font-bold text-gray-900">Who We Are Today</h2>
           <p className="text-gray-700 leading-relaxed text-justify">
-            After the passing of Mr. Avelino C. Santiago in 1992, distinct groups emerged. 
-            In 2008, a new entity was registered with the SEC under the name{" "}
-            <em>"THE PRESIDING MINISTER OF IGLESIA NG DIOS NA BUHAY KAY CRISTO JESUS, INC."</em> (SEC CN200800458).
-          </p>
-          
-          <div className="bg-blue-50 border-l-4 border-blue-600 p-6 my-6">
-            <h3 className="font-bold text-blue-900 mb-2">We Remained Faithful</h3>
-            <p className="text-blue-800 text-sm italic">
-              "We, represented by idbcj.org and its affiliated locales (including Canada), 
-              are the members who remained faithful to the doctrine and leadership structure 
-              established by Mr. Avelino C. Santiago, and to the original registration (SEC Reg. No. 13708, 1958)."
-            </p>
-          </div>
-
-          <p className="text-gray-700">
             We continue to actively worship, study the Bible, and spread the Gospel worldwide, 
-            holding steadfast to the truth of God's Word without human changes in leadership structure.
+            holding steadfast to the truth of God's Word.
           </p>
-        </div>
-
-        {/* 3. PROOF OF REGISTRATION (Placeholder) */}
-        <div className="border-2 border-dashed border-gray-300 rounded-xl p-10 text-center bg-gray-50">
-          <h3 className="text-lg font-semibold text-gray-500 mb-2">Historical Document Archive</h3>
-          <p className="text-gray-400 text-sm mb-4">
-            (Scan of Original SEC 13708 Registration Paper to be uploaded here)
-          </p>
-          <Button variant="outline" disabled>View Original SEC 13708</Button>
         </div>
 
       </div>
