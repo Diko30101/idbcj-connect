@@ -1,5 +1,4 @@
 import Link from "next/link";
-import Image from "next/image";
 import { Button } from "@/components/ui/button";
 
 export default function AboutPage() {
@@ -18,75 +17,62 @@ export default function AboutPage() {
       {/* --- PAGE TITLE --- */}
       <section className="text-center py-10 px-4">
         <h1 className="text-4xl font-extrabold text-gray-900 mb-4">About Us</h1>
-        <p className="text-xl text-gray-500">Founded on Truth, Established in Love</p>
+        <p className="text-xl text-gray-500">Founded on Faith, Established by Love, Sustained by Hope</p>
       </section>
 
-      {/* --- FOUNDER SECTION --- */}
-      <section className="max-w-5xl mx-auto px-6 pb-20">
-        <div className="bg-slate-50 rounded-2xl p-8 md:p-12 shadow-sm border border-gray-100 flex flex-col md:flex-row gap-12 items-center">
-          
-          {/* Founder Image */}
-          <div className="relative w-full md:w-1/3 aspect-[3/4] rounded-xl overflow-hidden shadow-lg border-4 border-white">
-            <Image 
-              src="/founder.jpg"  // <--- Make sure founder.jpg is in your public folder
-              alt="Founder Avelino C. Santiago"
-              fill
-              className="object-cover"
-            />
+      {/* --- WHO WE ARE --- */}
+      <section className="max-w-3xl mx-auto px-6 pb-20">
+        <div className="bg-slate-50 rounded-2xl p-8 md:p-12 shadow-sm border border-gray-100 space-y-6 text-center">
+          <div className="h-1 w-20 bg-emerald-500 mx-auto rounded-full"></div>
+
+          <p className="text-xl text-gray-800 leading-relaxed">
+            We are a small church of Christians continuing the spiritual work of serving the living God. 
+            Our purpose is to keep serving God and the brethren, who are overseen with full faithfulness 
+            and deep fear of God.
+          </p>
+
+          <p className="text-lg text-gray-600 leading-relaxed border-t border-gray-200 pt-6">
+            <em>
+              Kami ay isang maliit na simbahan ng mga Cristiano na nagpapatuloy sa mga gawaing pang-espiritu. 
+              Layunin naming magpatuloy sa paglilingkod sa Dios na buhay at sa mga kapatiran, na 
+              pinapangasiwaan nang may buong katapatan at malaking pagkatakot sa Dios.
+            </em>
+          </p>
+
+          <div className="pt-4">
+            <Link href="/contact">
+              <Button>Contact Us to Learn More</Button>
+            </Link>
           </div>
-
-          {/* History Text */}
-          <div className="md:w-2/3 space-y-6">
-            <div className="inline-block bg-blue-100 text-blue-800 text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wide">
-              Founded 1954
-            </div>
-            
-            <h2 className="text-3xl font-bold text-gray-900">
-              The Foundation
-            </h2>
-            
-            <p className="text-lg text-gray-700 leading-relaxed">
-              The <strong>Iglesia ng Dios na Buhay kay Cristo Jesus</strong> (IDBCJ) traces its roots back to 1954. 
-              It was established through the dedication and spiritual leadership of our founder, 
-              <strong> Elder Bro. Avelino C. Santiago</strong>.
-            </p>
-
-            <p className="text-lg text-gray-700 leading-relaxed">
-              From humble beginnings, the church has grown into a vibrant community dedicated to spreading 
-              the Gospel and living out the teachings of Christ. The church was registered with the SEC 
-              in 1958 (SEC Reg. No. 13708).
-            </p>
-
-            <div className="pt-4">
-              <Link href="/contact">
-                <Button>Contact Us to Learn More</Button>
-              </Link>
-            </div>
-          </div>
-
         </div>
       </section>
 
-      {/* --- TIMELINE / VALUES (Optional) --- */}
+      {/* --- FAITH, LOVE, HOPE --- */}
       <section className="max-w-4xl mx-auto px-6 pb-20">
         <h3 className="text-2xl font-bold text-center mb-10">Our Core Values</h3>
         <div className="grid md:grid-cols-3 gap-6 text-center">
           <div className="p-6 border rounded-xl">
             <div className="text-4xl mb-4">🙏</div>
-            <h4 className="font-bold mb-2">Faith</h4>
-            <p className="text-gray-600 text-sm">Unwavering trust in God's plan and His holy word.</p>
-          </div>
-          <div className="p-6 border rounded-xl">
-            <div className="text-4xl mb-4">📖</div>
-            <h4 className="font-bold mb-2">Truth</h4>
-            <p className="text-gray-600 text-sm">Upholding the doctrines and teachings of the church.</p>
+            <h4 className="font-bold">Pananampalataya</h4>
+            <p className="text-gray-500 text-xs mb-2">Faith</p>
+            <p className="text-gray-600 text-sm">&ldquo;Work of faith&rdquo;</p>
           </div>
           <div className="p-6 border rounded-xl">
             <div className="text-4xl mb-4">❤️</div>
-            <h4 className="font-bold mb-2">Love</h4>
-            <p className="text-gray-600 text-sm">Serving one another and our community with compassion.</p>
+            <h4 className="font-bold">Pag-ibig</h4>
+            <p className="text-gray-500 text-xs mb-2">Love</p>
+            <p className="text-gray-600 text-sm">&ldquo;Labour of love&rdquo;</p>
+          </div>
+          <div className="p-6 border rounded-xl">
+            <div className="text-4xl mb-4">🌟</div>
+            <h4 className="font-bold">Pag-asa</h4>
+            <p className="text-gray-500 text-xs mb-2">Hope</p>
+            <p className="text-gray-600 text-sm">&ldquo;Patience of hope&rdquo;</p>
           </div>
         </div>
+        <p className="text-center text-gray-400 text-xs mt-6">
+          1 Thessalonians 1:3 (KJV); see also 1 Corinthians 13:13
+        </p>
       </section>
 
     </div>
