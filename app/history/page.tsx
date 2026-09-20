@@ -54,7 +54,7 @@ export default function AboutPage() {
               <strong> Mr. Avelino C. Santiago</strong> in Sampaloc, San Rafael, Bulacan.
             </p>
             <p>
-              It was originally registered with the Securities and Exchange Commission (SEC) under 
+              Although the church began in 1954, it was officially registered with the Securities and Exchange Commission (SEC) in 1958 under 
               <strong> Registration No. 13708</strong>. We stand by this registration as the true, 
               original, and historical legal identity of the church.
             </p>
@@ -104,7 +104,7 @@ export default function AboutPage() {
       <footer className="bg-gray-900 text-white py-12 px-4 text-center mt-auto">
         <div className="max-w-3xl mx-auto space-y-4">
           <p className="text-lg font-bold text-yellow-500 tracking-wide">
-            ORIGINAL 1954 CHURCH – SEC REG. NO. 13708
+            FOUNDED 1954 – SEC REG. NO. 13708 (REGISTERED 1958)
           </p>
           <div className="h-px w-24 bg-gray-700 mx-auto"></div>
           <p className="text-gray-300">

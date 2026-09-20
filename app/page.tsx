@@ -64,7 +64,7 @@ export default function Home() {
             <div className="h-1 w-20 bg-emerald-500 mx-auto md:mx-0 rounded-full"></div>
             <p className="text-lg text-gray-700 leading-relaxed">
               We, represented by <strong>idbcj.org</strong> and its affiliated locales, 
-              are the members who remained faithful to the original <strong>registration (SEC 13708)</strong>, 
+              are the members who remained faithful to the original <strong>registration (SEC Reg. No. 13708, 1958)</strong>, 
               doctrine, and leadership structure established by our founder, <strong>Mr. Avelino C. Santiago</strong>.
             </p>
             <div className="pt-2">
@@ -105,7 +105,7 @@ export default function Home() {
               <div className="p-6 bg-white">
                 <h3 className="text-xl font-bold text-emerald-900 mb-2">Our History</h3>
                 <p className="text-gray-600 mb-4">Learn about our founder Avelino C. Santiago and our 1954 legacy.</p>
-                <Link href="/about" className="text-emerald-600 font-bold hover:underline">Read More →</Link>
+                <Link href="/history" className="text-emerald-600 font-bold hover:underline">Read More →</Link>
               </div>
             </div>
             {/* Card 3 */}
@@ -133,7 +133,7 @@ export default function Home() {
       </section>
 
       <footer className="py-8 bg-emerald-950 text-center text-emerald-400 text-sm border-t border-emerald-900">
-        <p>&copy; {new Date().getFullYear()} Iglesia ng Dios na Buhay kay Cristo Jesus (SEC 13708). Est 1954</p> 
+        <p>&copy; {new Date().getFullYear()} Iglesia ng Dios na Buhay kay Cristo Jesus. Founded 1954. SEC Reg. No. 13708 (registered 1958).</p> 
       </footer>
 
     </div>

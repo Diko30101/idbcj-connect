@@ -38,7 +38,7 @@ export default function AboutPage() {
           {/* History Text */}
           <div className="md:w-2/3 space-y-6">
             <div className="inline-block bg-blue-100 text-blue-800 text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wide">
-              Est. 1954
+              Founded 1954
             </div>
             
             <h2 className="text-3xl font-bold text-gray-900">
@@ -54,7 +54,7 @@ export default function AboutPage() {
             <p className="text-lg text-gray-700 leading-relaxed">
               From humble beginnings, the church has grown into a vibrant community dedicated to spreading 
               the Gospel and living out the teachings of Christ. We remain faithful to the original 
-              registration (SEC 13708), doctrine, and leadership structure established by our founder.
+              registration (SEC Reg. No. 13708, 1958), doctrine, and leadership structure established by our founder.
             </p>
 
             <div className="pt-4">
