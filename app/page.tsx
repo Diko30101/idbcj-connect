@@ -133,7 +133,7 @@ export default function Home() {
       </section>
 
       <footer className="py-8 bg-emerald-950 text-center text-emerald-400 text-sm border-t border-emerald-900">
-        <p>&copy; 2025 Iglesia ng Dios na Buhay kay Cristo Jesus (SEC 13708). Est 1954</p> 
+        <p>&copy; {new Date().getFullYear()} Iglesia ng Dios na Buhay kay Cristo Jesus (SEC 13708). Est 1954</p> 
       </footer>
 
     </div>
