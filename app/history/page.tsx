@@ -67,7 +67,7 @@ export default function AboutPage() {
           <p className="text-gray-700 leading-relaxed text-justify">
             After the passing of Mr. Avelino C. Santiago in 1992, distinct groups emerged. 
             In 2008, a new entity was registered with the SEC under the name 
-            <em>"THE PRESIDING MINISTER OF IGLESIA NG DIOS NA BUHAY KAY CRISTO JESUS"</em> (SEC CN2008458), 
+            <em>"THE PRESIDING MINISTER OF IGLESIA NG DIOS NA BUHAY KAY CRISTO JESUS, INC."</em> (SEC CN200800458), 
             led by descendants of the founder.
           </p>
           
@@ -111,7 +111,7 @@ export default function AboutPage() {
             Founded by Avelino C. Santiago
           </p>
           <p className="text-sm text-gray-400 bg-gray-800 inline-block px-4 py-2 rounded-full">
-            Not affiliated with the 2008 group (CN2008458) or Ruel Santiago
+            Not affiliated with the 2008 group (CN200800458) or Ruel Santiago
           </p>
           
           <div className="pt-8">
