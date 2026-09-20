@@ -45,16 +45,21 @@ export default function MinistriesPage() {
             <p className="text-blue-600 font-medium mb-4">Presiding Minister</p>
             <p className="text-gray-600 leading-relaxed mb-4">
               We are a small church of Christians serving the living God and the brethren. If you have 
-              a question or a prayer request, you are welcome to write to us.
+              a question or a request we can help with, within our small ability, you are welcome to write to us.
             </p>
-            <p className="text-gray-500 leading-relaxed mb-6 italic">
+            <p className="text-gray-500 leading-relaxed italic">
               Kami ay maliit na simbahan ng mga Cristiano na naglilingkod sa Dios na buhay at sa mga 
-              kapatiran. Kung may tanong o kahilingang panalangin ka, malaya kang sumulat sa amin.
+              kapatiran. Kung may tanong o kahilingang maipaglilingkod sa abot ng aming maliit na 
+              kakayahan, malaya kang sumulat sa amin.
             </p>
-            <Link href="/contact">
-              <Button variant="outline">Contact Leadership</Button>
-            </Link>
           </div>
+        </div>
+
+        {/* --- CONTACT BUTTON --- */}
+        <div className="mt-6 text-center">
+          <Link href="/contact">
+            <Button variant="outline">Contact Leadership</Button>
+          </Link>
         </div>
 
         {/* --- OTHER MINISTERS --- */}
@@ -134,13 +139,6 @@ export default function MinistriesPage() {
 
         </div>
       </section>
-
-        {/* --- BOTTOM BACK BUTTON --- */}
-      <div className="py-10 text-center">
-        <Link href="/">
-          <Button variant="outline">Return to Home Page</Button>
-        </Link>
-      </div>
 
     </div>
   );
