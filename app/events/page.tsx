@@ -1,53 +1,57 @@
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { Calendar, Clock, MapPin } from "lucide-react"; // Icons
+import { Clock, MapPin, Repeat } from "lucide-react";
+
+// Page is rebuilt at most once an hour so the "next Sunday" date stays current.
+export const revalidate = 3600;
+
+// --- WEEKLY WORSHIP SETTINGS (edit here) ---
+const WORSHIP = {
+  title: "Sunday Worship",
+  hour: 9, // Philippine time, 24-hour clock
+  minute: 0,
+  location: "Medina, Magallanes, Cavite, Philippines",
+};
+
+const PH_OFFSET_HOURS = 8; // Philippines is UTC+8 all year
+
+// Returns the next Sunday worship start as a real point in time.
+function nextWorship(now: Date) {
+  const ph = new Date(now.getTime() + PH_OFFSET_HOURS * 3600 * 1000);
+  const daysToSunday = (7 - ph.getUTCDay()) % 7;
+  let start = Date.UTC(
+    ph.getUTCFullYear(),
+    ph.getUTCMonth(),
+    ph.getUTCDate() + daysToSunday,
+    WORSHIP.hour,
+    WORSHIP.minute
+  ) - PH_OFFSET_HOURS * 3600 * 1000;
+  if (start < now.getTime()) start += 7 * 24 * 3600 * 1000;
+  return new Date(start);
+}
+
+function formatPH(date: Date) {
+  return new Intl.DateTimeFormat("en-US", {
+    timeZone: "Asia/Manila",
+    weekday: "long",
+    month: "short",
+    day: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+  }).format(date);
+}
 
 export default function EventsPage() {
-  
-  // This is your Event Data. 
-  // You can easily edit this list to change your church events.
-  const events = [
-    {
-      id: 1,
-      month: "DEC",
-      day: "14",
-      title: "Sunday Worship",
-      time: "9:00 AM",
-      location: "Medina, Magallanes, Cavite, Philippines",
-      description: "Why the members of I.D.B.C.J. are entirely referred to as the chosen or elect"
-    },
-    {
-      id: 2,
-      month: "DEC",
-      day: "21",
-      title: "Sunday Worship",
-      time: "9:00 AM",
-      location: "Medina, Magallanes, Cavite",
-      description: "The condition of the world (or worldly people) without Passover yet, and the person who has Passover, according to the Bible."
-    },
-    {
-      id: 3,
-      month: "DEC",
-      day: "28",
-      title: "Sunday Worship",
-      time: "9:00 AM",
-      location: "Medina, Magallanes, Cavite, Philippines",
-      description: "The significant difference between the soul and the spirit according to biblical teachings."
-    },
-    {
-      id: 4,
-      month: "JAN",
-      day: "01",
-      title: "New Year 2026",
-      time: "09:00 AM",
-      location: "Sta. Teresita Sto. Tomas, Batangas, Philippines",
-      description: "Thanks Giving Day!"
-    }
-  ];
+  const start = nextWorship(new Date());
+
+  const monthPH = new Intl.DateTimeFormat("en-US", { timeZone: "Asia/Manila", month: "short" })
+    .format(start)
+    .toUpperCase();
+  const dayPH = new Intl.DateTimeFormat("en-US", { timeZone: "Asia/Manila", day: "numeric" }).format(start);
 
   return (
     <div className="flex min-h-screen flex-col bg-slate-50">
-      
+
       {/* --- HEADER --- */}
       <section className="bg-white py-12 shadow-sm border-b">
         <div className="max-w-6xl mx-auto px-6">
@@ -59,54 +63,56 @@ export default function EventsPage() {
                 </Button>
             </Link>
            </div>
-           
+
            <h1 className="text-4xl font-extrabold text-gray-900 mb-2">Upcoming Events</h1>
            <p className="text-gray-600 text-lg">Mark your calendars and join us in fellowship.</p>
         </div>
       </section>
 
-      {/* --- EVENTS LIST --- */}
+      {/* --- WEEKLY WORSHIP --- */}
       <section className="max-w-4xl mx-auto py-12 px-6 w-full">
-        <div className="flex flex-col gap-6">
-          
-          {events.map((event) => (
-            <div key={event.id} className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 flex flex-col sm:flex-row gap-6 hover:shadow-md transition-shadow">
-              
-              {/* THE DATE BOX (Calendar Look) */}
-              <div className="shrink-0 flex flex-col items-center justify-center bg-emerald-50 text-emerald-700 rounded-lg w-full sm:w-24 h-24 border border-emerald-100">
-                <span className="text-sm font-bold tracking-widest uppercase">{event.month}</span>
-                <span className="text-4xl font-extrabold">{event.day}</span>
+        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 flex flex-col sm:flex-row gap-6">
+
+          {/* DATE BOX (next worship, Philippine date) */}
+          <div className="shrink-0 flex flex-col items-center justify-center bg-emerald-50 text-emerald-700 rounded-lg w-full sm:w-24 h-24 border border-emerald-100">
+            <span className="text-sm font-bold tracking-widest uppercase">{monthPH}</span>
+            <span className="text-4xl font-extrabold">{dayPH}</span>
+          </div>
+
+          {/* DETAILS */}
+          <div className="flex-1">
+            <h3 className="text-2xl font-bold text-gray-900 mb-1">{WORSHIP.title}</h3>
+            <p className="flex items-center gap-1 text-emerald-700 text-sm font-medium mb-3">
+              <Repeat className="w-4 h-4" />
+              Every Sunday
+            </p>
+
+            <div className="space-y-2 text-gray-600 text-sm">
+              <div className="flex items-start gap-2">
+                <Clock className="w-4 h-4 mt-0.5 shrink-0" />
+                <p>{formatPH(start)} (Philippine time)</p>
               </div>
-
-              {/* EVENT DETAILS */}
-              <div className="flex-1">
-                <h3 className="text-2xl font-bold text-gray-900 mb-2">{event.title}</h3>
-                
-                <div className="flex flex-wrap gap-4 text-gray-500 text-sm mb-3">
-                  <div className="flex items-center gap-1">
-                    <Clock className="w-4 h-4" />
-                    {event.time}
-                  </div>
-                  <div className="flex items-center gap-1">
-                    <MapPin className="w-4 h-4" />
-                    {event.location}
-                  </div>
-                </div>
-
-                <p className="text-gray-600 leading-relaxed">
-                  {event.description}
-                </p>
+              <div className="flex items-start gap-2">
+                <MapPin className="w-4 h-4 mt-0.5 shrink-0" />
+                <p>{WORSHIP.location}</p>
               </div>
-
             </div>
-          ))}
+
+            <div className="mt-5">
+              <Link href="https://idbcj13708.online.church/" target="_blank" rel="noopener noreferrer">
+                <Button className="bg-emerald-600 hover:bg-emerald-700 text-white rounded-full">
+                  Join Live Stream
+                </Button>
+              </Link>
+            </div>
+          </div>
 
         </div>
-        
-        {/* Empty State / Call to Action */}
+
+        {/* Call to Action */}
         <div className="mt-12 text-center bg-white p-8 rounded-xl border border-dashed border-gray-300">
             <h3 className="text-lg font-semibold text-gray-900">Don't see what you're looking for?</h3>
-            <p className="text-gray-500 mb-4">Contact our office to ask about specific schedules.</p>
+            <p className="text-gray-500 mb-4">Contact us to ask about specific schedules.</p>
             <Link href="/contact">
                 <Button variant="outline">Contact Us</Button>
             </Link>
