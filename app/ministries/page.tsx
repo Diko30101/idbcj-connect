@@ -27,15 +27,13 @@ export default function MinistriesPage() {
 
       {/* --- LEADERSHIP / PASTOR BIO --- */}
       <section className="max-w-5xl mx-auto py-16 px-6">
-        <h2 className="text-3xl font-bold text-gray-800 mb-8 text-center">Church Leadership</h2>
-        
         <div className="flex flex-col md:flex-row gap-10 items-center bg-white p-8 rounded-2xl shadow-sm border border-gray-100">
           {/* Photo Placeholder */}
           <div className="relative w-48 h-48 md:w-64 md:h-64 shrink-0 overflow-hidden rounded-full border-4 border-slate-100 shadow-md">
             {/* You can replace '/pastor.jpg' with a real image in your public folder later */}
     <Image 
             src="/rod.png" 
-            alt="Minister Rodelio S. Villaverde" 
+            alt="Elder Bro. Rodelio Villaverde, Presiding Minister" 
             fill 
             className="object-cover"
           />
@@ -43,78 +41,97 @@ export default function MinistriesPage() {
 
           {/* Bio Text */}
           <div className="text-center md:text-left">
-            <h3 className="text-2xl font-bold text-gray-900">Minister [Rodelio S. Villaverde]</h3>
-            <p className="text-blue-600 font-medium mb-4">Elder Pastor</p>
-            <p className="text-gray-600 leading-relaxed mb-6">
-              Welcome to IDBCJ. Our goal is to spread the word of God and build a community 
-              founded on faith, truth, and love. We are dedicated to shepherding the flock 
-              and ensuring that every member feels at home.
+            <h3 className="text-2xl font-bold text-gray-900">Elder Bro. Rodelio Villaverde</h3>
+            <p className="text-blue-600 font-medium mb-4">Presiding Minister</p>
+            <p className="text-gray-600 leading-relaxed mb-4">
+              We are a small church of Christians serving the living God and the brethren. If you have 
+              a question or a prayer request, you are welcome to write to us.
+            </p>
+            <p className="text-gray-500 leading-relaxed mb-6 italic">
+              Kami ay maliit na simbahan ng mga Cristiano na naglilingkod sa Dios na buhay at sa mga 
+              kapatiran. Kung may tanong o kahilingang panalangin ka, malaya kang sumulat sa amin.
             </p>
             <Link href="/contact">
               <Button variant="outline">Contact Leadership</Button>
             </Link>
           </div>
         </div>
-      </section>
 
-      {/* --- MINISTRIES GRID --- */}
-      <section className="max-w-6xl mx-auto py-12 px-6">
-        <h2 className="text-3xl font-bold text-gray-800 mb-10 text-center">Get Involved</h2>
-        
-        <div className="grid gap-8 md:grid-cols-3">
-          
-          {/* Card 1: Music */}
-          <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
-            <div className="h-12 w-12 bg-purple-100 text-purple-600 rounded-lg flex items-center justify-center mb-4 text-2xl">
-              🎵
+        {/* --- OTHER MINISTERS --- */}
+        <div className="grid gap-6 md:grid-cols-2 mt-8">
+
+          {/* Bro. Abondio Mangubat */}
+          <div className="flex items-center gap-6 bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
+            <div className="relative w-24 h-24 shrink-0 overflow-hidden rounded-full border-4 border-slate-100 shadow-md">
+              <Image
+                src="/mangubat.jpg"
+                alt="Bro. Abondio Mangubat, Minister"
+                fill
+                sizes="96px"
+                className="object-cover"
+              />
             </div>
-            <h3 className="text-xl font-bold text-gray-900 mb-2">Music Ministry</h3>
-            <p className="text-gray-600 mb-4">
-              Join the choir or worship team to lead the congregation in praise through music and song.
-            </p>
+            <div>
+              <h3 className="text-lg font-bold text-gray-900">Bro. Abondio Mangubat</h3>
+              <p className="text-blue-600 text-sm font-medium">Minister</p>
+              <p className="text-gray-600 text-sm mt-1">Magallanes, Cavite, Philippines</p>
+            </div>
           </div>
 
-          {/* Card 2: Youth */}
-          <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
-            <div className="h-12 w-12 bg-orange-100 text-orange-600 rounded-lg flex items-center justify-center mb-4 text-2xl">
-              🔥
+          {/* Bro. Felicisimo Mangubat */}
+          <div className="flex items-center gap-6 bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
+            <div className="relative w-24 h-24 shrink-0 overflow-hidden rounded-full border-4 border-slate-100 shadow-md">
+              <Image
+                src="/mangubat-felicisimo.jpg"
+                alt="Bro. Felicisimo Mangubat, Minister"
+                fill
+                sizes="96px"
+                className="object-cover"
+              />
             </div>
-            <h3 className="text-xl font-bold text-gray-900 mb-2">Youth Ministry</h3>
-            <p className="text-gray-600 mb-4">
-              Building the next generation of believers through bible study, activities, and fellowship.
-            </p>
+            <div>
+              <h3 className="text-lg font-bold text-gray-900">Bro. Felicisimo Mangubat</h3>
+              <p className="text-blue-600 text-sm font-medium">Minister</p>
+              <p className="text-gray-600 text-sm mt-1">Sta. Teresita, Sto. Tomas, Batangas, Philippines</p>
+            </div>
           </div>
 
-          {/* Card 3: Ushers/Welcoming */}
-          <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
-            <div className="h-12 w-12 bg-blue-100 text-blue-600 rounded-lg flex items-center justify-center mb-4 text-2xl">
-              🤝
+          {/* Bro. Jimmy Villaverde */}
+          <div className="flex items-center gap-6 bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
+            <div className="relative w-24 h-24 shrink-0 overflow-hidden rounded-full border-4 border-slate-100 shadow-md">
+              <Image
+                src="/villaverde-jimmy.jpg"
+                alt="Bro. Jimmy Villaverde, Minister"
+                fill
+                sizes="96px"
+                className="object-cover"
+              />
             </div>
-            <h3 className="text-xl font-bold text-gray-900 mb-2">Ushers & Greeters</h3>
-            <p className="text-gray-600 mb-4">
-              Be the first smile people see. Help welcome guests and maintain order during services.
-            </p>
+            <div>
+              <h3 className="text-lg font-bold text-gray-900">Bro. Jimmy Villaverde</h3>
+              <p className="text-blue-600 text-sm font-medium">Minister</p>
+              <p className="text-gray-600 text-sm mt-1">Lipa City, Batangas, Philippines</p>
+            </div>
           </div>
 
-           {/* Card 4: Sunday School */}
-           <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
-            <div className="h-12 w-12 bg-green-100 text-green-600 rounded-lg flex items-center justify-center mb-4 text-2xl">
-              📖
+          {/* Bro. Ariel Mencias */}
+          <div className="flex items-center gap-6 bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
+            <div className="relative w-24 h-24 shrink-0 overflow-hidden rounded-full border-4 border-slate-100 shadow-md">
+              <Image
+                src="/mencias-ariel.jpg"
+                alt="Bro. Ariel Mencias, Student Minister"
+                fill
+                sizes="96px"
+                className="object-cover"
+              />
             </div>
-            <h3 className="text-xl font-bold text-gray-900 mb-2">Sunday School</h3>
-            <p className="text-gray-600 mb-4">
-              Teaching children the foundations of the bible in a fun and engaging environment.
-            </p>
+            <div>
+              <h3 className="text-lg font-bold text-gray-900">Bro. Ariel Mencias</h3>
+              <p className="text-blue-600 text-sm font-medium">Student Minister</p>
+              <p className="text-gray-600 text-sm mt-1">Lipa City, Philippines</p>
+            </div>
           </div>
 
-        </div>
-
-        {/* Call to Action */}
-        <div className="mt-16 text-center">
-          <p className="text-lg text-gray-600 mb-4">Want to serve in one of these areas?</p>
-          <Link href="/contact">
-             <Button size="lg">Join a Ministry</Button>
-          </Link>
         </div>
       </section>
 

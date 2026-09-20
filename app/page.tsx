@@ -100,12 +100,12 @@ export default function Home() {
             {/* Card 2 */}
             <div className="group rounded-2xl overflow-hidden shadow-lg border border-gray-100 hover:shadow-2xl transition duration-300">
               <div className="relative h-56 w-full">
-                <Image src="/founder.jpg" alt="History" fill className="object-contain bg-gray-200" />
+                <Image src="/logo.png" alt="IDBCJ logo" fill className="object-contain bg-emerald-50 p-4" />
               </div>
               <div className="p-6 bg-white">
-                <h3 className="text-xl font-bold text-emerald-900 mb-2">Our History</h3>
-                <p className="text-gray-600 mb-4">Learn about our founder Avelino C. Santiago and our 1954 legacy.</p>
-                <Link href="/history" className="text-emerald-600 font-bold hover:underline">Read More →</Link>
+                <h3 className="text-xl font-bold text-emerald-900 mb-2">Our Ministries</h3>
+                <p className="text-gray-600 mb-4">Discover ways to serve and take part in the life of the church.</p>
+                <Link href="/ministries" className="text-emerald-600 font-bold hover:underline">See Ministries →</Link>
               </div>
             </div>
             {/* Card 3 */}
