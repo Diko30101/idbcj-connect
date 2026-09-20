@@ -92,7 +92,7 @@ export default function MinistriesPage() {
             <div>
               <h3 className="text-lg font-bold text-gray-900">Bro. Felicisimo Mangubat</h3>
               <p className="text-blue-600 text-sm font-medium">Minister</p>
-              <p className="text-gray-600 text-sm mt-1">Sta. Teresita, Sto. Tomas, Batangas, Philippines</p>
+              <p className="text-gray-600 text-sm mt-1">Sto. Tomas, Batangas, Philippines</p>
             </div>
           </div>
 
@@ -128,7 +128,7 @@ export default function MinistriesPage() {
             <div>
               <h3 className="text-lg font-bold text-gray-900">Bro. Ariel Mencias</h3>
               <p className="text-blue-600 text-sm font-medium">Student Minister</p>
-              <p className="text-gray-600 text-sm mt-1">Lipa City, Philippines</p>
+              <p className="text-gray-600 text-sm mt-1">Lipa City, Batangas, Philippines</p>
             </div>
           </div>
 
