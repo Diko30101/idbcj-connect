@@ -55,8 +55,7 @@ export default function AboutPage() {
             </p>
             <p>
               Although the church began in 1954, it was officially registered with the Securities and Exchange Commission (SEC) in 1958 under 
-              <strong> Registration No. 13708</strong>. We stand by this registration as the true, 
-              original, and historical legal identity of the church.
+              <strong> Registration No. 13708</strong>.
             </p>
           </div>
         </div>
@@ -66,9 +65,8 @@ export default function AboutPage() {
           <h2 className="text-2xl font-bold text-gray-900">Our Stand on Leadership</h2>
           <p className="text-gray-700 leading-relaxed text-justify">
             After the passing of Mr. Avelino C. Santiago in 1992, distinct groups emerged. 
-            In 2008, a new entity was registered with the SEC under the name 
-            <em>"THE PRESIDING MINISTER OF IGLESIA NG DIOS NA BUHAY KAY CRISTO JESUS, INC."</em> (SEC CN200800458), 
-            led by descendants of the founder.
+            In 2008, a new entity was registered with the SEC under the name{" "}
+            <em>"THE PRESIDING MINISTER OF IGLESIA NG DIOS NA BUHAY KAY CRISTO JESUS, INC."</em> (SEC CN200800458).
           </p>
           
           <div className="bg-blue-50 border-l-4 border-blue-600 p-6 my-6">
@@ -77,9 +75,6 @@ export default function AboutPage() {
               "We, represented by idbcj.org and its affiliated locales (including Canada), 
               are the members who remained faithful to the doctrine and leadership structure 
               established by Mr. Avelino C. Santiago, and to the original registration (SEC Reg. No. 13708, 1958)."
-            </p>
-            <p className="mt-4 text-blue-900 font-semibold text-sm">
-              We did not join the new 2008 registration or the groups that departed from the original teachings.
             </p>
           </div>
 
