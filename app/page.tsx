@@ -48,37 +48,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* 3. FOUNDER SECTION */}
-      <section className="py-20 px-6 bg-emerald-50">
-        <div className="max-w-5xl mx-auto flex flex-col md:flex-row items-center gap-12">
-          <div className="w-full md:w-1/3 flex justify-center">
-             <div className="relative w-56 h-72 md:w-64 md:h-80 shadow-2xl rounded-lg overflow-hidden border-4 border-white rotate-2 hover:rotate-0 transition duration-500">
-                <Image src="/founder.jpg" alt="Mr. Avelino C. Santiago" fill className="object-cover" />
-                <div className="absolute bottom-0 inset-x-0 bg-black/60 text-white text-center py-2 text-xs backdrop-blur-sm">
-                  Mr. Avelino C. Santiago
-                </div>
-             </div>
-          </div>
-          <div className="w-full md:w-2/3 space-y-6 text-center md:text-left">
-            <h2 className="text-3xl font-bold text-emerald-900">Our Foundation</h2>
-            <div className="h-1 w-20 bg-emerald-500 mx-auto md:mx-0 rounded-full"></div>
-            <p className="text-lg text-gray-700 leading-relaxed">
-              The <strong>Iglesia ng Dios na Buhay kay Cristo Jesus (IDBCJ)</strong> was founded in 1954 
-              by <strong>Mr. Avelino C. Santiago</strong> and registered with the SEC in 1958 
-              (<strong>SEC Reg. No. 13708</strong>). This website serves our members and affiliated locales.
-            </p>
-            <div className="pt-2">
-              <Link href="/history">
-                 <Button variant="outline" className="border-emerald-600 text-emerald-700 hover:bg-emerald-100 rounded-full">
-                   Read Our History
-                 </Button>
-              </Link>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* 4. CARDS SECTION */}
+      {/* 3. CARDS SECTION */}
       <section className="py-20 px-6 bg-white">
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-12">
@@ -118,6 +88,36 @@ export default function Home() {
                 <p className="text-gray-600 mb-4">Join us for worship, bible studies, and community gatherings.</p>
                 <Link href="/events" className="text-emerald-600 font-bold hover:underline">See Calendar →</Link>
               </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* 4. FOUNDER SECTION */}
+      <section className="py-20 px-6 bg-emerald-50">
+        <div className="max-w-5xl mx-auto flex flex-col md:flex-row items-center gap-12">
+          <div className="w-full md:w-1/3 flex justify-center">
+             <div className="relative w-56 h-72 md:w-64 md:h-80 shadow-2xl rounded-lg overflow-hidden border-4 border-white rotate-2 hover:rotate-0 transition duration-500">
+                <Image src="/founder.jpg" alt="Mr. Avelino C. Santiago" fill className="object-cover" />
+                <div className="absolute bottom-0 inset-x-0 bg-black/60 text-white text-center py-2 text-xs backdrop-blur-sm">
+                  Mr. Avelino C. Santiago
+                </div>
+             </div>
+          </div>
+          <div className="w-full md:w-2/3 space-y-6 text-center md:text-left">
+            <h2 className="text-3xl font-bold text-emerald-900">Our Foundation</h2>
+            <div className="h-1 w-20 bg-emerald-500 mx-auto md:mx-0 rounded-full"></div>
+            <p className="text-lg text-gray-700 leading-relaxed">
+              The <strong>Iglesia ng Dios na Buhay kay Cristo Jesus (IDBCJ)</strong> was founded in 1954 
+              by <strong>Mr. Avelino C. Santiago</strong> and registered with the SEC in 1958 
+              (<strong>SEC Reg. No. 13708</strong>). This website serves our members and affiliated locales.
+            </p>
+            <div className="pt-2">
+              <Link href="/history">
+                 <Button variant="outline" className="border-emerald-600 text-emerald-700 hover:bg-emerald-100 rounded-full">
+                   Read Our History
+                 </Button>
+              </Link>
             </div>
           </div>
         </div>
