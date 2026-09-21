@@ -2,6 +2,16 @@ import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 import { hasEnvVars } from "../utils";
 
+// Ang home page lang ang bukas sa lahat. Ang ibang pahina (About Us, Ministries,
+// Sermons, Our History, Events, Contact Us, portal) ay kailangan ng login.
+// Bukas din ang mga pahina ng login at pag-reset ng password, para makapasok ang member.
+const PUBLIC_PATHS = ["/login", "/auth", "/forgot-password", "/reset-password"];
+
+function isPublicPath(pathname: string) {
+  if (pathname === "/") return true;
+  return PUBLIC_PATHS.some((p) => pathname === p || pathname.startsWith(p + "/"));
+}
+
 export async function updateSession(request: NextRequest) {
   let supabaseResponse = NextResponse.next({
     request,
@@ -48,15 +58,14 @@ export async function updateSession(request: NextRequest) {
   const { data } = await supabase.auth.getClaims();
   const user = data?.claims;
 
-  if (
-    request.nextUrl.pathname !== "/" &&
-    !user &&
-    !request.nextUrl.pathname.startsWith("/login") &&
-    !request.nextUrl.pathname.startsWith("/auth")
-  ) {
+  if (!user && !isPublicPath(request.nextUrl.pathname)) {
     // no user, potentially respond by redirecting the user to the login page
+    // Tandaan kung saang pahina siya papunta para doon siya ibalik pagkatapos mag-login
+    const wanted = request.nextUrl.pathname + request.nextUrl.search;
     const url = request.nextUrl.clone();
     url.pathname = "/auth/login";
+    url.search = "";
+    url.searchParams.set("next", wanted);
     return NextResponse.redirect(url);
   }
 

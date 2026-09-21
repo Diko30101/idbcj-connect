@@ -5,15 +5,6 @@ export default function AboutPage() {
   return (
     <div className="min-h-screen bg-white">
       
-      {/* --- BACK BUTTON (Top Left) --- */}
-      <div className="max-w-6xl mx-auto px-6 pt-8">
-        <Link href="/">
-          <Button variant="ghost" className="text-gray-600 hover:text-gray-900 pl-0 hover:bg-transparent">
-            ← Back to Home
-          </Button>
-        </Link>
-      </div>
-
       {/* --- PAGE TITLE --- */}
       <section className="text-center py-10 px-4">
         <h1 className="text-4xl font-extrabold text-gray-900 mb-4">About Us</h1>

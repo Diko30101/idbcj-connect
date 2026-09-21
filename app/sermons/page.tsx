@@ -30,11 +30,6 @@ export default function SermonsPage() {
         </div>
 
         <div className="relative z-10 max-w-7xl mx-auto text-white">
-          <Link href="/">
-            <Button variant="ghost" className="text-emerald-100 hover:text-white hover:bg-white/10 pl-0 mb-6">
-              ← Back to Home
-            </Button>
-          </Link>
           <h1 className="text-4xl md:text-5xl font-extrabold">Sermon Library</h1>
           <p className="mt-3 text-lg text-emerald-50 max-w-2xl">
             Watch, study, and review. Each message has a summary, Bible verses, and review questions.

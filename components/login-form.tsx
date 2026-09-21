@@ -41,8 +41,14 @@ export function LoginForm({
       });
       if (error) throw error;
       
-      // Redirect to member portal on success
-      router.push("/portal"); 
+      // Ibalik sa pahinang pinuntahan bago siya pinag-login; kung wala, sa member portal.
+      // Puwede lang ang loob ng site (nagsisimula sa "/"), para hindi magamit sa panloloko.
+      const raw = new URLSearchParams(window.location.search).get("next");
+      const dest =
+        raw && raw.startsWith("/") && !raw.startsWith("//") && !raw.startsWith("/\\") && !raw.startsWith("/auth")
+          ? raw
+          : "/portal";
+      router.push(dest);
       router.refresh();
     } catch (error: unknown) {
       setError(error instanceof Error ? error.message : "An error occurred");

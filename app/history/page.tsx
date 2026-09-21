@@ -6,15 +6,6 @@ export default function AboutPage() {
   return (
     <div className="flex min-h-screen flex-col bg-slate-50">
 
-      {/* --- BACK BUTTON (Top Left) --- */}
-      <div className="w-full max-w-6xl mx-auto px-6 pt-8">
-        <Link href="/">
-          <Button variant="ghost" className="text-gray-600 hover:text-gray-900 pl-0 hover:bg-transparent">
-            ← Back to Home
-          </Button>
-        </Link>
-      </div>
-
       {/* --- HERO HEADER --- */}
       <section className="bg-white border-b py-16 text-center px-4">
         <h1 className="text-4xl md:text-5xl font-extrabold text-gray-900 mb-4">

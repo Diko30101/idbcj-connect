@@ -40,15 +40,7 @@ export default function ContactPage() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 py-12 px-4 flex items-center justify-center">
-    {/* --- BACK BUTTON --- */}
-      <div className="absolute top-6 left-6">
-        <Link href="/">
-          <Button variant="ghost" className="text-gray-600 hover:text-gray-900">
-            ← Back to Home
-          </Button>
-        </Link>
-      </div>
+    <div className="min-h-[calc(100vh-5rem)] bg-slate-50 py-12 px-4 flex items-center justify-center">
       <Card className="w-full max-w-lg shadow-lg">
         <CardHeader className="text-center">
           <CardTitle className="text-3xl font-bold text-gray-800">Contact Leadership</CardTitle>

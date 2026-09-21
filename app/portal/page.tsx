@@ -51,7 +51,7 @@ export default async function PortalHome({
     <>
       <PageHeader
         title={`Welcome, ${profile.full_name || "Member"}`}
-        subtitle="Maligayang pagdating sa Member Portal."
+        subtitle="Maligayang pagdating sa IDBCJ Connect."
         action={
           <div className="flex gap-2">
             <RoleBadge role={profile.role} />

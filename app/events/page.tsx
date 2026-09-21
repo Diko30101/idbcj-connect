@@ -55,15 +55,6 @@ export default function EventsPage() {
       {/* --- HEADER --- */}
       <section className="bg-white py-12 shadow-sm border-b">
         <div className="max-w-6xl mx-auto px-6">
-           {/* Back Button */}
-           <div className="mb-6">
-            <Link href="/">
-                <Button variant="ghost" className="text-gray-500 hover:text-gray-900 pl-0">
-                ← Back to Home
-                </Button>
-            </Link>
-           </div>
-
            <h1 className="text-4xl font-extrabold text-gray-900 mb-2">Upcoming Events</h1>
            <p className="text-gray-600 text-lg">Mark your calendars and join us in fellowship.</p>
         </div>

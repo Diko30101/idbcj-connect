@@ -2,15 +2,11 @@ import Link from "next/link";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { ContactForm } from "@/components/contact-form";
-import { Navbar } from "@/components/navbar"; // <--- Import your new component
 
 export default function Home() {
   return (
     <div className="flex min-h-screen flex-col bg-white">
       
-      {/* 1. USE THE NEW NAVBAR COMPONENT */}
-      <Navbar />
-
       {/* 2. HERO SECTION */}
       <section className="relative h-[550px] flex items-center justify-center text-center px-4 overflow-hidden">
         <Image 
@@ -34,11 +30,6 @@ export default function Home() {
           </p>
           
           <div className="flex gap-4 justify-center pt-4">
-            <Link href="/about">
-              <Button className="h-12 px-8 text-lg bg-emerald-500 hover:bg-emerald-600 text-white border-none shadow-lg rounded-full">
-                About Us
-              </Button>
-            </Link>
             <Link href="https://idbcj13708.online.church/">
               <Button variant="outline" className="h-12 px-8 text-lg text-white border-white bg-transparent hover:bg-white hover:text-emerald-900 rounded-full">
                 Join Live Stream

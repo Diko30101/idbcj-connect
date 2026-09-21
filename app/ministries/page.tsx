@@ -6,15 +6,6 @@ export default function MinistriesPage() {
   return (
     <div className="flex min-h-screen flex-col bg-slate-50">
 
-       {/* --- BACK BUTTON --- */}
-    <div className="w-full max-w-6xl mx-auto px-6 pt-6">
-      <Link href="/">
-        <Button variant="ghost" className="text-gray-600 hover:text-gray-900 pl-0 hover:bg-transparent">
-          ← Back to Home
-        </Button>
-      </Link>
-    </div>      
-
       {/* --- PAGE HEADER --- */}
       <section className="bg-white py-16 text-center shadow-sm border-b">
         <h1 className="text-4xl font-extrabold text-gray-900 mb-4">Our Ministries</h1>
