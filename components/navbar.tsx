@@ -18,8 +18,8 @@ const MENU: Entry[] = [
   {
     label: "About",
     children: [
-      { href: "/about", label: "About Us", gated: true },
-      { href: "/history", label: "Our History", gated: true },
+      { href: "/about", label: "About Us" },
+      { href: "/history", label: "Our History" },
       { href: "/ministries", label: "Leadership", gated: true },
     ],
   },
