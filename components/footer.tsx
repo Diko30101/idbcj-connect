@@ -3,7 +3,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
-import { WORSHIP } from "@/lib/worship";
+import { WORSHIP, WORSHIP_ALBERTA, WORSHIP_BATANGAS } from "@/lib/worship";
 
 // Ang portal, ang privacy notice, at ang pagpalit ng password ay may sarili nang layout
 const HIDDEN_ON = ["/portal", "/consent", "/change-password"];
@@ -48,8 +48,9 @@ export function Footer() {
         <div>
           <h2 className={headCls}>Worship With Us</h2>
           <ul className="space-y-2.5">
-            <li>Every {WORSHIP.day}, {WORSHIP.displayTime} (Philippine time)</li>
-            <li>{WORSHIP.location}</li>
+            <li>Medina, Magallanes, Cavite: Every {WORSHIP.day}, {WORSHIP.displayTime}</li>
+            <li>Sto. Tomas, Batangas: Every {WORSHIP_BATANGAS.day}, {WORSHIP_BATANGAS.displayTimes.join(" and ")}</li>
+            <li>Fort McMurray, Alberta: Every {WORSHIP_ALBERTA.day}, {WORSHIP_ALBERTA.displayTime}</li>
             <li>
               <a href={WORSHIP.streamUrl} target="_blank" rel="noopener noreferrer" className={linkCls}>
                 Join Live Stream

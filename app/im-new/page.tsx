@@ -1,34 +1,29 @@
 import Link from "next/link";
 import Image from "next/image";
 import { CalendarDays, ChevronDown, MapPin, MonitorPlay } from "lucide-react";
-import { WORSHIP, worshipTimes } from "@/lib/worship";
+import { WORSHIP, WORSHIP_ALBERTA, WORSHIP_BATANGAS } from "@/lib/worship";
 
 export const metadata = {
   title: "I’m New | IDBCJ",
   description: "Plan your visit to IDBCJ: worship schedule, location, and how to join us online.",
 };
 
-// Ina-update kada oras para tama ang oras sa Alberta kapag nagpalit ng summer/winter time.
-export const revalidate = 3600;
-
 const pill =
   "font-display inline-flex items-center justify-center rounded-full px-6 py-3 text-sm font-semibold transition";
 
 export default function ImNewPage() {
-  const t = worshipTimes();
-
   const faqs = [
     {
       q: "When is the worship service?",
-      a: `Every ${WORSHIP.day} at ${WORSHIP.displayTime} Philippine time. For those in Alberta, Canada, that is ${t.alberta}.`,
+      a: `In Medina, Magallanes, Cavite, we worship every ${WORSHIP.day} at ${WORSHIP.displayTime}. In Sta. Teresita, Sto. Tomas, Batangas, we worship every ${WORSHIP_BATANGAS.day} at ${WORSHIP_BATANGAS.displayTimes.join(" and ")}. In Fort McMurray, Alberta, we worship every ${WORSHIP_ALBERTA.day} at ${WORSHIP_ALBERTA.displayTime}. Times are local to each place.`,
     },
     {
       q: "Where is the church?",
-      a: `${WORSHIP.location}. If you need directions, send us a message and we will be glad to help.`,
+      a: `${WORSHIP.location}; ${WORSHIP_BATANGAS.location}; and ${WORSHIP_ALBERTA.location}. If you need directions, send us a message and we will be glad to help.`,
     },
     {
       q: "Can I watch the service online?",
-      a: "Yes. Open our live stream link during worship time and you can worship with us from anywhere.",
+      a: "Yes. The Sunday worship in Medina is livestreamed at the same time on the IDBCJ Facebook group, the IDBCJ YouTube channel, and our online church website.",
     },
     {
       q: "How do I ask a question before I visit?",
@@ -81,13 +76,22 @@ export default function ImNewPage() {
             <CalendarDays className="h-7 w-7 text-emerald-700" aria-hidden />
             <h3 className="font-display mt-4 text-lg font-bold text-emerald-800">When we gather</h3>
             <p className="mt-3 text-slate-700">
-              <span className="font-display font-semibold">
-                {WORSHIP.day}, {WORSHIP.displayTime}
+              <span className="font-display font-semibold">Medina, Magallanes, Cavite</span>
+              <span className="block">
+                Every {WORSHIP.day}, {WORSHIP.displayTime}
               </span>
-              <span className="block text-sm text-slate-500">Philippine time</span>
             </p>
-            <p className="mt-3 border-t border-emerald-600/10 pt-3 text-sm text-slate-600">
-              Alberta, Canada: <span className="font-semibold">{t.alberta}</span>
+            <p className="mt-3 border-t border-emerald-600/10 pt-3 text-slate-700">
+              <span className="font-display font-semibold">Sta. Teresita, Sto. Tomas, Batangas</span>
+              <span className="block">
+                Every {WORSHIP_BATANGAS.day}, {WORSHIP_BATANGAS.displayTimes.join(" and ")}
+              </span>
+            </p>
+            <p className="mt-3 border-t border-emerald-600/10 pt-3 text-slate-700">
+              <span className="font-display font-semibold">Fort McMurray, Alberta</span>
+              <span className="block">
+                Every {WORSHIP_ALBERTA.day}, {WORSHIP_ALBERTA.displayTime}
+              </span>
             </p>
           </div>
 
@@ -95,6 +99,8 @@ export default function ImNewPage() {
             <MapPin className="h-7 w-7 text-emerald-700" aria-hidden />
             <h3 className="font-display mt-4 text-lg font-bold text-emerald-800">Where to find us</h3>
             <p className="mt-3 text-slate-700">{WORSHIP.location}</p>
+            <p className="mt-1 text-slate-700">{WORSHIP_BATANGAS.location}</p>
+            <p className="mt-1 text-slate-700">{WORSHIP_ALBERTA.location}</p>
             <Link href="/contact" className="font-display mt-3 inline-block text-sm font-semibold text-emerald-700 hover:underline">
               Ask for directions &rarr;
             </Link>
@@ -103,7 +109,9 @@ export default function ImNewPage() {
           <div className="rounded-2xl border border-emerald-900/10 bg-white p-7 shadow-sm">
             <MonitorPlay className="h-7 w-7 text-emerald-700" aria-hidden />
             <h3 className="font-display mt-4 text-lg font-bold text-emerald-800">Can&rsquo;t make it in person?</h3>
-            <p className="mt-3 text-slate-700">Join our live stream during worship time.</p>
+            <p className="mt-3 text-slate-700">
+              Join the Medina worship online. It is livestreamed on the IDBCJ Facebook group, the IDBCJ YouTube channel, and our online church website.
+            </p>
             <a
               href={WORSHIP.streamUrl}
               target="_blank"

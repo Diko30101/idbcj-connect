@@ -2,17 +2,12 @@ import Link from "next/link";
 import Image from "next/image";
 import { CalendarDays, MapPin, MonitorPlay } from "lucide-react";
 import { ContactForm } from "@/components/contact-form";
-import { WORSHIP, worshipTimes } from "@/lib/worship";
-
-// Ina-update kada oras para tama ang oras sa Alberta kapag nagpalit ng summer/winter time.
-export const revalidate = 3600;
+import { WORSHIP, WORSHIP_ALBERTA, WORSHIP_BATANGAS } from "@/lib/worship";
 
 const pill =
   "font-display inline-flex items-center justify-center rounded-full px-6 py-3 text-sm font-semibold transition";
 
 export default function Home() {
-  const t = worshipTimes();
-
   return (
     <div className="flex min-h-screen flex-col bg-white font-serif text-slate-800">
       {/* 1. HERO */}
@@ -59,17 +54,23 @@ export default function Home() {
               <CalendarDays className="h-7 w-7 text-emerald-700" aria-hidden />
               <h3 className="font-display mt-4 text-lg font-bold text-emerald-800">When we gather</h3>
               <p className="mt-2 text-slate-700">
-                Every {WORSHIP.day}, {WORSHIP.displayTime}
-                <span className="block text-sm text-slate-500">Philippine time</span>
+                <span className="font-display font-semibold">Medina, Magallanes, Cavite:</span> Every {WORSHIP.day}, {WORSHIP.displayTime}
               </p>
-              <p className="mt-3 text-sm text-slate-600">
-                Alberta, Canada: {t.alberta}
+              <p className="mt-1 text-slate-700">
+                <span className="font-display font-semibold">Sta. Teresita, Sto. Tomas, Batangas:</span> Every {WORSHIP_BATANGAS.day},{" "}
+                {WORSHIP_BATANGAS.displayTimes.join(" and ")}
+              </p>
+              <p className="mt-1 text-slate-700">
+                <span className="font-display font-semibold">Fort McMurray, Alberta:</span> Every {WORSHIP_ALBERTA.day},{" "}
+                {WORSHIP_ALBERTA.displayTime}
               </p>
             </div>
             <div className="rounded-2xl border border-emerald-900/10 bg-[#F6F4EE] p-7">
               <MapPin className="h-7 w-7 text-emerald-700" aria-hidden />
               <h3 className="font-display mt-4 text-lg font-bold text-emerald-800">Where to find us</h3>
               <p className="mt-2 text-slate-700">{WORSHIP.location}</p>
+              <p className="mt-1 text-slate-700">{WORSHIP_BATANGAS.location}</p>
+              <p className="mt-1 text-slate-700">{WORSHIP_ALBERTA.location}</p>
               <Link href="/contact" className="font-display mt-3 inline-block text-sm font-semibold text-emerald-700 hover:underline">
                 Ask for directions &rarr;
               </Link>
@@ -77,7 +78,9 @@ export default function Home() {
             <div className="rounded-2xl border border-emerald-900/10 bg-[#F6F4EE] p-7">
               <MonitorPlay className="h-7 w-7 text-emerald-700" aria-hidden />
               <h3 className="font-display mt-4 text-lg font-bold text-emerald-800">Can&rsquo;t come in person?</h3>
-              <p className="mt-2 text-slate-700">Worship with us online through our live stream.</p>
+              <p className="mt-2 text-slate-700">
+                The Sunday worship in Medina is livestreamed on the IDBCJ Facebook group, the IDBCJ YouTube channel, and our online church website.
+              </p>
               <a
                 href={WORSHIP.streamUrl}
                 target="_blank"
