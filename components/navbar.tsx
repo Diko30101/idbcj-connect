@@ -11,7 +11,7 @@ import { createClient } from "@/lib/supabase/client";
 const LINKS = [
   { href: "/", label: "Home" },
   { href: "/about", label: "About Us" },
-  { href: "/ministries", label: "Ministries" },
+  { href: "/ministries", label: "Leadership" },
   { href: "/sermons", label: "Sermons" },
   { href: "/history", label: "Our History" },
   { href: "/events", label: "Events" },

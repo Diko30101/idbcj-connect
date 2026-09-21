@@ -35,15 +35,58 @@ export default function MinistriesPage() {
             <h3 className="text-2xl font-bold text-gray-900">Elder Bro. Rodelio Villaverde</h3>
             <p className="text-blue-600 font-medium">Presiding Minister</p>
             <p className="text-gray-600 text-sm mt-1 mb-4">Fort McMurray, Alberta, Canada</p>
-            <p className="text-gray-600 leading-relaxed mb-4">
-              We are a small church of Christians serving the living God and the brethren. If you have 
-              a question or a request we can help with, within our small ability, you are welcome to write to us.
-            </p>
-            <p className="text-gray-500 leading-relaxed italic">
-              Kami ay maliit na simbahan ng mga Cristiano na naglilingkod sa Dios na buhay at sa mga 
-              kapatiran. Kung may tanong o kahilingang maipaglilingkod sa abot ng aming maliit na 
-              kakayahan, malaya kang sumulat sa amin.
-            </p>
+            <h4 className="text-lg font-semibold text-gray-900 mb-3">Isang Munting Mensahe sa mga Kapatiran</h4>
+            <div className="space-y-3 leading-relaxed text-gray-600">
+              <p>
+                Mga minamahal na kapatiran, sa tulong at awa ng Panginoong Diyos, patuloy nating
+                pinagsisikapang gawing mas maayos at mas malinaw ang ating paglilingkod at
+                pangangasiwa, para higit itong makatulong sa inyo.
+              </p>
+              <p>
+                Gumagamit na rin tayo ng makabagong teknolohiya sa pakikipag-usap, pagtatala, at
+                pagpaplano ng mga gawain sa Iglesia. Kasangkapan lang ito, at hindi nito napapalitan
+                ang ating pananampalataya, pananalangin, at pagsunod sa mga aral ng Panginoon.
+                Gagamitin natin ito nang maingat at sa tamang layunin.
+              </p>
+              <p>
+                Ang mga kaayusang ito sa pamamahala ay para makapaglingkod tayo nang mas mabuti sa
+                Panginoong Diyos at sa mga kapatiran, mapagaan ang ilang gawain, at mapanatili ang
+                pagkakaisa at maayos na koordinasyon.
+              </p>
+              <p>
+                Ang tiwala natin ay nasa Panginoong Diyos at hindi sa teknolohiya. Anuman ang gawin
+                natin, hilingin nawa natin lagi ang Kaniyang patnubay, karunungan, at pagpapala.
+              </p>
+              <p>Sama-sama nating ipagpatuloy ang tapat at maayos na paglilingkod sa Kaniya at sa isa&apos;t isa.</p>
+            </div>
+
+            <details className="mt-4 text-left">
+              <summary className="cursor-pointer text-sm font-medium text-emerald-700 hover:text-emerald-900">
+                Read in English
+              </summary>
+              <div className="mt-3 space-y-3 text-sm italic leading-relaxed text-gray-500">
+                <p>
+                  Beloved brethren, by the help and mercy of the Lord God, we keep working to make our
+                  service and administration clearer and better organized, so that it helps you more.
+                </p>
+                <p>
+                  We now also use modern technology to communicate, keep records, and plan the work of
+                  the Church. It is only a tool. It does not replace our faith, our prayer, or our
+                  obedience to the teachings of the Lord, and we will use it carefully and for the
+                  right purpose.
+                </p>
+                <p>
+                  These arrangements in management are meant to help us serve the Lord God and the
+                  brethren better, to lighten some of the work, and to keep us united and well
+                  coordinated.
+                </p>
+                <p>
+                  Our trust is in the Lord God and not in technology. Whatever we do, may we always ask
+                  for His guidance, wisdom, and blessing.
+                </p>
+                <p>Together, let us continue our faithful and orderly service to Him and to one another.</p>
+              </div>
+            </details>
           </div>
         </div>
 
