@@ -42,7 +42,8 @@ export default function MinistriesPage() {
           {/* Bio Text */}
           <div className="text-center md:text-left">
             <h3 className="text-2xl font-bold text-gray-900">Elder Bro. Rodelio Villaverde</h3>
-            <p className="text-blue-600 font-medium mb-4">Presiding Minister</p>
+            <p className="text-blue-600 font-medium">Presiding Minister</p>
+            <p className="text-gray-600 text-sm mt-1 mb-4">Fort McMurray, Alberta, Canada</p>
             <p className="text-gray-600 leading-relaxed mb-4">
               We are a small church of Christians serving the living God and the brethren. If you have 
               a question or a request we can help with, within our small ability, you are welcome to write to us.
