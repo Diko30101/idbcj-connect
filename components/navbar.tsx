@@ -1,34 +1,60 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
-import { Button } from "@/components/ui/button";
-import { Menu, X } from "lucide-react"; // Icons for the menu
+import { ChevronDown, ExternalLink, Lock, Menu, X } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { isInternalEmail } from "@/lib/username";
+import { WORSHIP } from "@/lib/worship";
 
-const LINKS = [
-  { href: "/", label: "Home" },
-  { href: "/about", label: "About Us" },
-  { href: "/ministries", label: "Leadership" },
-  { href: "/sermons", label: "Sermons" },
-  { href: "/history", label: "Our History" },
-  { href: "/events", label: "Events" },
-  { href: "/contact", label: "Contact Us" },
+type Item = { href: string; label: string; gated?: boolean; external?: boolean };
+type Entry = { label: string; href?: string; gated?: boolean; children?: Item[] };
+
+// Ang "gated" ay mga pahinang kailangan pa ng login (ayon sa proxy). May maliit na kandado ito para hindi magulat ang bisita.
+const MENU: Entry[] = [
+  { label: "I’m New", href: "/im-new" },
+  {
+    label: "About",
+    children: [
+      { href: "/about", label: "About Us", gated: true },
+      { href: "/history", label: "Our History", gated: true },
+      { href: "/ministries", label: "Leadership", gated: true },
+    ],
+  },
+  { label: "Events", href: "/events", gated: true },
+  {
+    label: "Watch",
+    children: [
+      { href: WORSHIP.streamUrl, label: "Live Stream", external: true },
+      { href: "/sermons", label: "Sermon Library", gated: true },
+    ],
+  },
+  {
+    label: "Connect",
+    children: [
+      { href: "/contact", label: "Contact Us" },
+      { href: "/portal/prayer", label: "Prayer Request", gated: true },
+    ],
+  },
 ];
 
 // Ang portal at ang privacy notice ay may sarili nang menu bar
 const HIDDEN_ON = ["/portal", "/consent", "/change-password"];
 
+const linkBase =
+  "font-display whitespace-nowrap text-[15px] font-semibold transition-colors";
+
 export function Navbar() {
-  const [isOpen, setIsOpen] = useState(false);
+  const [mobileOpen, setMobileOpen] = useState(false);
+  const [openMenu, setOpenMenu] = useState<string | null>(null);
   const [loggedIn, setLoggedIn] = useState(false);
   const [name, setName] = useState("");
   const pathname = usePathname();
+  const navRef = useRef<HTMLElement>(null);
 
-  // Kung naka-login na, ang pangalan niya at "Logout" ang ipapakita imbes na "Login"
+  // Kung naka-login na, ang pangalan niya at "Logout" ang ipapakita
   useEffect(() => {
     const supabase = createClient();
 
@@ -51,125 +77,232 @@ export function Navbar() {
     return () => sub.subscription.unsubscribe();
   }, []);
 
-  // Isara ang mobile menu kapag lumipat ng pahina
+  // Isara ang mga menu kapag lumipat ng pahina
   useEffect(() => {
-    setIsOpen(false);
+    setMobileOpen(false);
+    setOpenMenu(null);
   }, [pathname]);
+
+  // Isara ang dropdown kapag nag-click sa labas o pinindot ang Esc
+  useEffect(() => {
+    function onClick(e: MouseEvent) {
+      if (navRef.current && !navRef.current.contains(e.target as Node)) setOpenMenu(null);
+    }
+    function onKey(e: KeyboardEvent) {
+      if (e.key === "Escape") setOpenMenu(null);
+    }
+    document.addEventListener("mousedown", onClick);
+    document.addEventListener("keydown", onKey);
+    return () => {
+      document.removeEventListener("mousedown", onClick);
+      document.removeEventListener("keydown", onKey);
+    };
+  }, []);
 
   if (HIDDEN_ON.some((p) => pathname === p || pathname.startsWith(p + "/"))) return null;
 
-  const closeMenu = () => setIsOpen(false);
-  const isActive = (href: string) => (href === "/" ? pathname === "/" : pathname === href || pathname.startsWith(href + "/"));
+  const isActive = (href?: string) =>
+    !!href && !href.startsWith("http") && (href === "/" ? pathname === "/" : pathname === href || pathname.startsWith(href + "/"));
+  const entryActive = (e: Entry) => isActive(e.href) || !!e.children?.some((c) => isActive(c.href));
+  const closeAll = () => {
+    setMobileOpen(false);
+    setOpenMenu(null);
+  };
+
+  const lock = (gated?: boolean) =>
+    gated && !loggedIn ? <Lock className="ml-1.5 inline h-3 w-3 shrink-0 text-emerald-700/50" aria-label="Para sa members" /> : null;
 
   return (
-    <nav className="sticky top-0 z-50 bg-white/95 backdrop-blur-sm border-b border-green-100 shadow-sm">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between items-center h-20">
-
+    <nav ref={navRef} className="sticky top-0 z-50 border-b border-emerald-900/10 bg-white shadow-sm" aria-label="Main">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <div className="flex h-20 items-center justify-between gap-6">
           {/* --- LOGO --- */}
-          <Link href="/" className="flex items-center gap-3 hover:opacity-80 transition" onClick={closeMenu}>
-            <div className="relative h-10 w-10 md:h-12 md:w-12 overflow-hidden rounded-full border-2 border-emerald-100 shrink-0 shadow-sm">
-              <Image src="/logo.png" alt="IDBCJ Logo" fill className="object-cover" />
-            </div>
-            <div className="font-bold text-gray-800 leading-tight">
-              <span className="min-[1700px]:hidden text-xl">IDBCJ</span>
-              <span className="hidden min-[1700px]:block text-lg">Iglesia ng Dios na Buhay kay Cristo Jesus</span>
-            </div>
+          <Link href="/" className="flex shrink-0 items-center gap-3 transition hover:opacity-80" onClick={closeAll}>
+            <span className="relative h-11 w-11 shrink-0 overflow-hidden rounded-full border-2 border-emerald-100 shadow-sm md:h-12 md:w-12">
+              <Image src="/logo.png" alt="IDBCJ Logo" fill sizes="48px" className="object-cover" />
+            </span>
+            <span className="font-display leading-tight text-emerald-950">
+              <span className="block text-xl font-extrabold tracking-tight">IDBCJ</span>
+              <span className="hidden text-[11px] font-medium text-emerald-800/80 sm:block">
+                Iglesia ng Dios na Buhay
+                <br />
+                kay Cristo Jesus
+              </span>
+            </span>
           </Link>
 
-          {/* --- DESKTOP MENU (Hidden on Mobile) --- */}
-          <div className="hidden xl:flex items-center gap-6">
-            {LINKS.map((l) => (
-              <Link
-                key={l.href}
-                href={l.href}
-                className={
-                  "whitespace-nowrap text-sm font-semibold transition " +
-                  (isActive(l.href) ? "text-emerald-700" : "text-gray-600 hover:text-emerald-600")
+          {/* --- DESKTOP MENU --- */}
+          <div className="hidden items-center gap-7 lg:flex">
+            <ul className="flex items-center gap-7">
+              {MENU.map((e) => {
+                const active = entryActive(e);
+                const color = active ? "text-emerald-700" : "text-emerald-950 hover:text-emerald-700";
+                if (!e.children) {
+                  return (
+                    <li key={e.label}>
+                      <Link href={e.href!} className={`${linkBase} ${color}`}>
+                        {e.label}
+                        {lock(e.gated)}
+                      </Link>
+                    </li>
+                  );
                 }
-              >
-                {l.label}
-              </Link>
-            ))}
+                const open = openMenu === e.label;
+                return (
+                  <li
+                    key={e.label}
+                    className="relative"
+                    onMouseEnter={() => setOpenMenu(e.label)}
+                    onMouseLeave={() => setOpenMenu((m) => (m === e.label ? null : m))}
+                  >
+                    <button
+                      type="button"
+                      aria-haspopup="menu"
+                      aria-expanded={open}
+                      onClick={() => setOpenMenu(open ? null : e.label)}
+                      className={`${linkBase} ${color} inline-flex items-center gap-1 py-6`}
+                    >
+                      {e.label}
+                      <ChevronDown className={`h-4 w-4 transition-transform ${open ? "rotate-180" : ""}`} />
+                    </button>
+                    {open && (
+                      <div className="absolute left-1/2 top-full z-50 w-56 -translate-x-1/2 rounded-2xl border border-emerald-900/10 bg-white p-2 shadow-xl">
+                        {e.children.map((c) => (
+                          <Link
+                            key={c.href}
+                            href={c.href}
+                            {...(c.external ? { target: "_blank", rel: "noopener noreferrer" } : {})}
+                            className={`font-display flex items-center justify-between rounded-xl px-3 py-2.5 text-sm font-semibold hover:bg-emerald-50 hover:text-emerald-800 ${
+                              isActive(c.href) ? "text-emerald-700" : "text-emerald-950"
+                            }`}
+                          >
+                            <span>
+                              {c.label}
+                              {lock(c.gated)}
+                            </span>
+                            {c.external && <ExternalLink className="h-3.5 w-3.5 text-emerald-700/60" />}
+                          </Link>
+                        ))}
+                      </div>
+                    )}
+                  </li>
+                );
+              })}
+            </ul>
 
-            <div className="flex items-center gap-3 ml-2 border-l border-gray-200 pl-5">
+            <div className="flex items-center gap-3 border-l border-emerald-900/10 pl-6">
               {loggedIn ? (
                 <>
-                  <Link href="/portal" title="Buksan ang IDBCJ Connect" className="flex max-w-[14rem] flex-col leading-tight hover:opacity-80 transition">
-                    <span className="truncate text-sm font-semibold text-emerald-700">{name || "IDBCJ Connect"}</span>
-                    <span className="flex items-center gap-1 text-[11px] text-gray-500">
-                      <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" aria-hidden />
-                      You&apos;re connected
-                    </span>
+                  <span className="hidden max-w-[10rem] truncate font-display text-sm font-semibold text-emerald-900 xl:block">
+                    {name || "Member"}
+                  </span>
+                  <Link
+                    href="/portal"
+                    className="font-display rounded-full bg-emerald-800 px-4 py-2 text-sm font-semibold text-white transition hover:bg-emerald-900"
+                  >
+                    Member Portal
                   </Link>
                   <form action="/auth/sign-out" method="post">
                     <button
                       type="submit"
-                      className="rounded-full border border-gray-300 px-4 py-1.5 text-sm font-semibold text-gray-600 hover:border-red-300 hover:bg-red-50 hover:text-red-600 transition"
+                      className="font-display rounded-full px-3 py-2 text-sm font-semibold text-emerald-900/70 transition hover:bg-red-50 hover:text-red-600"
                     >
                       Logout
                     </button>
                   </form>
                 </>
               ) : (
-                <Link href="/auth/login" className="whitespace-nowrap text-sm font-semibold text-emerald-600 hover:text-emerald-800 transition flex items-center gap-1">
-                  Login to Connect
+                <Link
+                  href="/auth/login"
+                  className="font-display rounded-full border border-emerald-800 px-5 py-2 text-sm font-semibold text-emerald-900 transition hover:bg-emerald-800 hover:text-white"
+                >
+                  Members
                 </Link>
               )}
             </div>
           </div>
 
-          {/* --- MOBILE MENU BUTTON (Visible only on Mobile) --- */}
-          <div className="xl:hidden flex items-center">
-            <button
-              onClick={() => setIsOpen(!isOpen)}
-              aria-label={isOpen ? "Close menu" : "Open menu"}
-              className="text-emerald-900 hover:text-emerald-600 focus:outline-none p-2"
-            >
-              {isOpen ? <X size={28} /> : <Menu size={28} />}
-            </button>
-          </div>
+          {/* --- MOBILE MENU BUTTON --- */}
+          <button
+            type="button"
+            onClick={() => setMobileOpen(!mobileOpen)}
+            aria-label={mobileOpen ? "Close menu" : "Open menu"}
+            aria-expanded={mobileOpen}
+            className="p-2 text-emerald-900 hover:text-emerald-600 focus:outline-none lg:hidden"
+          >
+            {mobileOpen ? <X size={28} /> : <Menu size={28} />}
+          </button>
         </div>
       </div>
 
-      {/* --- MOBILE FULL-SCREEN DROPDOWN --- */}
-      {isOpen && (
-        <div className="xl:hidden absolute top-20 left-0 w-full bg-white border-b border-green-100 shadow-xl animate-in slide-in-from-top-5 duration-300">
-          <div className="flex flex-col p-6 space-y-4 text-center">
-            {LINKS.map((l) => (
-              <Link
-                key={l.href}
-                href={l.href}
-                onClick={closeMenu}
-                className={
-                  "text-lg font-semibold py-2 border-b border-gray-50 hover:bg-emerald-50 rounded-lg " +
-                  (isActive(l.href) ? "text-emerald-900" : "text-gray-600")
-                }
-              >
-                {l.label}
-              </Link>
-            ))}
+      {/* --- MOBILE PANEL --- */}
+      {mobileOpen && (
+        <div className="absolute left-0 top-20 max-h-[calc(100vh-5rem)] w-full overflow-y-auto border-b border-emerald-900/10 bg-white shadow-xl lg:hidden">
+          <div className="space-y-1 px-5 py-4">
+            {MENU.map((e) =>
+              e.children ? (
+                <div key={e.label} className="pt-3">
+                  <p className="font-display px-3 pb-1 text-xs font-bold uppercase tracking-widest text-emerald-700/70">{e.label}</p>
+                  {e.children.map((c) => (
+                    <Link
+                      key={c.href}
+                      href={c.href}
+                      onClick={closeAll}
+                      {...(c.external ? { target: "_blank", rel: "noopener noreferrer" } : {})}
+                      className={`font-display flex items-center justify-between rounded-xl px-3 py-3 text-base font-semibold hover:bg-emerald-50 ${
+                        isActive(c.href) ? "text-emerald-700" : "text-emerald-950"
+                      }`}
+                    >
+                      <span>
+                        {c.label}
+                        {lock(c.gated)}
+                      </span>
+                      {c.external && <ExternalLink className="h-4 w-4 text-emerald-700/60" />}
+                    </Link>
+                  ))}
+                </div>
+              ) : (
+                <Link
+                  key={e.label}
+                  href={e.href!}
+                  onClick={closeAll}
+                  className={`font-display block rounded-xl px-3 py-3 text-base font-semibold hover:bg-emerald-50 ${
+                    isActive(e.href) ? "text-emerald-700" : "text-emerald-950"
+                  }`}
+                >
+                  {e.label}
+                  {lock(e.gated)}
+                </Link>
+              ),
+            )}
 
-            <div className="pt-4 flex flex-col gap-3">
+            <div className="flex flex-col gap-3 border-t border-emerald-900/10 pt-5">
               {loggedIn ? (
                 <>
-                  <Link href="/portal" onClick={closeMenu}>
-                    <Button variant="outline" className="h-auto w-full flex-col gap-0 border-emerald-600 py-2 text-emerald-700">
-                      <span className="max-w-full truncate">{name || "IDBCJ Connect"}</span>
-                      <span className="text-[11px] font-normal text-gray-500">You&apos;re connected</span>
-                    </Button>
+                  <p className="font-display truncate px-1 text-sm font-semibold text-emerald-900">{name || "Member"}</p>
+                  <Link
+                    href="/portal"
+                    onClick={closeAll}
+                    className="font-display rounded-full bg-emerald-800 px-5 py-3 text-center text-base font-semibold text-white hover:bg-emerald-900"
+                  >
+                    Member Portal
                   </Link>
                   <form action="/auth/sign-out" method="post">
-                    <Button type="submit" variant="outline" className="w-full border-red-300 text-red-600 hover:bg-red-50">
+                    <button
+                      type="submit"
+                      className="font-display w-full rounded-full border border-red-300 px-5 py-3 text-base font-semibold text-red-600 hover:bg-red-50"
+                    >
                       Logout
-                    </Button>
+                    </button>
                   </form>
                 </>
               ) : (
-                <Link href="/auth/login" onClick={closeMenu}>
-                  <Button variant="outline" className="w-full border-emerald-600 text-emerald-700">
-                    Login to Connect
-                  </Button>
+                <Link
+                  href="/auth/login"
+                  onClick={closeAll}
+                  className="font-display rounded-full border border-emerald-800 px-5 py-3 text-center text-base font-semibold text-emerald-900 hover:bg-emerald-800 hover:text-white"
+                >
+                  Members Login
                 </Link>
               )}
             </div>

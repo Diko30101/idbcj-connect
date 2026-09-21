@@ -52,6 +52,10 @@ export default {
           "5": "hsl(var(--chart-5))",
         },
       },
+      fontFamily: {
+        display: ["var(--font-noto-sans)", "Helvetica Neue", "Arial", "sans-serif"],
+        serif: ["var(--font-noto-serif)", "Georgia", "Times New Roman", "serif"],
+      },
       borderRadius: {
         lg: "var(--radius)",
         md: "calc(var(--radius) - 2px)",

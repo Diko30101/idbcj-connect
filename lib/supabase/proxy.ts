@@ -2,10 +2,10 @@ import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 import { hasEnvVars } from "../utils";
 
-// Bukas sa lahat: ang home page at ang Contact Us (para makapagpadala ng mensahe kahit hindi member).
+// Bukas sa lahat: ang home page, ang I'm New page para sa mga bisita, at ang Contact Us (para makapagpadala ng mensahe kahit hindi member).
 // Ang ibang pahina (About Us, Leadership, Sermons, Our History, Events, portal) ay kailangan ng login.
 // Bukas din ang mga pahina ng login at pag-reset ng password, para makapasok ang member.
-const PUBLIC_PATHS = ["/contact", "/login", "/auth", "/forgot-password", "/reset-password"];
+const PUBLIC_PATHS = ["/im-new", "/contact", "/login", "/auth", "/forgot-password", "/reset-password"];
 
 function isPublicPath(pathname: string) {
   if (pathname === "/") return true;

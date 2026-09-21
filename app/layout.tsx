@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Geist } from "next/font/google";
+import { Geist, Noto_Sans, Noto_Serif } from "next/font/google";
 import { ThemeProvider } from "next-themes";
 import "./globals.css";
 import { Navbar } from "@/components/navbar";
@@ -22,6 +22,21 @@ const geistSans = Geist({
   subsets: ["latin"],
 });
 
+// Para sa mga pampublikong pahina: Noto Sans sa mga heading at menu, Noto Serif sa mga talata
+const notoSans = Noto_Sans({
+  variable: "--font-noto-sans",
+  display: "swap",
+  subsets: ["latin"],
+  weight: ["500", "600", "700", "800"],
+});
+
+const notoSerif = Noto_Serif({
+  variable: "--font-noto-serif",
+  display: "swap",
+  subsets: ["latin"],
+  weight: ["400", "500", "700"],
+});
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -29,7 +44,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={`${geistSans.className} antialiased`}>
+      <body className={`${geistSans.className} ${notoSans.variable} ${notoSerif.variable} antialiased`}>
         <ThemeProvider
           attribute="class"
           defaultTheme="system"
