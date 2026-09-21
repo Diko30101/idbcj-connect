@@ -118,16 +118,14 @@ export function Navbar() {
         <div className="flex h-20 items-center justify-between gap-6">
           {/* --- LOGO --- */}
           <Link href="/" className="flex shrink-0 items-center gap-3 transition hover:opacity-80" onClick={closeAll}>
+            <span className="font-display text-xl font-extrabold tracking-tight text-emerald-950">IDBCJ</span>
             <span className="relative h-11 w-11 shrink-0 overflow-hidden rounded-full border-2 border-emerald-100 shadow-sm md:h-12 md:w-12">
               <Image src="/logo.png" alt="IDBCJ Logo" fill sizes="48px" className="object-cover" />
             </span>
-            <span className="font-display leading-tight text-emerald-950">
-              <span className="block text-xl font-extrabold tracking-tight">IDBCJ</span>
-              <span className="hidden text-[11px] font-medium text-emerald-800/80 sm:block">
-                Iglesia ng Dios na Buhay
-                <br />
-                kay Cristo Jesus
-              </span>
+            <span className="font-display hidden text-[11px] font-medium leading-tight text-emerald-800/80 sm:block">
+              Iglesia ng Dios na Buhay
+              <br />
+              kay Cristo Jesus
             </span>
           </Link>
 
