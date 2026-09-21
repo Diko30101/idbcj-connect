@@ -12,7 +12,7 @@ export const WORSHIP = {
 // Lokal na worship sa Sto. Tomas, Batangas: tuwing Linggo, dalawang oras (oras sa Pilipinas).
 export const WORSHIP_BATANGAS = {
   day: "Sunday",
-  displayTimes: ["9:00 AM", "7:00 PM"],
+  displayTimes: ["9:00 AM", "3:00 PM"],
   location: "Sta. Teresita, Sto. Tomas, Batangas, Philippines",
 };
 
