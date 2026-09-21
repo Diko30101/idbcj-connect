@@ -28,14 +28,9 @@ export default function Home() {
           <p className="text-lg md:text-xl text-gray-100 max-w-2xl mx-auto drop-shadow-sm">
             The pillar and ground of the truth. Join us as we worship the Living God.
           </p>
-          
-          <div className="flex gap-4 justify-center pt-4">
-            <Link href="https://idbcj13708.online.church/">
-              <Button variant="outline" className="h-12 px-8 text-lg text-white border-white bg-transparent hover:bg-white hover:text-emerald-900 rounded-full">
-                Join Live Stream
-              </Button>
-            </Link>
-          </div>
+          <p className="text-sm md:text-base text-emerald-100/90 font-medium tracking-wide drop-shadow-sm">
+            1 Timothy 3:15 (ASV)
+          </p>
         </div>
       </section>
 
@@ -114,7 +109,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* 5. CONTACT & FOOTER */}
+      {/* 5. CONTACT */}
       <section className="py-20 px-6 bg-slate-50 border-t border-gray-200">
         <div className="max-w-4xl mx-auto text-center mb-10">
           <h2 className="text-3xl font-bold text-gray-900">Contact Us</h2>
@@ -123,9 +118,6 @@ export default function Home() {
         <ContactForm />
       </section>
 
-      <footer className="py-8 bg-emerald-950 text-center text-emerald-400 text-sm border-t border-emerald-900">
-        <p>&copy; {new Date().getFullYear()} Iglesia ng Dios na Buhay kay Cristo Jesus. Founded 1954. SEC Reg. No. 13708 (registered 1958).</p> 
-      </footer>
 
     </div>
   );

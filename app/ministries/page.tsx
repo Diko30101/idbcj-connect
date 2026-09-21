@@ -1,19 +1,23 @@
 import Image from "next/image";
-import Link from "next/link";
-import { Button } from "@/components/ui/button";
 
 export default function MinistriesPage() {
   return (
     <div className="flex min-h-screen flex-col bg-slate-50">
 
       {/* --- PAGE HEADER --- */}
-      <section className="bg-white py-16 text-center shadow-sm border-b">
-        <h1 className="text-4xl font-extrabold text-gray-900 mb-4">Our Ministries</h1>
-        <p className="text-xl text-gray-600 max-w-2xl mx-auto px-4">
-          "For even the Son of Man came not to be served but to serve."
-          <br />
-          <span className="text-sm text-gray-400 mt-2 block">- Mark 10:45</span>
-        </p>
+      <section className="bg-white py-12 text-center shadow-sm border-b">
+        <div className="max-w-2xl mx-auto px-4 space-y-4">
+          <p className="text-xl text-gray-600">
+            &ldquo;For the Son of man also came not to be ministered unto, but to minister, and to give
+            his life a ransom for many.&rdquo;
+            <span className="text-sm text-gray-400 mt-2 block">Mark 10:45 (American Standard Version, 1901)</span>
+          </p>
+          <p className="text-lg text-gray-500 italic">
+            &ldquo;Sapagka&apos;t ang Anak ng tao rin naman ay hindi naparito upang paglingkuran, kundi upang
+            maglingkod, at ibigay ang kaniyang buhay na pangtubos sa marami.&rdquo;
+            <span className="text-sm not-italic text-gray-400 mt-2 block">Marcos 10:45 (Ang Biblia)</span>
+          </p>
+        </div>
       </section>
 
       {/* --- LEADERSHIP / PASTOR BIO --- */}
@@ -88,13 +92,6 @@ export default function MinistriesPage() {
               </div>
             </details>
           </div>
-        </div>
-
-        {/* --- CONTACT BUTTON --- */}
-        <div className="mt-6 text-center">
-          <Link href="/contact">
-            <Button variant="outline">Contact Leadership</Button>
-          </Link>
         </div>
 
         {/* --- OTHER MINISTERS --- */}

@@ -62,20 +62,6 @@ export default function AboutPage() {
 
       </div>
 
-      {/* --- FOOTER DISCLAIMER --- */}
-      <footer className="bg-gray-900 text-white py-12 px-4 text-center mt-auto">
-        <div className="max-w-3xl mx-auto space-y-4">
-          <p className="text-lg font-bold text-yellow-500 tracking-wide">
-            FOUNDED 1954 – SEC REG. NO. 13708 (REGISTERED 1958)
-          </p>
-          <div className="h-px w-24 bg-gray-700 mx-auto"></div>
-          <p className="text-gray-300">
-            Founded by Avelino C. Santiago
-          </p>
-          
-        </div>
-      </footer>
-
     </div>
   );
 }
