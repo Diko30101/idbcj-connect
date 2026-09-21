@@ -2,7 +2,8 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { requireRoles, fmtDate, KIND_LABEL } from "@/lib/portal";
 import { saveAttendance } from "../../actions";
-import { Empty, Field, Notice, PageHeader, Panel, btnCls, btnGhostCls, inputCls } from "@/components/portal/ui";
+import { Empty, Notice, PageHeader, Panel, btnGhostCls } from "@/components/portal/ui";
+import { AttendanceList } from "@/components/portal/attendance-list";
 
 export default async function ServiceAttendance({
   params,
@@ -50,44 +51,11 @@ export default async function ServiceAttendance({
           {list.length === 0 ? (
             <Empty>Walang aktibong member. Magdagdag muna sa Members.</Empty>
           ) : (
-            <>
-              <div className="mb-4 flex flex-wrap items-end justify-between gap-3">
-                <p className="text-sm text-gray-600">
-                  Dumalo na: <strong>{presentSet.size}</strong> sa {list.length} na aktibong member
-                </p>
-                <div className="w-40">
-                  <Field label="Bilang ng bisita">
-                    <input
-                      type="number"
-                      min={0}
-                      name="visitors_count"
-                      defaultValue={service.visitors_count}
-                      className={inputCls}
-                    />
-                  </Field>
-                </div>
-              </div>
-              <ul className="grid gap-x-6 sm:grid-cols-2">
-                {list.map((m) => (
-                  <li key={m.id} className="border-b border-gray-100">
-                    <input type="hidden" name="all" value={m.id} />
-                    <label className="flex cursor-pointer items-center gap-3 py-3">
-                      <input
-                        type="checkbox"
-                        name="present"
-                        value={m.id}
-                        defaultChecked={presentSet.has(m.id)}
-                        className="h-5 w-5 accent-emerald-700"
-                      />
-                      <span className="text-sm font-medium text-gray-900">{m.full_name || "(walang pangalan)"}</span>
-                    </label>
-                  </li>
-                ))}
-              </ul>
-              <div className="sticky bottom-0 -mx-5 -mb-5 mt-4 border-t border-gray-100 bg-white/95 px-5 py-3">
-                <button type="submit" className={btnCls}>Save Attendance</button>
-              </div>
-            </>
+            <AttendanceList
+              members={list.map((m) => ({ id: m.id, full_name: m.full_name }))}
+              presentIds={Array.from(presentSet) as string[]}
+              visitorsDefault={service.visitors_count ?? 0}
+            />
           )}
         </Panel>
       </form>
