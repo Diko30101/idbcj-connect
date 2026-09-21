@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { requireRoles, fmtDate, KIND_LABEL, ROLE_LABEL } from "@/lib/portal";
+import { requireRoles, fmtDate, KIND_LABEL, ROLE_LABEL, CATEGORY_LABEL } from "@/lib/portal";
+import { shownEmail } from "@/lib/username";
+import { ResetPasswordButton } from "@/components/portal/reset-password-button";
 import { addMemberToMinistry, removeFromMinistry, updateMember } from "../../actions";
 import { Empty, Field, Notice, PageHeader, Panel, btnCls, btnDangerCls, btnGhostCls, inputCls } from "@/components/portal/ui";
 
@@ -37,7 +39,7 @@ export default async function MemberDetail({
     <>
       <PageHeader
         title={m.full_name || "(walang pangalan)"}
-        subtitle={m.email ?? ""}
+        subtitle={[m.username ? `Username: ${m.username}` : null, shownEmail(m.email)].filter(Boolean).join(" · ")}
         action={
           <Link href="/portal/members" className={btnGhostCls}>
             ← Members
@@ -63,6 +65,13 @@ export default async function MemberDetail({
             </Field>
             <Field label="City or Town">
               <input name="city" defaultValue={m.city ?? ""} className={inputCls} disabled={readOnlyAdmin} />
+            </Field>
+            <Field label="Category">
+              <select name="category" defaultValue={m.category ?? "adult"} className={inputCls} disabled={readOnlyAdmin}>
+                {(Object.keys(CATEGORY_LABEL) as (keyof typeof CATEGORY_LABEL)[]).map((c) => (
+                  <option key={c} value={c}>{CATEGORY_LABEL[c]}</option>
+                ))}
+              </select>
             </Field>
             <Field label="Status">
               <select name="status" defaultValue={m.status} className={inputCls} disabled={readOnlyAdmin}>
@@ -112,6 +121,21 @@ export default async function MemberDetail({
         </Panel>
 
         <div className="space-y-6">
+          <Panel title="Login">
+            <dl className="mb-4 space-y-2 text-sm">
+              <div>
+                <dt className="text-xs font-semibold uppercase tracking-wide text-gray-400">Username</dt>
+                <dd className="font-mono text-gray-800">{m.username ?? "(gumagamit ng email)"}</dd>
+              </div>
+              {m.must_change_password && (
+                <p className="rounded-md bg-amber-50 px-3 py-2 text-xs text-amber-800">
+                  Hindi pa napapalitan ang temporary password.
+                </p>
+              )}
+            </dl>
+            <ResetPasswordButton id={m.id} disabled={readOnlyAdmin} />
+          </Panel>
+
           <Panel title="Mga Ministry">
             {((memberships.data ?? []) as any[]).length === 0 ? (
               <Empty>Wala pang ministry.</Empty>

@@ -1,28 +1,30 @@
 import Link from "next/link";
-import { requireRoles, fmtDate, type Profile } from "@/lib/portal";
+import { requireRoles, fmtDate, CATEGORY_LABEL, type Profile } from "@/lib/portal";
+import { shownEmail } from "@/lib/username";
 import { Empty, Notice, PageHeader, Panel, RoleBadge, StatusBadge, btnGhostCls, btnCls, inputCls } from "@/components/portal/ui";
 
 export default async function MembersPage({
   searchParams,
 }: {
-  searchParams: Promise<{ q?: string; status?: string; role?: string; ok?: string; error?: string }>;
+  searchParams: Promise<{ q?: string; status?: string; role?: string; category?: string; ok?: string; error?: string }>;
 }) {
-  const { q = "", status = "", role = "", ok, error } = await searchParams;
+  const { q = "", status = "", role = "", category = "", ok, error } = await searchParams;
   const { supabase, profile } = await requireRoles(["admin", "secretary"]);
 
   let query = supabase
     .from("profiles")
-    .select("id, full_name, email, phone_number, city, role, status, member_since")
+    .select("id, full_name, email, username, category, phone_number, city, role, status, member_since")
     .order("full_name", { ascending: true })
     .limit(500);
 
   const term = q.replace(/[,()%*\\]/g, " ").trim();
-  if (term) query = query.or(`full_name.ilike.%${term}%,email.ilike.%${term}%,phone_number.ilike.%${term}%`);
+  if (term) query = query.or(`full_name.ilike.%${term}%,username.ilike.%${term}%,email.ilike.%${term}%,phone_number.ilike.%${term}%`);
   if (["visitor", "active", "inactive"].includes(status)) query = query.eq("status", status);
   if (["admin", "secretary", "leader", "member"].includes(role)) query = query.eq("role", role);
+  if (["adult", "young", "child"].includes(category)) query = query.eq("category", category);
 
   const { data } = await query;
-  const rows = (data ?? []) as Pick<Profile, "id" | "full_name" | "email" | "phone_number" | "city" | "role" | "status" | "member_since">[];
+  const rows = (data ?? []) as Pick<Profile, "id" | "full_name" | "email" | "username" | "category" | "phone_number" | "city" | "role" | "status" | "member_since">[];
 
   return (
     <>
@@ -30,22 +32,33 @@ export default async function MembersPage({
         title="Members"
         subtitle="Talaan ng mga kapatiran. Ikaw lang at ang secretary ang nakakakita nito."
         action={
-          profile.role === "admin" ? (
-            <a href="/portal/members/export" className={btnGhostCls}>
-              Export CSV
-            </a>
-          ) : undefined
+          <div className="flex flex-wrap gap-2">
+            <Link href="/portal/members/new" className={btnCls}>
+              + Add Member
+            </Link>
+            {profile.role === "admin" && (
+              <a href="/portal/members/export" className={btnGhostCls}>
+                Export CSV
+              </a>
+            )}
+          </div>
         }
       />
       <Notice ok={ok} error={error} />
 
-      <form className="mb-5 grid gap-3 sm:grid-cols-[1fr_auto_auto_auto]" method="get">
-        <input name="q" defaultValue={q} placeholder="Hanapin: pangalan, email, telepono" className={inputCls} />
+      <form className="mb-5 grid gap-3 sm:grid-cols-[1fr_auto_auto_auto_auto]" method="get">
+        <input name="q" defaultValue={q} placeholder="Hanapin: pangalan, username, telepono" className={inputCls} />
         <select name="status" defaultValue={status} className={inputCls}>
           <option value="">Lahat ng status</option>
           <option value="active">Active</option>
           <option value="visitor">Visitor</option>
           <option value="inactive">Inactive</option>
+        </select>
+        <select name="category" defaultValue={category} className={inputCls}>
+          <option value="">Lahat ng category</option>
+          <option value="adult">Adult</option>
+          <option value="young">Young</option>
+          <option value="child">Child</option>
         </select>
         <select name="role" defaultValue={role} className={inputCls}>
           <option value="">Lahat ng role</option>
@@ -73,11 +86,14 @@ export default async function MembersPage({
                     <div>
                       <div className="font-semibold text-gray-900">{m.full_name || "(walang pangalan)"}</div>
                       <div className="text-xs text-gray-500">
-                        {[m.email, m.phone_number, m.city].filter(Boolean).join(" · ")}
+                        {[m.username, shownEmail(m.email), m.phone_number, m.city].filter(Boolean).join(" · ")}
                       </div>
                     </div>
                     <div className="flex items-center gap-2">
                       <span className="text-xs text-gray-400">Since {fmtDate(m.member_since)}</span>
+                      <span className="inline-block rounded-full border border-sky-100 bg-sky-50 px-2.5 py-0.5 text-xs font-semibold text-sky-700">
+                        {CATEGORY_LABEL[m.category] ?? m.category}
+                      </span>
                       <RoleBadge role={m.role} />
                       <StatusBadge status={m.status} />
                     </div>
@@ -90,8 +106,8 @@ export default async function MembersPage({
       </Panel>
 
       <p className="mt-4 text-xs text-gray-500">
-        Para magdagdag ng bagong member: gumawa ng account sa Supabase (Authentication, Users, Add user).
-        Awtomatikong lalabas siya rito bilang Active member.
+        Para magdagdag ng bagong member, pindutin ang &quot;+ Add Member&quot;. Bibigyan siya ng username at
+        temporary password.
       </p>
     </>
   );

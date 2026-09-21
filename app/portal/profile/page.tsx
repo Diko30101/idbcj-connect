@@ -1,4 +1,5 @@
-import { requirePortalAccess, fmtDate, DPO_CONTACT } from "@/lib/portal";
+import { requirePortalAccess, fmtDate, DPO_CONTACT, CATEGORY_LABEL } from "@/lib/portal";
+import { shownEmail } from "@/lib/username";
 import { updateMyProfile } from "../actions";
 import { Field, Notice, Panel, PageHeader, RoleBadge, StatusBadge, btnCls, inputCls } from "@/components/portal/ui";
 
@@ -50,9 +51,21 @@ export default async function ProfilePage({
         <div className="space-y-6">
           <Panel title="Account">
             <dl className="space-y-3 text-sm">
+              {p.username && (
+                <div>
+                  <dt className="text-xs font-semibold uppercase tracking-wide text-gray-400">Username</dt>
+                  <dd className="break-all font-mono text-gray-800">{p.username}</dd>
+                </div>
+              )}
+              {shownEmail(p.email) && (
+                <div>
+                  <dt className="text-xs font-semibold uppercase tracking-wide text-gray-400">Email</dt>
+                  <dd className="break-all text-gray-800">{p.email}</dd>
+                </div>
+              )}
               <div>
-                <dt className="text-xs font-semibold uppercase tracking-wide text-gray-400">Email</dt>
-                <dd className="break-all text-gray-800">{p.email}</dd>
+                <dt className="text-xs font-semibold uppercase tracking-wide text-gray-400">Category</dt>
+                <dd className="text-gray-800">{CATEGORY_LABEL[p.category] ?? p.category}</dd>
               </div>
               <div className="flex flex-wrap gap-2">
                 <RoleBadge role={p.role} />

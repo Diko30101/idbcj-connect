@@ -12,6 +12,7 @@ import {
   strOrNull,
   type Role,
 } from "@/lib/portal";
+import { CATEGORIES, type Category } from "@/lib/categories";
 
 const STATUSES = ["visitor", "active", "inactive"];
 const ROLES: Role[] = ["admin", "secretary", "leader", "member"];
@@ -48,13 +49,15 @@ export async function updateMember(fd: FormData) {
   const path = `/portal/members/${id}`;
   const status = str(fd, "status");
   const baptism = str(fd, "baptism_status");
-  if (!STATUSES.includes(status) || !BAPTISM.includes(baptism)) back(path, "error", "Di-wastong halaga.");
+  const category = str(fd, "category") as Category;
+  if (!STATUSES.includes(status) || !BAPTISM.includes(baptism) || !CATEGORIES.includes(category)) back(path, "error", "Di-wastong halaga.");
 
   const patch: Record<string, unknown> = {
     full_name: str(fd, "full_name"),
     phone_number: strOrNull(fd, "phone_number"),
     city: strOrNull(fd, "city"),
     status,
+    category,
     baptism_status: baptism,
     baptism_date: strOrNull(fd, "baptism_date"),
     member_since: strOrNull(fd, "member_since"),

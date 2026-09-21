@@ -10,6 +10,11 @@ export const CONSENT_VERSION = "v1-draft";
 // Ilagay dito ang contact ng Data Protection Officer kapag naitalaga na.
 export const DPO_CONTACT = "Ilalagay pagkatapos italaga ang Data Protection Officer";
 
+import { CATEGORIES, CATEGORY_LABEL, type Category } from "@/lib/categories";
+
+export { CATEGORIES, CATEGORY_LABEL };
+export type { Category };
+
 export type Role = "admin" | "secretary" | "leader" | "member";
 export type MemberStatus = "visitor" | "active" | "inactive";
 
@@ -20,6 +25,9 @@ export type Profile = {
   phone_number: string | null;
   role: Role;
   status: MemberStatus;
+  username: string | null;
+  category: Category;
+  must_change_password: boolean;
   birthday: string | null;
   city: string | null;
   baptism_status: string | null;
@@ -113,6 +121,8 @@ export const getPortalContext = cache(async () => {
 // Kailangan ng consent bago gamitin ang portal
 export async function requirePortalAccess() {
   const ctx = await getPortalContext();
+  // Temporary password pa lang ang gamit: palitan muna bago magpatuloy
+  if (ctx.profile.must_change_password) redirect("/change-password");
   if (ctx.profile.status !== "inactive" && !ctx.profile.consent_at) redirect("/consent");
   return ctx;
 }

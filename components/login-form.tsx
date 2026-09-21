@@ -15,12 +15,13 @@ import { Label } from "@/components/ui/label";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import Link from "next/link"; // Import Link for the redirect
+import { loginToEmail } from "@/lib/username";
 
 export function LoginForm({
   className,
   ...props
 }: React.ComponentPropsWithoutRef<"div">) {
-  const [email, setEmail] = useState("");
+  const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -35,8 +36,9 @@ export function LoginForm({
     const supabase = createClient();
 
     try {
+      // Username ang inilalagay ng member. Sa likod ng eksena, ginagawa itong email para sa Supabase.
       const { error } = await supabase.auth.signInWithPassword({
-        email,
+        email: loginToEmail(username),
         password,
       });
       if (error) throw error;
@@ -51,7 +53,8 @@ export function LoginForm({
       router.push(dest);
       router.refresh();
     } catch (error: unknown) {
-      setError(error instanceof Error ? error.message : "An error occurred");
+      const msg = error instanceof Error ? error.message : "";
+      setError(/invalid login credentials/i.test(msg) ? "Mali ang username o password." : msg || "May problema sa pag-login. Subukan ulit.");
     } finally {
       setIsLoading(false);
     }
@@ -63,23 +66,27 @@ export function LoginForm({
         <CardHeader>
           <CardTitle className="text-2xl text-emerald-900">Church Member Access</CardTitle>
           <CardDescription>
-            Enter your email to access the member portal.
+            Ilagay ang iyong username at password para makapasok sa IDBCJ Connect.
           </CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleLogin}>
             <div className="flex flex-col gap-6">
               
-              {/* Email Input */}
+              {/* Username Input */}
               <div className="grid gap-2">
-                <Label htmlFor="email">Email</Label>
+                <Label htmlFor="username">Username</Label>
                 <Input
-                  id="email"
-                  type="email"
-                  placeholder="m@example.com"
+                  id="username"
+                  type="text"
+                  placeholder="juan.delacruz"
+                  autoComplete="username"
+                  autoCapitalize="none"
+                  autoCorrect="off"
+                  spellCheck={false}
                   required
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
+                  value={username}
+                  onChange={(e) => setUsername(e.target.value)}
                 />
               </div>
 
@@ -97,10 +104,14 @@ export function LoginForm({
                 <Input
                   id="password"
                   type="password"
+                  autoComplete="current-password"
                   required
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                 />
+                <p className="text-xs text-gray-500">
+                  Kung nakalimutan mo ang password, makipag-ugnayan sa secretary o sa Presiding Minister para ma-reset ito.
+                </p>
               </div>
 
               {/* Error Message (Red) */}

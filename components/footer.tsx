@@ -3,7 +3,7 @@
 import { usePathname } from "next/navigation";
 
 // Ang portal at ang privacy notice ay may sarili nang layout
-const HIDDEN_ON = ["/portal", "/consent"];
+const HIDDEN_ON = ["/portal", "/consent", "/change-password"];
 
 export function Footer() {
   const pathname = usePathname();

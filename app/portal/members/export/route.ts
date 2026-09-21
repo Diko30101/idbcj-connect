@@ -3,6 +3,8 @@ import { getPortalContext } from "@/lib/portal";
 
 const COLUMNS = [
   "full_name",
+  "username",
+  "category",
   "email",
   "phone_number",
   "city",

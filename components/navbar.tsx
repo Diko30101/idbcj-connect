@@ -7,6 +7,7 @@ import { usePathname } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Menu, X } from "lucide-react"; // Icons for the menu
 import { createClient } from "@/lib/supabase/client";
+import { isInternalEmail } from "@/lib/username";
 
 const LINKS = [
   { href: "/", label: "Home" },
@@ -19,7 +20,7 @@ const LINKS = [
 ];
 
 // Ang portal at ang privacy notice ay may sarili nang menu bar
-const HIDDEN_ON = ["/portal", "/consent"];
+const HIDDEN_ON = ["/portal", "/consent", "/change-password"];
 
 export function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
@@ -38,7 +39,7 @@ export function Navbar() {
         return;
       }
       // Pansamantala, email muna habang kinukuha ang pangalan sa profile
-      setName((prev) => prev || (session.user.email ?? ""));
+      setName((prev) => prev || (isInternalEmail(session.user.email) ? "" : (session.user.email ?? "")));
       const { data } = await supabase.from("profiles").select("full_name").eq("id", session.user.id).maybeSingle();
       if (data?.full_name) setName(data.full_name);
     }

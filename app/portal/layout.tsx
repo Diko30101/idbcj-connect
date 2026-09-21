@@ -1,12 +1,15 @@
 import Link from "next/link";
 import Image from "next/image";
+import { redirect } from "next/navigation";
 import { getPortalContext, isStaff } from "@/lib/portal";
 import { PortalNav, type NavItem } from "@/components/portal/portal-nav";
+import { shownEmail } from "@/lib/username";
 
 export const metadata = { title: "IDBCJ Connect", robots: { index: false, follow: false } };
 
 export default async function PortalLayout({ children }: { children: React.ReactNode }) {
   const { profile } = await getPortalContext();
+  if (profile.must_change_password) redirect("/change-password");
 
   const signOut = (
     <form action="/auth/sign-out" method="post">
@@ -57,7 +60,7 @@ export default async function PortalLayout({ children }: { children: React.React
             <Link href="/" className="text-sm font-medium text-gray-500 hover:text-emerald-700">
               ← Website
             </Link>
-            <span className="hidden text-sm text-gray-500 sm:inline">{profile.full_name || profile.email}</span>
+            <span className="hidden text-sm text-gray-500 sm:inline">{profile.full_name || profile.username || shownEmail(profile.email)}</span>
             {signOut}
           </div>
         </div>
