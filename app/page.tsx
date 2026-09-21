@@ -79,7 +79,7 @@ export default function Home() {
               <MonitorPlay className="h-7 w-7 text-emerald-700" aria-hidden />
               <h3 className="font-display mt-4 text-lg font-bold text-emerald-800">Can&rsquo;t come in person?</h3>
               <p className="mt-2 text-slate-700">
-                The Sunday worship in Medina is livestreamed on the IDBCJ Facebook group, the IDBCJ YouTube channel, and our online church website.
+                The Sunday worship in Medina is livestreamed on the IDBCJ YouTube channel and our online church website. It is also shown in our private Facebook group, for group members only.
               </p>
               <a
                 href={WORSHIP.streamUrl}

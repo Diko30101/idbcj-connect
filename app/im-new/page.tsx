@@ -23,7 +23,7 @@ export default function ImNewPage() {
     },
     {
       q: "Can I watch the service online?",
-      a: "Yes. The Sunday worship in Medina is livestreamed at the same time on the IDBCJ Facebook group, the IDBCJ YouTube channel, and our online church website.",
+      a: "Yes. The Sunday worship in Medina is livestreamed at the same time on the IDBCJ YouTube channel and our online church website. It is also shown in our private Facebook group, which is open to group members only.",
     },
     {
       q: "How do I ask a question before I visit?",
@@ -110,7 +110,7 @@ export default function ImNewPage() {
             <MonitorPlay className="h-7 w-7 text-emerald-700" aria-hidden />
             <h3 className="font-display mt-4 text-lg font-bold text-emerald-800">Can&rsquo;t make it in person?</h3>
             <p className="mt-3 text-slate-700">
-              Join the Medina worship online. It is livestreamed on the IDBCJ Facebook group, the IDBCJ YouTube channel, and our online church website.
+              Join the Medina worship online. It is livestreamed on the IDBCJ YouTube channel and our online church website. The Facebook group livestream is for group members only.
             </p>
             <a
               href={WORSHIP.streamUrl}
