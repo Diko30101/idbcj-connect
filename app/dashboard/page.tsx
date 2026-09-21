@@ -15,7 +15,7 @@ export default async function Dashboard() {
     const { data: { user } } = await supabase.auth.getUser();
 
     if (!user) {
-        return redirect("/sign-in");
+        return redirect("/auth/login");
     }
 
     // 3. Fetch the user's Church Profile
@@ -47,7 +47,7 @@ export default async function Dashboard() {
                         <span>Member Portal</span>
                     </div>
                     
-                    <form action="/" method="post">
+                    <form action="/auth/sign-out" method="post">
                         <button className="flex items-center gap-2 text-sm font-medium text-gray-500 hover:text-red-600 transition border px-4 py-2 rounded-lg hover:bg-red-50">
                             Sign Out
                         </button>
