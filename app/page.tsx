@@ -100,7 +100,7 @@ export default function Home() {
             {/* Card 2 */}
             <div className="group rounded-2xl overflow-hidden shadow-lg border border-gray-100 hover:shadow-2xl transition duration-300">
               <div className="relative h-56 w-full">
-                <Image src="/logo.png" alt="IDBCJ logo" fill className="object-contain bg-emerald-50 p-4" />
+                <Image src="/logo-seal.png" alt="IDBCJ logo" fill sizes="(min-width: 768px) 33vw, 100vw" className="object-contain bg-emerald-50 p-4" />
               </div>
               <div className="p-6 bg-white">
                 <h3 className="text-xl font-bold text-emerald-900 mb-2">Our Ministries</h3>
