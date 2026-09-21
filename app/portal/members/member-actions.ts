@@ -3,6 +3,7 @@
 import { randomInt } from "crypto";
 import { revalidatePath } from "next/cache";
 import { CATEGORIES, type Category } from "@/lib/categories";
+import { LOCALITIES, type Locality } from "@/lib/locality";
 import { requireRoles, str, strOrNull } from "@/lib/portal";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { baseUsername, usernameToEmail } from "@/lib/username";
@@ -41,8 +42,10 @@ export async function createMember(_prev: CreateMemberState, fd: FormData): Prom
 
   const fullName = str(fd, "full_name").replace(/\s+/g, " ");
   const category = str(fd, "category") as Category;
+  const locality = str(fd, "locality") as Locality;
   if (fullName.length < 3 || fullName.length > 100) return { error: "Isulat ang buong pangalan (3 hanggang 100 na letra)." };
   if (!CATEGORIES.includes(category)) return { error: "Pumili ng category: Adult, Young, o Child." };
+  if (!LOCALITIES.includes(locality)) return { error: "Pumili ng lokalidad kung saan naka-tala ang member." };
   if (fd.get("consent") !== "on") {
     return { error: "Lagyan ng tsek na nakuha na ang pahintulot ng member (o ng magulang/guardian kung Young o Child)." };
   }
@@ -84,6 +87,7 @@ export async function createMember(_prev: CreateMemberState, fd: FormData): Prom
       full_name: fullName,
       username,
       category,
+      locality,
       role: "member",
       status: "active",
       must_change_password: true,
@@ -103,7 +107,7 @@ export async function createMember(_prev: CreateMemberState, fd: FormData): Prom
     action: "create_member",
     table_name: "profiles",
     record_id: id,
-    detail: { username, category },
+    detail: { username, category, locality },
   });
 
   revalidatePath("/portal/members");

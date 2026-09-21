@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { requireRoles, fmtDate, KIND_LABEL, ROLE_LABEL, CATEGORY_LABEL } from "@/lib/portal";
+import { requireRoles, fmtDate, KIND_LABEL, ROLE_LABEL, CATEGORY_LABEL, LOCALITY_LABEL } from "@/lib/portal";
 import { shownEmail } from "@/lib/username";
 import { ResetPasswordButton } from "@/components/portal/reset-password-button";
 import { addMemberToMinistry, removeFromMinistry, updateMember } from "../../actions";
@@ -65,6 +65,14 @@ export default async function MemberDetail({
             </Field>
             <Field label="City or Town">
               <input name="city" defaultValue={m.city ?? ""} className={inputCls} disabled={readOnlyAdmin} />
+            </Field>
+            <Field label="Locality" hint="Ginagamit sa pag-uulat ng attendance kada lokalidad.">
+              <select name="locality" defaultValue={m.locality ?? ""} className={inputCls} disabled={readOnlyAdmin}>
+                <option value="">(Wala pang nakatakda)</option>
+                {(Object.keys(LOCALITY_LABEL) as (keyof typeof LOCALITY_LABEL)[]).map((l) => (
+                  <option key={l} value={l}>{LOCALITY_LABEL[l]}</option>
+                ))}
+              </select>
             </Field>
             <Field label="Category">
               <select name="category" defaultValue={m.category ?? "adult"} className={inputCls} disabled={readOnlyAdmin}>

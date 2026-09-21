@@ -2,9 +2,12 @@
 
 import { useMemo, useState } from "react";
 import { Search, X } from "lucide-react";
+import { LOCALITY_LABEL, type Locality } from "@/lib/locality";
 import { Field, btnCls, btnGhostCls, inputCls } from "./form-bits";
 
-type Member = { id: string; full_name: string | null };
+type Member = { id: string; full_name: string | null; locality: Locality | null };
+
+const NO_LOCALITY = "none";
 
 // Tanggalin ang accent at gawing maliit ang letra para madaling mahanap ("Peña" = "pena")
 const norm = (s: string) =>
@@ -24,10 +27,20 @@ export function AttendanceList({
   visitorsDefault: number;
 }) {
   const [query, setQuery] = useState("");
+  const [locFilter, setLocFilter] = useState<string>("");
   const [checked, setChecked] = useState<Set<string>>(() => new Set(presentIds));
+
+  // Lokalidad na talagang mayroon sa listahan, ayon sa pagkakasunod sa LOCALITY_LABEL
+  const localitiesPresent = useMemo(() => {
+    const have = new Set(members.map((m) => m.locality ?? NO_LOCALITY));
+    const ordered = (Object.keys(LOCALITY_LABEL) as Locality[]).filter((l) => have.has(l));
+    if (have.has(NO_LOCALITY)) ordered.push(NO_LOCALITY as unknown as Locality);
+    return ordered;
+  }, [members]);
 
   const words = norm(query).split(/\s+/).filter(Boolean);
   const isShown = (m: Member) => {
+    if (locFilter && (m.locality ?? NO_LOCALITY) !== locFilter) return false;
     if (words.length === 0) return true;
     const name = norm(m.full_name ?? "");
     return words.every((w) => name.includes(w));
@@ -35,7 +48,7 @@ export function AttendanceList({
   const shownIds = useMemo(
     () => members.filter(isShown).map((m) => m.id),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [members, query],
+    [members, query, locFilter],
   );
 
   function toggle(id: string, on: boolean) {
@@ -58,7 +71,20 @@ export function AttendanceList({
     });
   }
 
-  const searching = words.length > 0;
+  const searching = words.length > 0 || !!locFilter;
+
+  // Bilang ng dumalo kada lokalidad, para agad makita ang breakdown (research by locality)
+  const localityCounts = useMemo(() => {
+    const map = new Map<string, { present: number; total: number }>();
+    for (const m of members) {
+      const key = m.locality ?? NO_LOCALITY;
+      const row = map.get(key) ?? { present: 0, total: 0 };
+      row.total += 1;
+      if (checked.has(m.id)) row.present += 1;
+      map.set(key, row);
+    }
+    return map;
+  }, [members, checked]);
 
   return (
     <>
@@ -95,6 +121,22 @@ export function AttendanceList({
             )}
           </div>
         </div>
+        {localitiesPresent.length > 1 && (
+          <div className="w-56">
+            <label htmlFor="loc-filter" className="mb-1.5 block text-sm font-medium text-gray-700">
+              Lokalidad
+            </label>
+            {/* Walang "name" ito kaya hindi ito kasama sa isasave */}
+            <select id="loc-filter" value={locFilter} onChange={(e) => setLocFilter(e.target.value)} className={inputCls}>
+              <option value="">Lahat ng lokalidad</option>
+              {localitiesPresent.map((l) => (
+                <option key={l} value={l}>
+                  {l === (NO_LOCALITY as unknown as Locality) ? "(Walang lokalidad)" : LOCALITY_LABEL[l]}
+                </option>
+              ))}
+            </select>
+          </div>
+        )}
         <div className="w-40">
           <Field label="Bilang ng bisita">
             <input type="number" min={0} name="visitors_count" defaultValue={visitorsDefault} className={inputCls} />
@@ -102,10 +144,27 @@ export function AttendanceList({
         </div>
       </div>
 
+      {localitiesPresent.length > 1 && (
+        <div className="mb-3 flex flex-wrap gap-2" aria-live="polite">
+          {localitiesPresent.map((l) => {
+            const row = localityCounts.get(l) ?? { present: 0, total: 0 };
+            const label = l === (NO_LOCALITY as unknown as Locality) ? "(Walang lokalidad)" : LOCALITY_LABEL[l];
+            return (
+              <span
+                key={l}
+                className="inline-flex items-center gap-1 rounded-full border border-emerald-100 bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-800"
+              >
+                {label}: {row.present}/{row.total}
+              </span>
+            );
+          })}
+        </div>
+      )}
+
       <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
         <p className="text-sm text-gray-600" aria-live="polite">
           Naka-tsek: <strong>{checked.size}</strong> sa {members.length} na aktibong member
-          {searching && <span className="text-gray-400"> · {shownIds.length} ang lumabas sa paghahanap</span>}
+          {searching && <span className="text-gray-400"> · {shownIds.length} ang lumabas sa filter</span>}
         </p>
         <div className="flex gap-2">
           <button type="button" onClick={() => setShown(true)} disabled={shownIds.length === 0} className={`${btnGhostCls} disabled:opacity-50`}>
@@ -118,7 +177,7 @@ export function AttendanceList({
       </div>
 
       {searching && shownIds.length === 0 && (
-        <p className="py-6 text-center text-sm text-gray-500">Walang member na may ganyang pangalan.</p>
+        <p className="py-6 text-center text-sm text-gray-500">Walang member na tugma sa hinahanap o lokalidad.</p>
       )}
 
       {/* Itinatago lang (hindi inaalis) ang hindi tugma, kaya kasama pa rin sila sa isasave */}
@@ -136,6 +195,7 @@ export function AttendanceList({
                 className="h-5 w-5 accent-emerald-700"
               />
               <span className="text-sm font-medium text-gray-900">{m.full_name || "(walang pangalan)"}</span>
+              {m.locality && <span className="text-xs text-gray-400">{LOCALITY_LABEL[m.locality]}</span>}
             </label>
           </li>
         ))}

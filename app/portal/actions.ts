@@ -13,6 +13,7 @@ import {
   type Role,
 } from "@/lib/portal";
 import { CATEGORIES, type Category } from "@/lib/categories";
+import { LOCALITIES, type Locality } from "@/lib/locality";
 
 const STATUSES = ["visitor", "active", "inactive"];
 const ROLES: Role[] = ["admin", "secretary", "leader", "member"];
@@ -50,7 +51,15 @@ export async function updateMember(fd: FormData) {
   const status = str(fd, "status");
   const baptism = str(fd, "baptism_status");
   const category = str(fd, "category") as Category;
-  if (!STATUSES.includes(status) || !BAPTISM.includes(baptism) || !CATEGORIES.includes(category)) back(path, "error", "Di-wastong halaga.");
+  const localityRaw = str(fd, "locality");
+  const locality = (localityRaw || null) as Locality | null;
+  if (
+    !STATUSES.includes(status) ||
+    !BAPTISM.includes(baptism) ||
+    !CATEGORIES.includes(category) ||
+    (locality !== null && !LOCALITIES.includes(locality))
+  )
+    back(path, "error", "Di-wastong halaga.");
 
   const patch: Record<string, unknown> = {
     full_name: str(fd, "full_name"),
@@ -58,6 +67,7 @@ export async function updateMember(fd: FormData) {
     city: strOrNull(fd, "city"),
     status,
     category,
+    locality,
     baptism_status: baptism,
     baptism_date: strOrNull(fd, "baptism_date"),
     member_since: strOrNull(fd, "member_since"),

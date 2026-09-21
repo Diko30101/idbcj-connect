@@ -3,6 +3,7 @@
 import { useActionState, useState } from "react";
 import { createMember, type CreateMemberState } from "@/app/portal/members/member-actions";
 import { CATEGORY_LABEL } from "@/lib/categories";
+import { LOCALITIES, LOCALITY_LABEL } from "@/lib/locality";
 import { Field, inputCls, btnCls, btnGhostCls } from "@/components/portal/form-bits";
 
 export function AddMemberForm() {
@@ -77,6 +78,14 @@ export function AddMemberForm() {
           <option value="adult">{CATEGORY_LABEL.adult}</option>
           <option value="young">{CATEGORY_LABEL.young}</option>
           <option value="child">{CATEGORY_LABEL.child}</option>
+        </select>
+      </Field>
+      <Field label="Locality" hint="Saan siya naka-tala. Ito ang gagamitin sa pag-uulat ng attendance kada lokalidad.">
+        <select name="locality" required defaultValue="" className={inputCls}>
+          <option value="" disabled>Piliin ang lokalidad…</option>
+          {LOCALITIES.map((l) => (
+            <option key={l} value={l}>{LOCALITY_LABEL[l]}</option>
+          ))}
         </select>
       </Field>
       <Field label="Phone (opsyonal)">

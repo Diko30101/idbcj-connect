@@ -5,6 +5,7 @@ const COLUMNS = [
   "full_name",
   "username",
   "category",
+  "locality",
   "email",
   "phone_number",
   "city",

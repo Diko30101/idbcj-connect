@@ -22,7 +22,7 @@ export default async function ServiceAttendance({
   const [members, marks] = await Promise.all([
     supabase
       .from("profiles")
-      .select("id, full_name, phone_number")
+      .select("id, full_name, phone_number, locality")
       .eq("status", "active")
       .order("full_name")
       .limit(1000),
@@ -30,7 +30,7 @@ export default async function ServiceAttendance({
   ]);
 
   const presentSet = new Set(((marks.data ?? []) as any[]).filter((a) => a.present).map((a) => a.profile_id));
-  const list = (members.data ?? []) as { id: string; full_name: string | null; phone_number: string | null }[];
+  const list = (members.data ?? []) as { id: string; full_name: string | null; phone_number: string | null; locality: string | null }[];
 
   return (
     <>
@@ -52,7 +52,7 @@ export default async function ServiceAttendance({
             <Empty>Walang aktibong member. Magdagdag muna sa Members.</Empty>
           ) : (
             <AttendanceList
-              members={list.map((m) => ({ id: m.id, full_name: m.full_name }))}
+              members={list.map((m) => ({ id: m.id, full_name: m.full_name, locality: m.locality as any }))}
               presentIds={Array.from(presentSet) as string[]}
               visitorsDefault={service.visitors_count ?? 0}
             />

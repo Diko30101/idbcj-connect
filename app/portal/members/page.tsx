@@ -1,19 +1,19 @@
 import Link from "next/link";
-import { requireRoles, fmtDate, CATEGORY_LABEL, type Profile } from "@/lib/portal";
+import { requireRoles, fmtDate, CATEGORY_LABEL, LOCALITY_LABEL, type Profile } from "@/lib/portal";
 import { shownEmail } from "@/lib/username";
 import { Empty, Notice, PageHeader, Panel, RoleBadge, StatusBadge, btnGhostCls, btnCls, inputCls } from "@/components/portal/ui";
 
 export default async function MembersPage({
   searchParams,
 }: {
-  searchParams: Promise<{ q?: string; status?: string; role?: string; category?: string; ok?: string; error?: string }>;
+  searchParams: Promise<{ q?: string; status?: string; role?: string; category?: string; locality?: string; ok?: string; error?: string }>;
 }) {
-  const { q = "", status = "", role = "", category = "", ok, error } = await searchParams;
+  const { q = "", status = "", role = "", category = "", locality = "", ok, error } = await searchParams;
   const { supabase, profile } = await requireRoles(["admin", "secretary"]);
 
   let query = supabase
     .from("profiles")
-    .select("id, full_name, email, username, category, phone_number, city, role, status, member_since")
+    .select("id, full_name, email, username, category, locality, phone_number, city, role, status, member_since")
     .order("full_name", { ascending: true })
     .limit(500);
 
@@ -22,9 +22,10 @@ export default async function MembersPage({
   if (["visitor", "active", "inactive"].includes(status)) query = query.eq("status", status);
   if (["admin", "secretary", "leader", "member"].includes(role)) query = query.eq("role", role);
   if (["adult", "young", "child"].includes(category)) query = query.eq("category", category);
+  if (Object.keys(LOCALITY_LABEL).includes(locality)) query = query.eq("locality", locality);
 
   const { data } = await query;
-  const rows = (data ?? []) as Pick<Profile, "id" | "full_name" | "email" | "username" | "category" | "phone_number" | "city" | "role" | "status" | "member_since">[];
+  const rows = (data ?? []) as Pick<Profile, "id" | "full_name" | "email" | "username" | "category" | "locality" | "phone_number" | "city" | "role" | "status" | "member_since">[];
 
   return (
     <>
@@ -46,8 +47,14 @@ export default async function MembersPage({
       />
       <Notice ok={ok} error={error} />
 
-      <form className="mb-5 grid gap-3 sm:grid-cols-[1fr_auto_auto_auto_auto]" method="get">
+      <form className="mb-5 grid gap-3 sm:grid-cols-[1fr_auto_auto_auto_auto_auto]" method="get">
         <input name="q" defaultValue={q} placeholder="Hanapin: pangalan, username, telepono" className={inputCls} />
+        <select name="locality" defaultValue={locality} className={inputCls}>
+          <option value="">Lahat ng lokalidad</option>
+          {(Object.keys(LOCALITY_LABEL) as (keyof typeof LOCALITY_LABEL)[]).map((l) => (
+            <option key={l} value={l}>{LOCALITY_LABEL[l]}</option>
+          ))}
+        </select>
         <select name="status" defaultValue={status} className={inputCls}>
           <option value="">Lahat ng status</option>
           <option value="active">Active</option>
@@ -89,8 +96,13 @@ export default async function MembersPage({
                         {[m.username, shownEmail(m.email), m.phone_number, m.city].filter(Boolean).join(" · ")}
                       </div>
                     </div>
-                    <div className="flex items-center gap-2">
+                    <div className="flex flex-wrap items-center gap-2">
                       <span className="text-xs text-gray-400">Since {fmtDate(m.member_since)}</span>
+                      {m.locality && (
+                        <span className="inline-block rounded-full border border-emerald-100 bg-emerald-50 px-2.5 py-0.5 text-xs font-semibold text-emerald-700">
+                          {LOCALITY_LABEL[m.locality] ?? m.locality}
+                        </span>
+                      )}
                       <span className="inline-block rounded-full border border-sky-100 bg-sky-50 px-2.5 py-0.5 text-xs font-semibold text-sky-700">
                         {CATEGORY_LABEL[m.category] ?? m.category}
                       </span>

@@ -11,9 +11,10 @@ export const CONSENT_VERSION = "v1-draft";
 export const DPO_CONTACT = "Ilalagay pagkatapos italaga ang Data Protection Officer";
 
 import { CATEGORIES, CATEGORY_LABEL, type Category } from "@/lib/categories";
+import { LOCALITIES, LOCALITY_LABEL, type Locality } from "@/lib/locality";
 
-export { CATEGORIES, CATEGORY_LABEL };
-export type { Category };
+export { CATEGORIES, CATEGORY_LABEL, LOCALITIES, LOCALITY_LABEL };
+export type { Category, Locality };
 
 export type Role = "admin" | "secretary" | "leader" | "member";
 export type MemberStatus = "visitor" | "active" | "inactive";
@@ -27,6 +28,7 @@ export type Profile = {
   status: MemberStatus;
   username: string | null;
   category: Category;
+  locality: Locality | null;
   must_change_password: boolean;
   birthday: string | null;
   city: string | null;
