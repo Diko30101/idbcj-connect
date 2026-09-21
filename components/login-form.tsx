@@ -41,8 +41,8 @@ export function LoginForm({
       });
       if (error) throw error;
       
-      // Redirect to dashboard on success
-      router.push("/dashboard"); 
+      // Redirect to member portal on success
+      router.push("/portal"); 
       router.refresh();
     } catch (error: unknown) {
       setError(error instanceof Error ? error.message : "An error occurred");
