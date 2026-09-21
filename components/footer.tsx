@@ -17,18 +17,18 @@ export function Footer() {
   if (HIDDEN_ON.some((p) => pathname === p || pathname.startsWith(p + "/"))) return null;
 
   return (
-    <footer className="bg-emerald-950 text-sm text-emerald-100/80">
+    <footer className="bg-emerald-800 text-sm text-emerald-100/80">
       <div className="mx-auto grid max-w-7xl gap-10 px-6 py-14 sm:grid-cols-2 lg:grid-cols-4 lg:px-8">
         {/* Church */}
         <div className="space-y-4">
           <div className="flex items-center gap-3">
-            <span className="relative h-12 w-12 shrink-0 overflow-hidden rounded-full border-2 border-emerald-800">
+            <span className="relative h-12 w-12 shrink-0 overflow-hidden rounded-full border-2 border-emerald-400">
               <Image src="/logo.png" alt="IDBCJ Logo" fill sizes="48px" className="object-cover" />
             </span>
             <span className="font-display text-lg font-extrabold leading-tight text-white">IDBCJ</span>
           </div>
           <p className="leading-relaxed">Iglesia ng Dios na Buhay kay Cristo Jesus</p>
-          <p className="text-xs text-emerald-200/60">Founded 1954 &middot; SEC Reg. No. 13708 (registered 1958)</p>
+          <p className="text-xs text-emerald-100/75">Founded 1954 &middot; SEC Reg. No. 13708 (registered 1958)</p>
         </div>
 
         {/* Explore */}
@@ -68,8 +68,8 @@ export function Footer() {
         </div>
       </div>
 
-      <div className="border-t border-emerald-900">
-        <div className="mx-auto max-w-7xl px-6 py-5 text-center text-xs text-emerald-200/60 lg:px-8">
+      <div className="border-t border-emerald-600">
+        <div className="mx-auto max-w-7xl px-6 py-5 text-center text-xs text-emerald-100/75 lg:px-8">
           &copy; {new Date().getFullYear()} Iglesia ng Dios na Buhay kay Cristo Jesus. All rights reserved.
         </div>
       </div>

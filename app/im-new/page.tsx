@@ -46,7 +46,7 @@ export default function ImNewPage() {
       <section className="mx-auto w-full max-w-7xl px-4 pt-6 sm:px-6 lg:px-8">
         <div className="relative flex min-h-[380px] items-center justify-center overflow-hidden rounded-3xl px-6 py-14 text-center">
           <Image src="/background.jpg" alt="" fill priority sizes="100vw" className="object-cover" />
-          <div className="absolute inset-0 bg-gradient-to-b from-emerald-950/75 via-emerald-950/65 to-emerald-950/85" />
+          <div className="absolute inset-0 bg-gradient-to-b from-emerald-800/55 via-emerald-700/45 to-emerald-800/75" />
           <div className="relative z-10 max-w-2xl space-y-5">
             <span className="font-display inline-block rounded-full border border-white/25 bg-white/10 px-4 py-1 text-xs font-bold uppercase tracking-widest text-emerald-50 backdrop-blur-sm">
               First time here
@@ -62,7 +62,7 @@ export default function ImNewPage() {
       {/* WELCOME */}
       <section className="px-4 py-16 sm:px-6 lg:px-8">
         <div className="mx-auto max-w-3xl space-y-5 text-center">
-          <h2 className="font-display text-3xl font-bold text-emerald-950">You are welcome here</h2>
+          <h2 className="font-display text-3xl font-bold text-emerald-800">You are welcome here</h2>
           <div className="mx-auto h-1 w-20 rounded-full bg-amber-400" />
           <p className="text-lg leading-relaxed text-slate-700">
             Whether this is your first time to visit or your first time to watch online, we are glad you are here. Below is
@@ -79,21 +79,21 @@ export default function ImNewPage() {
         <div className="mx-auto grid max-w-6xl gap-6 md:grid-cols-3">
           <div className="rounded-2xl border border-emerald-900/10 bg-white p-7 shadow-sm">
             <CalendarDays className="h-7 w-7 text-emerald-700" aria-hidden />
-            <h3 className="font-display mt-4 text-lg font-bold text-emerald-950">When we gather</h3>
+            <h3 className="font-display mt-4 text-lg font-bold text-emerald-800">When we gather</h3>
             <p className="mt-3 text-slate-700">
               <span className="font-display font-semibold">
                 {WORSHIP.day}, {WORSHIP.displayTime}
               </span>
               <span className="block text-sm text-slate-500">Philippine time</span>
             </p>
-            <p className="mt-3 border-t border-emerald-900/10 pt-3 text-sm text-slate-600">
+            <p className="mt-3 border-t border-emerald-600/10 pt-3 text-sm text-slate-600">
               Alberta, Canada: <span className="font-semibold">{t.alberta}</span>
             </p>
           </div>
 
           <div className="rounded-2xl border border-emerald-900/10 bg-white p-7 shadow-sm">
             <MapPin className="h-7 w-7 text-emerald-700" aria-hidden />
-            <h3 className="font-display mt-4 text-lg font-bold text-emerald-950">Where to find us</h3>
+            <h3 className="font-display mt-4 text-lg font-bold text-emerald-800">Where to find us</h3>
             <p className="mt-3 text-slate-700">{WORSHIP.location}</p>
             <Link href="/contact" className="font-display mt-3 inline-block text-sm font-semibold text-emerald-700 hover:underline">
               Ask for directions &rarr;
@@ -102,13 +102,13 @@ export default function ImNewPage() {
 
           <div className="rounded-2xl border border-emerald-900/10 bg-white p-7 shadow-sm">
             <MonitorPlay className="h-7 w-7 text-emerald-700" aria-hidden />
-            <h3 className="font-display mt-4 text-lg font-bold text-emerald-950">Can&rsquo;t make it in person?</h3>
+            <h3 className="font-display mt-4 text-lg font-bold text-emerald-800">Can&rsquo;t make it in person?</h3>
             <p className="mt-3 text-slate-700">Join our live stream during worship time.</p>
             <a
               href={WORSHIP.streamUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className={`${pill} mt-4 bg-amber-400 text-emerald-950 hover:bg-amber-300`}
+              className={`${pill} mt-4 bg-amber-400 text-emerald-800 hover:bg-amber-300`}
             >
               Join Live Stream
             </a>
@@ -120,13 +120,13 @@ export default function ImNewPage() {
       <section className="px-4 py-16 sm:px-6 lg:px-8">
         <div className="mx-auto max-w-3xl">
           <div className="mb-8 text-center">
-            <h2 className="font-display text-3xl font-bold text-emerald-950">Common questions</h2>
+            <h2 className="font-display text-3xl font-bold text-emerald-800">Common questions</h2>
             <p className="mt-2 text-slate-600">Short answers to what visitors ask first.</p>
           </div>
           <div className="divide-y divide-emerald-900/10 overflow-hidden rounded-2xl border border-emerald-900/10">
             {faqs.map((f) => (
               <details key={f.q} className="group bg-white open:bg-[#F6F4EE]">
-                <summary className="font-display flex cursor-pointer list-none items-center justify-between gap-4 px-6 py-4 text-base font-semibold text-emerald-950 [&::-webkit-details-marker]:hidden">
+                <summary className="font-display flex cursor-pointer list-none items-center justify-between gap-4 px-6 py-4 text-base font-semibold text-emerald-800 [&::-webkit-details-marker]:hidden">
                   {f.q}
                   <ChevronDown className="h-5 w-5 shrink-0 text-emerald-700 transition-transform group-open:rotate-180" aria-hidden />
                 </summary>
@@ -139,12 +139,12 @@ export default function ImNewPage() {
 
       {/* CONNECT */}
       <section className="px-4 pb-20 sm:px-6 lg:px-8">
-        <div className="mx-auto flex max-w-5xl flex-col items-center gap-6 rounded-3xl bg-emerald-900 px-8 py-12 text-center text-white md:flex-row md:justify-between md:text-left">
+        <div className="mx-auto flex max-w-5xl flex-col items-center gap-6 rounded-3xl bg-emerald-700 px-8 py-12 text-center text-white md:flex-row md:justify-between md:text-left">
           <div className="max-w-xl space-y-2">
             <h2 className="font-display text-2xl font-bold">Have a question?</h2>
             <p className="text-emerald-100">Send us a message and we will read it.</p>
           </div>
-          <Link href="/contact" className={`${pill} shrink-0 bg-amber-400 text-emerald-950 hover:bg-amber-300`}>
+          <Link href="/contact" className={`${pill} shrink-0 bg-amber-400 text-emerald-800 hover:bg-amber-300`}>
             Contact Us
           </Link>
         </div>

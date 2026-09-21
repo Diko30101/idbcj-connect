@@ -19,7 +19,7 @@ export default function Home() {
       <section className="mx-auto w-full max-w-7xl px-4 pt-6 sm:px-6 lg:px-8">
         <div className="relative flex min-h-[520px] items-center justify-center overflow-hidden rounded-3xl px-6 py-16 text-center">
           <Image src="/background.jpg" alt="Church Worship" fill priority sizes="100vw" className="object-cover" />
-          <div className="absolute inset-0 bg-gradient-to-b from-emerald-950/70 via-emerald-950/60 to-emerald-950/85" />
+          <div className="absolute inset-0 bg-gradient-to-b from-emerald-800/55 via-emerald-700/45 to-emerald-800/75" />
 
           <div className="relative z-10 max-w-3xl space-y-6">
             <span className="font-display inline-block rounded-full border border-white/25 bg-white/10 px-4 py-1 text-xs font-bold uppercase tracking-widest text-emerald-50 backdrop-blur-sm">
@@ -36,10 +36,10 @@ export default function Home() {
             <p className="text-sm font-medium tracking-wide text-amber-200">1 Timothy 3:15 (ASV)</p>
 
             <div className="flex flex-col items-center justify-center gap-3 pt-2 sm:flex-row">
-              <Link href="/im-new" className={`${pill} bg-amber-400 text-emerald-950 shadow-lg hover:bg-amber-300`}>
+              <Link href="/im-new" className={`${pill} bg-amber-400 text-emerald-800 shadow-lg hover:bg-amber-300`}>
                 Plan Your Visit
               </Link>
-              <Link href="/auth/login" className={`${pill} border border-white/70 text-white hover:bg-white hover:text-emerald-950`}>
+              <Link href="/auth/login" className={`${pill} border border-white/70 text-white hover:bg-white hover:text-emerald-800`}>
                 Members Login
               </Link>
             </div>
@@ -52,12 +52,12 @@ export default function Home() {
         <div className="mx-auto max-w-6xl">
           <div className="mb-10 text-center">
             <p className="font-display text-xs font-bold uppercase tracking-widest text-emerald-700">First time here?</p>
-            <h2 className="font-display mt-2 text-3xl font-bold text-emerald-950">You are welcome here</h2>
+            <h2 className="font-display mt-2 text-3xl font-bold text-emerald-800">You are welcome here</h2>
           </div>
           <div className="grid gap-6 md:grid-cols-3">
             <div className="rounded-2xl border border-emerald-900/10 bg-[#F6F4EE] p-7">
               <CalendarDays className="h-7 w-7 text-emerald-700" aria-hidden />
-              <h3 className="font-display mt-4 text-lg font-bold text-emerald-950">When we gather</h3>
+              <h3 className="font-display mt-4 text-lg font-bold text-emerald-800">When we gather</h3>
               <p className="mt-2 text-slate-700">
                 Every {WORSHIP.day}, {WORSHIP.displayTime}
                 <span className="block text-sm text-slate-500">Philippine time</span>
@@ -68,7 +68,7 @@ export default function Home() {
             </div>
             <div className="rounded-2xl border border-emerald-900/10 bg-[#F6F4EE] p-7">
               <MapPin className="h-7 w-7 text-emerald-700" aria-hidden />
-              <h3 className="font-display mt-4 text-lg font-bold text-emerald-950">Where to find us</h3>
+              <h3 className="font-display mt-4 text-lg font-bold text-emerald-800">Where to find us</h3>
               <p className="mt-2 text-slate-700">{WORSHIP.location}</p>
               <Link href="/contact" className="font-display mt-3 inline-block text-sm font-semibold text-emerald-700 hover:underline">
                 Ask for directions &rarr;
@@ -76,7 +76,7 @@ export default function Home() {
             </div>
             <div className="rounded-2xl border border-emerald-900/10 bg-[#F6F4EE] p-7">
               <MonitorPlay className="h-7 w-7 text-emerald-700" aria-hidden />
-              <h3 className="font-display mt-4 text-lg font-bold text-emerald-950">Can&rsquo;t come in person?</h3>
+              <h3 className="font-display mt-4 text-lg font-bold text-emerald-800">Can&rsquo;t come in person?</h3>
               <p className="mt-2 text-slate-700">Worship with us online through our live stream.</p>
               <a
                 href={WORSHIP.streamUrl}
@@ -100,7 +100,7 @@ export default function Home() {
       <section className="bg-[#F6F4EE] px-4 py-20 sm:px-6 lg:px-8">
         <div className="mx-auto max-w-6xl">
           <div className="mb-12 text-center">
-            <h2 className="font-display text-3xl font-bold text-emerald-950">Connect With Us</h2>
+            <h2 className="font-display text-3xl font-bold text-emerald-800">Connect With Us</h2>
             <p className="mt-2 text-slate-600">Discover how you can get involved.</p>
           </div>
           <div className="grid gap-8 md:grid-cols-3">
@@ -148,7 +148,7 @@ export default function Home() {
                   />
                 </div>
                 <div className="p-6">
-                  <h3 className="font-display text-xl font-bold text-emerald-950">{c.title}</h3>
+                  <h3 className="font-display text-xl font-bold text-emerald-800">{c.title}</h3>
                   <p className="mt-2 text-slate-600">{c.text}</p>
                   <span className="font-display mt-4 inline-block text-sm font-bold text-emerald-700 group-hover:underline">{c.cta} &rarr;</span>
                 </div>
@@ -171,7 +171,7 @@ export default function Home() {
           </div>
           <div className="w-full space-y-5 text-center md:w-2/3 md:text-left">
             <p className="font-display text-xs font-bold uppercase tracking-widest text-emerald-700">Our story</p>
-            <h2 className="font-display text-3xl font-bold text-emerald-950">Our Foundation</h2>
+            <h2 className="font-display text-3xl font-bold text-emerald-800">Our Foundation</h2>
             <div className="mx-auto h-1 w-20 rounded-full bg-amber-400 md:mx-0" />
             <p className="text-lg leading-relaxed text-slate-700">
               The <strong>Iglesia ng Dios na Buhay kay Cristo Jesus (IDBCJ)</strong> was founded in 1954 by{" "}
@@ -180,7 +180,7 @@ export default function Home() {
             </p>
             <Link
               href="/history"
-              className="font-display inline-flex rounded-full border border-emerald-800 px-6 py-3 text-sm font-semibold text-emerald-900 transition hover:bg-emerald-800 hover:text-white"
+              className="font-display inline-flex rounded-full border border-emerald-600 px-6 py-3 text-sm font-semibold text-emerald-800 transition hover:bg-emerald-600 hover:text-white"
             >
               Read Our History
             </Link>
@@ -190,23 +190,23 @@ export default function Home() {
 
       {/* 5. MEMBER PORTAL */}
       <section className="px-4 pb-20 sm:px-6 lg:px-8">
-        <div className="mx-auto flex max-w-5xl flex-col items-center gap-6 rounded-3xl bg-emerald-900 px-8 py-12 text-center text-white md:flex-row md:justify-between md:text-left">
+        <div className="mx-auto flex max-w-5xl flex-col items-center gap-6 rounded-3xl bg-emerald-700 px-8 py-12 text-center text-white md:flex-row md:justify-between md:text-left">
           <div className="max-w-xl space-y-2">
             <h2 className="font-display text-2xl font-bold">For our members</h2>
             <p className="text-emerald-100">
               Sign in to IDBCJ Connect for announcements, ministries, prayer requests, and your member profile.
             </p>
           </div>
-          <Link href="/auth/login" className={`${pill} shrink-0 bg-amber-400 text-emerald-950 hover:bg-amber-300`}>
+          <Link href="/auth/login" className={`${pill} shrink-0 bg-amber-400 text-emerald-800 hover:bg-amber-300`}>
             Members Login
           </Link>
         </div>
       </section>
 
       {/* 6. CONTACT */}
-      <section className="border-t border-emerald-900/10 bg-[#F6F4EE] px-4 py-20 sm:px-6 lg:px-8">
+      <section className="border-t border-emerald-600/10 bg-[#F6F4EE] px-4 py-20 sm:px-6 lg:px-8">
         <div className="mx-auto mb-10 max-w-4xl text-center">
-          <h2 className="font-display text-3xl font-bold text-emerald-950">Contact Us</h2>
+          <h2 className="font-display text-3xl font-bold text-emerald-800">Contact Us</h2>
           <p className="mt-2 text-slate-600">Reach out to our leadership directly.</p>
         </div>
         <ContactForm />

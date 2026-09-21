@@ -118,7 +118,7 @@ export function Navbar() {
         <div className="flex h-20 items-center justify-between gap-6">
           {/* --- LOGO --- */}
           <Link href="/" className="flex shrink-0 items-center gap-3 transition hover:opacity-80" onClick={closeAll}>
-            <span className="font-display text-xl font-extrabold tracking-tight text-emerald-950">IDBCJ</span>
+            <span className="font-display text-xl font-extrabold tracking-tight text-emerald-800">IDBCJ</span>
             <span className="relative h-11 w-11 shrink-0 overflow-hidden rounded-full border-2 border-emerald-100 shadow-sm md:h-12 md:w-12">
               <Image src="/logo.png" alt="IDBCJ Logo" fill sizes="48px" className="object-cover" />
             </span>
@@ -134,7 +134,7 @@ export function Navbar() {
             <ul className="flex items-center gap-7">
               {MENU.map((e) => {
                 const active = entryActive(e);
-                const color = active ? "text-emerald-700" : "text-emerald-950 hover:text-emerald-700";
+                const color = active ? "text-emerald-700" : "text-emerald-800 hover:text-emerald-700";
                 if (!e.children) {
                   return (
                     <li key={e.label}>
@@ -171,7 +171,7 @@ export function Navbar() {
                             href={c.href}
                             {...(c.external ? { target: "_blank", rel: "noopener noreferrer" } : {})}
                             className={`font-display flex items-center justify-between rounded-xl px-3 py-2.5 text-sm font-semibold hover:bg-emerald-50 hover:text-emerald-800 ${
-                              isActive(c.href) ? "text-emerald-700" : "text-emerald-950"
+                              isActive(c.href) ? "text-emerald-700" : "text-emerald-800"
                             }`}
                           >
                             <span>
@@ -191,19 +191,19 @@ export function Navbar() {
             <div className="flex items-center gap-3 border-l border-emerald-900/10 pl-6">
               {loggedIn ? (
                 <>
-                  <span className="hidden max-w-[10rem] truncate font-display text-sm font-semibold text-emerald-900 xl:block">
+                  <span className="hidden max-w-[10rem] truncate font-display text-sm font-semibold text-emerald-800 xl:block">
                     {name || "Member"}
                   </span>
                   <Link
                     href="/portal"
-                    className="font-display rounded-full bg-emerald-800 px-4 py-2 text-sm font-semibold text-white transition hover:bg-emerald-900"
+                    className="font-display rounded-full bg-emerald-800 px-4 py-2 text-sm font-semibold text-white transition hover:bg-emerald-700"
                   >
                     Member Portal
                   </Link>
                   <form action="/auth/sign-out" method="post">
                     <button
                       type="submit"
-                      className="font-display rounded-full px-3 py-2 text-sm font-semibold text-emerald-900/70 transition hover:bg-red-50 hover:text-red-600"
+                      className="font-display rounded-full px-3 py-2 text-sm font-semibold text-emerald-800/70 transition hover:bg-red-50 hover:text-red-600"
                     >
                       Logout
                     </button>
@@ -212,7 +212,7 @@ export function Navbar() {
               ) : (
                 <Link
                   href="/auth/login"
-                  className="font-display rounded-full border border-emerald-800 px-5 py-2 text-sm font-semibold text-emerald-900 transition hover:bg-emerald-800 hover:text-white"
+                  className="font-display rounded-full border border-emerald-600 px-5 py-2 text-sm font-semibold text-emerald-800 transition hover:bg-emerald-600 hover:text-white"
                 >
                   Members
                 </Link>
@@ -226,7 +226,7 @@ export function Navbar() {
             onClick={() => setMobileOpen(!mobileOpen)}
             aria-label={mobileOpen ? "Close menu" : "Open menu"}
             aria-expanded={mobileOpen}
-            className="p-2 text-emerald-900 hover:text-emerald-600 focus:outline-none lg:hidden"
+            className="p-2 text-emerald-800 hover:text-emerald-600 focus:outline-none lg:hidden"
           >
             {mobileOpen ? <X size={28} /> : <Menu size={28} />}
           </button>
@@ -248,7 +248,7 @@ export function Navbar() {
                       onClick={closeAll}
                       {...(c.external ? { target: "_blank", rel: "noopener noreferrer" } : {})}
                       className={`font-display flex items-center justify-between rounded-xl px-3 py-3 text-base font-semibold hover:bg-emerald-50 ${
-                        isActive(c.href) ? "text-emerald-700" : "text-emerald-950"
+                        isActive(c.href) ? "text-emerald-700" : "text-emerald-800"
                       }`}
                     >
                       <span>
@@ -265,7 +265,7 @@ export function Navbar() {
                   href={e.href!}
                   onClick={closeAll}
                   className={`font-display block rounded-xl px-3 py-3 text-base font-semibold hover:bg-emerald-50 ${
-                    isActive(e.href) ? "text-emerald-700" : "text-emerald-950"
+                    isActive(e.href) ? "text-emerald-700" : "text-emerald-800"
                   }`}
                 >
                   {e.label}
@@ -274,14 +274,14 @@ export function Navbar() {
               ),
             )}
 
-            <div className="flex flex-col gap-3 border-t border-emerald-900/10 pt-5">
+            <div className="flex flex-col gap-3 border-t border-emerald-600/10 pt-5">
               {loggedIn ? (
                 <>
-                  <p className="font-display truncate px-1 text-sm font-semibold text-emerald-900">{name || "Member"}</p>
+                  <p className="font-display truncate px-1 text-sm font-semibold text-emerald-800">{name || "Member"}</p>
                   <Link
                     href="/portal"
                     onClick={closeAll}
-                    className="font-display rounded-full bg-emerald-800 px-5 py-3 text-center text-base font-semibold text-white hover:bg-emerald-900"
+                    className="font-display rounded-full bg-emerald-800 px-5 py-3 text-center text-base font-semibold text-white hover:bg-emerald-700"
                   >
                     Member Portal
                   </Link>
@@ -298,7 +298,7 @@ export function Navbar() {
                 <Link
                   href="/auth/login"
                   onClick={closeAll}
-                  className="font-display rounded-full border border-emerald-800 px-5 py-3 text-center text-base font-semibold text-emerald-900 hover:bg-emerald-800 hover:text-white"
+                  className="font-display rounded-full border border-emerald-600 px-5 py-3 text-center text-base font-semibold text-emerald-800 hover:bg-emerald-600 hover:text-white"
                 >
                   Members Login
                 </Link>
