@@ -25,18 +25,21 @@ export function PageHeader({
 
 export function Panel({
   title,
+  subtitle,
   children,
   className = "",
 }: {
   title?: string;
+  subtitle?: string;
   children: ReactNode;
   className?: string;
 }) {
   return (
     <section className={`bg-white rounded-xl border border-gray-200 shadow-sm ${className}`}>
-      {title && (
+      {(title || subtitle) && (
         <div className="px-5 py-3 border-b border-gray-100">
-          <h2 className="font-semibold text-gray-800">{title}</h2>
+          {title && <h2 className="font-semibold text-gray-800">{title}</h2>}
+          {subtitle && <p className="mt-0.5 text-xs text-gray-500">{subtitle}</p>}
         </div>
       )}
       <div className="p-5">{children}</div>
