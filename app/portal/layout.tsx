@@ -1,7 +1,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { redirect } from "next/navigation";
-import { getPortalContext, isStaff, isFinance, LOCAL_FINANCE_MINISTRY_NAME, FINANCE_MINISTRY_NAME } from "@/lib/portal";
+import { getPortalContext, isStaff, isFinance, LOCAL_FINANCE_MINISTRY_NAME, FINANCE_MINISTRY_NAME, PASTORAL_MINISTRY_NAME } from "@/lib/portal";
 import { PortalNav, type NavItem } from "@/components/portal/portal-nav";
 import { NotificationBell } from "@/components/portal/notification-bell";
 import { shownEmail } from "@/lib/username";
@@ -49,7 +49,7 @@ export default async function PortalLayout({ children }: { children: React.React
     items.push({ href: "/portal/events", label: "Events" });
   }
   {
-    const needsMinistryCheck = !isFinance(profile.role);
+    const needsMinistryCheck = !(isFinance(profile.role) && isStaff(profile.role));
     const { data: myMinistries } = needsMinistryCheck
       ? await supabase.from("ministry_members").select("ministries(name)").eq("profile_id", profile.id)
       : { data: null };
@@ -58,6 +58,9 @@ export default async function PortalLayout({ children }: { children: React.React
     );
     const isFinanceMinistryMember = ((myMinistries ?? []) as any[]).some(
       (m) => m.ministries?.name === FINANCE_MINISTRY_NAME,
+    );
+    const isPastoralMinistryMember = ((myMinistries ?? []) as any[]).some(
+      (m) => m.ministries?.name === PASTORAL_MINISTRY_NAME,
     );
 
     // Finance role (Admin/Secretary/Treasurer) at Finance Ministry members ay parehong may
@@ -74,6 +77,11 @@ export default async function PortalLayout({ children }: { children: React.React
       });
     }
     if (isLocalFinanceMember) items.push({ href: "/portal/finance/local", label: "Local Finance" });
+
+    // Admin/Secretary o Pastoral Ministry members lang ang may access sa Bible Study Courses
+    if (isStaff(profile.role) || isPastoralMinistryMember) {
+      items.push({ href: "/portal/courses", label: "Bible Study" });
+    }
   }
   if (profile.role === "admin") items.push({ href: "/portal/audit", label: "Audit Log" });
 
