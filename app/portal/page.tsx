@@ -39,11 +39,7 @@ export default async function PortalHome({
     staff
       ? supabase.from("profiles").select("status")
       : Promise.resolve({ data: null as { status: string }[] | null }),
-    supabase
-      .from("profiles")
-      .select("id, full_name, birthday")
-      .not("birthday", "is", null)
-      .neq("status", "inactive"),
+    supabase.rpc("member_birthdays"),
   ]);
 
   const myAtt = ((att.data ?? []) as any[])
