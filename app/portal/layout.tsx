@@ -1,7 +1,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { redirect } from "next/navigation";
-import { getPortalContext, isStaff, isFinance, LOCAL_FINANCE_MINISTRY_NAME } from "@/lib/portal";
+import { getPortalContext, isStaff, isFinance, LOCAL_FINANCE_MINISTRY_NAME, FINANCE_MINISTRY_NAME } from "@/lib/portal";
 import { PortalNav, type NavItem } from "@/components/portal/portal-nav";
 import { NotificationBell } from "@/components/portal/notification-bell";
 import { shownEmail } from "@/lib/username";
@@ -46,17 +46,27 @@ export default async function PortalLayout({ children }: { children: React.React
     items.push({ href: "/portal/attendance", label: "Attendance" });
     items.push({ href: "/portal/members", label: "Members" });
   }
-  if (isFinance(profile.role)) {
-    items.push({ href: "/portal/finance", label: "Finance" });
-  } else {
-    const { data: localFinanceMembership } = await supabase
-      .from("ministry_members")
-      .select("ministries(name)")
-      .eq("profile_id", profile.id);
-    const isLocalFinanceMember = ((localFinanceMembership ?? []) as any[]).some(
+  {
+    const needsMinistryCheck = !isFinance(profile.role);
+    const { data: myMinistries } = needsMinistryCheck
+      ? await supabase.from("ministry_members").select("ministries(name)").eq("profile_id", profile.id)
+      : { data: null };
+    const isLocalFinanceMember = ((myMinistries ?? []) as any[]).some(
       (m) => m.ministries?.name === LOCAL_FINANCE_MINISTRY_NAME,
     );
-    if (isLocalFinanceMember) items.push({ href: "/portal/finance/local", label: "Local Finance" });
+    const isFinanceMinistryMember = ((myMinistries ?? []) as any[]).some(
+      (m) => m.ministries?.name === FINANCE_MINISTRY_NAME,
+    );
+
+    if (isFinance(profile.role)) {
+      items.push({ href: "/portal/finance", label: "Finance" });
+      items.push({ href: "/portal/finance/report", label: "Audit Report" });
+    } else if (isLocalFinanceMember) {
+      items.push({ href: "/portal/finance/local", label: "Local Finance" });
+    }
+    if (isFinance(profile.role) || isFinanceMinistryMember) {
+      items.push({ href: "/portal/finance/expenses", label: "Gastusin" });
+    }
   }
   if (profile.role === "admin") items.push({ href: "/portal/audit", label: "Audit Log" });
 
