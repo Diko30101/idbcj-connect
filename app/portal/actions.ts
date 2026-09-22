@@ -350,11 +350,14 @@ function worshipSummary(): string {
   ].join(" · ");
 }
 
+// Ang Monthly Ministerial Class ay para lang sa mga miyembro ng ministry na ito
+const ADMINISTRATIVE_MINISTRY_NAME = "Administrative Ministry";
+
 export async function getNotifications(): Promise<{ items: NotificationItem[] }> {
   const { supabase, profile } = await requirePortalAccess();
   const seenAt = profile.notifications_seen_at;
 
-  const [ann, sched, svc] = await Promise.all([
+  const [ann, sched, svc, myMinistries] = await Promise.all([
     supabase
       .from("announcements")
       .select("id, title, ministry_id, created_at, ministries(name)")
@@ -375,7 +378,24 @@ export async function getNotifications(): Promise<{ items: NotificationItem[] }>
       .gt("created_at", seenAt)
       .order("created_at", { ascending: false })
       .limit(10),
+    // Para malaman kung kabilang ang naka-login sa Administrative Ministry
+    supabase.from("ministry_members").select("ministries(name)").eq("profile_id", profile.id),
   ]);
+
+  const isAdminMinistryMember = ((myMinistries.data ?? []) as any[]).some(
+    (m) => m.ministries?.name === ADMINISTRATIVE_MINISTRY_NAME,
+  );
+
+  // Bagong Monthly Ministerial Class — para lang sa Administrative Ministry
+  const mclass = isAdminMinistryMember
+    ? await supabase
+        .from("services")
+        .select("id, service_date, title, created_at")
+        .eq("kind", "monthly_ministerial_class")
+        .gt("created_at", seenAt)
+        .order("created_at", { ascending: false })
+        .limit(10)
+    : { data: [] as any[] };
 
   const items: NotificationItem[] = [
     ...((ann.data ?? []) as any[]).map((a) => ({
@@ -399,6 +419,14 @@ export async function getNotifications(): Promise<{ items: NotificationItem[] }>
       kind: "service" as const,
       title: `Sunday Worship · ${fmtDate(s.service_date)}`,
       subtitle: worshipSummary(),
+      date: s.created_at as string,
+      href: "/portal",
+    })),
+    ...((mclass.data ?? []) as any[]).map((s) => ({
+      id: `mc-${s.id}`,
+      kind: "service" as const,
+      title: `Monthly Ministerial Class · ${fmtDate(s.service_date)}`,
+      subtitle: s.title ? (s.title as string) : "Para sa Administrative Ministry",
       date: s.created_at as string,
       href: "/portal",
     })),
