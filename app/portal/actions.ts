@@ -8,6 +8,7 @@ import {
   getPortalContext,
   isStaff,
   KINDS,
+  requireExpenseAccess,
   requireLocalFinanceAccess,
   requirePortalAccess,
   requireRoles,
@@ -642,6 +643,62 @@ export async function saveLocalYearlyFinancials(fd: FormData) {
   if (error) back(path, "error", "Hindi na-save: " + error.message);
   revalidatePath("/portal/finance/local", "layout");
   back(path, "ok", `Na-save ang financial records ng ${year}.`);
+}
+
+// ---------------------------------------------------------------
+// GASTUSIN (buwanang listahan ng gastos, buong simbahan, hindi naka-locality)
+// ---------------------------------------------------------------
+export async function addExpense(fd: FormData) {
+  const { supabase, user } = await requireExpenseAccess();
+  const month = str(fd, "month");
+  const path = `/portal/finance/expenses?month=${encodeURIComponent(month)}`;
+  const description = str(fd, "description");
+  const amountRaw = str(fd, "amount");
+  if (!/^\d{4}-\d{2}$/.test(month)) back(path, "error", "Di-wastong buwan.");
+  if (!description) back(path, "error", "Isulat ang pangalan ng gastos.");
+  const amount = Math.max(0, Number(amountRaw) || 0);
+
+  const { error } = await supabase.from("expense_records").insert({
+    expense_month: monthToDate(month),
+    description,
+    amount,
+    note: strOrNull(fd, "note"),
+    created_by: user.id,
+    updated_by: user.id,
+  });
+  if (error) back(path, "error", "Hindi naidagdag: " + error.message);
+  revalidatePath("/portal/finance/expenses", "layout");
+  back(path, "ok", "Naidagdag ang gastos.");
+}
+
+export async function updateExpense(fd: FormData) {
+  const { supabase, user } = await requireExpenseAccess();
+  const id = str(fd, "id");
+  const month = str(fd, "month");
+  const path = `/portal/finance/expenses?month=${encodeURIComponent(month)}`;
+  const description = str(fd, "description");
+  const amountRaw = str(fd, "amount");
+  if (!description) back(path, "error", "Isulat ang pangalan ng gastos.");
+  const amount = Math.max(0, Number(amountRaw) || 0);
+
+  const { error } = await supabase
+    .from("expense_records")
+    .update({ description, amount, note: strOrNull(fd, "note"), updated_by: user.id })
+    .eq("id", id);
+  if (error) back(path, "error", "Hindi na-save: " + error.message);
+  revalidatePath("/portal/finance/expenses", "layout");
+  back(path, "ok", "Na-save ang pagbabago.");
+}
+
+export async function deleteExpense(fd: FormData) {
+  const { supabase } = await requireExpenseAccess();
+  const id = str(fd, "id");
+  const month = str(fd, "month");
+  const path = `/portal/finance/expenses?month=${encodeURIComponent(month)}`;
+  const { error } = await supabase.from("expense_records").delete().eq("id", id);
+  if (error) back(path, "error", "Hindi nabura: " + error.message);
+  revalidatePath("/portal/finance/expenses", "layout");
+  back(path, "ok", "Nabura ang gastos.");
 }
 
 export async function replyToLetter(fd: FormData) {

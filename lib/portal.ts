@@ -76,6 +76,9 @@ export const isFinance = (r: Role) => r === "admin" || r === "secretary" || r ==
 // Ministry na ang mga miyembro ay may access lang sa financial records ng sariling lokal
 export const LOCAL_FINANCE_MINISTRY_NAME = "Local Finance Ministry";
 
+// Ministry na ang mga miyembro ay may access sa pag-encode ng gastusin (buong simbahan, hindi naka-locality)
+export const FINANCE_MINISTRY_NAME = "Finance Ministry";
+
 // ---------------------------------------------------------------
 // Petsa (Philippine time)
 // ---------------------------------------------------------------
@@ -162,6 +165,17 @@ export async function requireLocalFinanceAccess() {
         encodeURIComponent("Wala kang naka-set na lokal sa iyong profile. Ipa-set muna sa Secretary o Admin."),
     );
   return { ...ctx, locality: profile.locality as Locality };
+}
+
+// Para sa pag-encode ng gastusin: Admin/Secretary/Treasurer, o kasapi ng "Finance Ministry"
+export async function requireExpenseAccess() {
+  const ctx = await requirePortalAccess();
+  const { supabase, profile } = ctx;
+  if (isFinance(profile.role)) return ctx;
+  const { data } = await supabase.from("ministry_members").select("ministries(name)").eq("profile_id", profile.id);
+  const isMember = ((data ?? []) as any[]).some((m) => m.ministries?.name === FINANCE_MINISTRY_NAME);
+  if (!isMember) redirect("/portal?error=" + encodeURIComponent("Wala kang access sa pahinang iyon."));
+  return ctx;
 }
 
 // Para sa mensahe pagkatapos ng isang aksyon

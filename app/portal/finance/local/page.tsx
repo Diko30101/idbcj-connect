@@ -24,7 +24,7 @@ export default async function LocalFinancePage({
   const [monthRes, yearRes] = await Promise.all([
     supabase
       .from("financial_records")
-      .select("category, amount, updated_at, profiles(full_name)")
+      .select("category, amount, updated_at, profiles!financial_records_updated_by_fkey(full_name)")
       .eq("record_month", monthToDate(month))
       .eq("locality", locality),
     supabase
