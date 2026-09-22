@@ -1,19 +1,23 @@
 import Link from "next/link";
-import { requireRoles, LOCALITIES, LOCALITY_LABEL, FINANCE_CATEGORIES, FINANCE_CATEGORY_LABEL, type FinanceCategory } from "@/lib/portal";
+import { requireRoles, LOCALITIES, LOCALITY_LABEL, FINANCE_CATEGORIES, FINANCE_CATEGORY_LABEL, type FinanceCategory, type Locality } from "@/lib/portal";
 import { currentMonthPH, monthToDate, monthLabel, fmtPeso } from "@/lib/finance";
 import { Empty, Notice, PageHeader, Panel, btnCls, btnGhostCls, inputCls } from "@/components/portal/ui";
 import { FinanceGrid } from "@/components/portal/finance-grid";
+import { YearlyLocalityGrid } from "@/components/portal/yearly-locality-grid";
+import { FinanceChart } from "@/components/portal/finance-chart";
 
 export default async function FinancePage({
   searchParams,
 }: {
-  searchParams: Promise<{ month?: string; year?: string; ok?: string; error?: string }>;
+  searchParams: Promise<{ month?: string; year?: string; locality?: string; ok?: string; error?: string }>;
 }) {
-  const { ok, error, month: monthParam, year: yearParam } = await searchParams;
+  const { ok, error, month: monthParam, year: yearParam, locality: localityParam } = await searchParams;
   const { supabase } = await requireRoles(["admin", "secretary", "treasurer"]);
 
   const month = monthParam && /^\d{4}-\d{2}$/.test(monthParam) ? monthParam : currentMonthPH();
   const year = yearParam && /^\d{4}$/.test(yearParam) ? yearParam : month.slice(0, 4);
+  const localityFilter =
+    localityParam && LOCALITIES.includes(localityParam as Locality) ? (localityParam as Locality) : "";
 
   const [monthRows, yearRows] = await Promise.all([
     supabase
@@ -22,7 +26,7 @@ export default async function FinancePage({
       .eq("record_month", monthToDate(month)),
     supabase
       .from("financial_records")
-      .select("record_month, category, amount")
+      .select("record_month, locality, category, amount")
       .gte("record_month", `${year}-01-01`)
       .lt("record_month", `${Number(year) + 1}-01-01`),
   ]);
@@ -38,13 +42,15 @@ export default async function FinancePage({
   }
   const initialValues: Record<string, number> = Object.fromEntries(grid);
 
-  // Taunang buod: buwan x kategorya
+  // Taunang buod: buwan x kategorya (kinukuha ang lahat ng lokal maliban kung may locality filter)
   const yearGrid = new Map<string, number>(); // key = `${MM}_${category}`
   for (const r of (yearRows.data ?? []) as any[]) {
+    if (localityFilter && r.locality !== localityFilter) continue;
     const mm = (r.record_month as string).slice(5, 7);
     const key = `${mm}_${r.category}`;
     yearGrid.set(key, (yearGrid.get(key) ?? 0) + Number(r.amount));
   }
+  const yearInitialValues: Record<string, number> = Object.fromEntries(yearGrid);
   const months12 = Array.from({ length: 12 }, (_, i) => String(i + 1).padStart(2, "0"));
   const yearCatTotal = (category: FinanceCategory) =>
     months12.reduce((s, mm) => s + (yearGrid.get(`${mm}_${category}`) ?? 0), 0);
@@ -86,15 +92,29 @@ export default async function FinancePage({
 
       <div className="mt-6">
         <Panel
-          title={`Taunang Buod (Spreadsheet View) · ${year}`}
-          className=""
+          title={
+            localityFilter
+              ? `Taunang Buod · ${LOCALITY_LABEL[localityFilter]} · ${year}`
+              : `Taunang Buod (Spreadsheet View) · Lahat ng Lokal · ${year}`
+          }
         >
           <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
-            <form method="get" className="flex items-end gap-2">
+            <form method="get" className="flex flex-wrap items-end gap-2">
               <input type="hidden" name="month" value={month} />
               <label className="grid gap-1.5">
                 <span className="text-sm font-medium text-gray-700">Taon</span>
                 <input type="number" name="year" defaultValue={year} className={inputCls + " w-28"} />
+              </label>
+              <label className="grid gap-1.5">
+                <span className="text-sm font-medium text-gray-700">Lokal</span>
+                <select name="locality" defaultValue={localityFilter} className={inputCls}>
+                  <option value="">Lahat ng Lokal</option>
+                  {LOCALITIES.map((l) => (
+                    <option key={l} value={l}>
+                      {LOCALITY_LABEL[l]}
+                    </option>
+                  ))}
+                </select>
               </label>
               <button className={btnGhostCls}>Ipakita</button>
             </form>
@@ -103,7 +123,26 @@ export default async function FinancePage({
             </Link>
           </div>
 
-          {(yearRows.data ?? []).length === 0 ? (
+          <div className="mb-6 rounded-xl border border-gray-100 bg-white p-4">
+            <FinanceChart
+              year={year}
+              months={months12}
+              categories={FINANCE_CATEGORIES}
+              categoryLabel={FINANCE_CATEGORY_LABEL}
+              values={yearInitialValues}
+            />
+          </div>
+
+          {localityFilter ? (
+            <YearlyLocalityGrid
+              year={year}
+              locality={localityFilter}
+              localityLabel={LOCALITY_LABEL[localityFilter]}
+              categories={FINANCE_CATEGORIES}
+              categoryLabel={FINANCE_CATEGORY_LABEL}
+              initial={yearInitialValues}
+            />
+          ) : yearGrid.size === 0 ? (
             <Empty>Wala pang naitatalang koleksyon para sa {year}.</Empty>
           ) : (
             <div className="overflow-x-auto">

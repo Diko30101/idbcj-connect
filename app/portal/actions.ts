@@ -548,6 +548,42 @@ export async function saveMonthlyFinancials(fd: FormData) {
   back(path, "ok", `Na-save ang financial records para sa ${month}.`);
 }
 
+// Pag-edit ng buong taon para sa isang lokal (mula sa Taunang Buod report)
+export async function saveYearlyLocalityFinancials(fd: FormData) {
+  const { supabase, user } = await requireRoles(["admin", "secretary", "treasurer"]);
+  const year = str(fd, "year");
+  const locality = str(fd, "locality");
+  const path = `/portal/finance?year=${encodeURIComponent(year)}&locality=${encodeURIComponent(locality)}`;
+  if (!/^\d{4}$/.test(year)) back(path, "error", "Di-wastong taon.");
+  if (!LOCALITIES.includes(locality as Locality)) back(path, "error", "Di-wastong lokal.");
+
+  const months = Array.from({ length: 12 }, (_, i) => String(i + 1).padStart(2, "0"));
+  const rows: {
+    record_month: string;
+    locality: string;
+    category: string;
+    amount: number;
+    note: string | null;
+    updated_by: string;
+  }[] = [];
+
+  for (const mm of months) {
+    for (const category of FINANCE_CATEGORIES) {
+      const raw = str(fd, `amt_${mm}_${category}`);
+      const amount = raw === "" ? 0 : Math.max(0, Number(raw) || 0);
+      const note = strOrNull(fd, `note_${mm}_${category}`);
+      rows.push({ record_month: `${year}-${mm}-01`, locality, category, amount, note, updated_by: user.id });
+    }
+  }
+
+  const { error } = await supabase
+    .from("financial_records")
+    .upsert(rows, { onConflict: "record_month,locality,category" });
+  if (error) back(path, "error", "Hindi na-save: " + error.message);
+  revalidatePath("/portal/finance", "layout");
+  back(path, "ok", `Na-save ang financial records ng ${year} para sa lokal na ito.`);
+}
+
 export async function replyToLetter(fd: FormData) {
   const { supabase, user } = await requirePortalAccess();
   const letterId = str(fd, "letter_id");
