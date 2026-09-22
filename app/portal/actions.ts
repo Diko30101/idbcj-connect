@@ -311,6 +311,21 @@ export async function createAnnouncement(fd: FormData) {
   back("/portal/announcements", "ok", "Nagawa ang anunsyo.");
 }
 
+export async function updateAnnouncement(fd: FormData) {
+  const { supabase } = await requirePortalAccess();
+  const id = str(fd, "id");
+  const title = str(fd, "title");
+  const body = str(fd, "body");
+  if (!title || !body) back("/portal/announcements", "error", "Isulat ang pamagat at mensahe.");
+  const { error } = await supabase
+    .from("announcements")
+    .update({ title, body, expires_at: strOrNull(fd, "expires_at") })
+    .eq("id", id);
+  if (error) back("/portal/announcements", "error", "Hindi na-update: " + error.message);
+  revalidatePath("/portal", "layout");
+  back("/portal/announcements", "ok", "Na-update ang anunsyo.");
+}
+
 export async function toggleAnnouncement(fd: FormData) {
   const { supabase } = await requirePortalAccess();
   const { error } = await supabase

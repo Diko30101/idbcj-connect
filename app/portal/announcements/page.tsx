@@ -1,13 +1,14 @@
+import Link from "next/link";
 import { requirePortalAccess, isStaff, fmtDate } from "@/lib/portal";
-import { createAnnouncement, deleteAnnouncement, toggleAnnouncement } from "../actions";
+import { createAnnouncement, deleteAnnouncement, toggleAnnouncement, updateAnnouncement } from "../actions";
 import { Empty, Field, Notice, PageHeader, Panel, btnCls, btnDangerCls, btnGhostCls, inputCls } from "@/components/portal/ui";
 
 export default async function AnnouncementsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ ok?: string; error?: string }>;
+  searchParams: Promise<{ ok?: string; error?: string; edit?: string }>;
 }) {
-  const { ok, error } = await searchParams;
+  const { ok, error, edit } = await searchParams;
   const { supabase, profile } = await requirePortalAccess();
   const staff = isStaff(profile.role);
 
@@ -42,30 +43,57 @@ export default async function AnnouncementsPage({
               <ul className="divide-y divide-gray-100">
                 {list.map((a) => {
                   const manage = staff || (a.ministry_id && ledIds.has(a.ministry_id));
+                  const isEditing = manage && edit === a.id;
                   return (
                     <li key={a.id} className="py-4 first:pt-0 last:pb-0">
-                      <div className="flex items-start justify-between gap-2">
-                        <h3 className="font-semibold text-gray-900">{a.title}</h3>
-                        <span className="shrink-0 text-xs text-gray-400">{fmtDate(a.publish_at)}</span>
-                      </div>
-                      <div className="mb-1 flex flex-wrap gap-2 text-xs">
-                        <span className="font-medium text-purple-700">{a.ministries?.name ?? "Para sa lahat"}</span>
-                        {!a.published && <span className="rounded bg-amber-50 px-1.5 text-amber-700">Draft</span>}
-                        {a.expires_at && <span className="text-gray-400">hanggang {fmtDate(a.expires_at)}</span>}
-                      </div>
-                      <p className="whitespace-pre-line text-sm text-gray-600">{a.body}</p>
-                      {manage && (
-                        <div className="mt-3 flex gap-2">
-                          <form action={toggleAnnouncement}>
-                            <input type="hidden" name="id" value={a.id} />
-                            <input type="hidden" name="publish" value={a.published ? "false" : "true"} />
-                            <button className={btnGhostCls}>{a.published ? "Gawing draft" : "I-publish"}</button>
-                          </form>
-                          <form action={deleteAnnouncement}>
-                            <input type="hidden" name="id" value={a.id} />
-                            <button className={btnDangerCls}>Burahin</button>
-                          </form>
-                        </div>
+                      {isEditing ? (
+                        <form action={updateAnnouncement} className="grid gap-3">
+                          <input type="hidden" name="id" value={a.id} />
+                          <Field label="Pamagat">
+                            <input name="title" required defaultValue={a.title} className={inputCls} />
+                          </Field>
+                          <Field label="Mensahe">
+                            <textarea name="body" required rows={4} defaultValue={a.body} className={inputCls} />
+                          </Field>
+                          <Field label="Hanggang kailan (opsyonal)">
+                            <input type="date" name="expires_at" defaultValue={a.expires_at ?? ""} className={inputCls} />
+                          </Field>
+                          <div className="flex gap-2">
+                            <button className={btnCls}>I-save</button>
+                            <Link href="/portal/announcements" className={btnGhostCls}>
+                              Kanselahin
+                            </Link>
+                          </div>
+                        </form>
+                      ) : (
+                        <>
+                          <div className="flex items-start justify-between gap-2">
+                            <h3 className="font-semibold text-gray-900">{a.title}</h3>
+                            <span className="shrink-0 text-xs text-gray-400">{fmtDate(a.publish_at)}</span>
+                          </div>
+                          <div className="mb-1 flex flex-wrap gap-2 text-xs">
+                            <span className="font-medium text-purple-700">{a.ministries?.name ?? "Para sa lahat"}</span>
+                            {!a.published && <span className="rounded bg-amber-50 px-1.5 text-amber-700">Draft</span>}
+                            {a.expires_at && <span className="text-gray-400">hanggang {fmtDate(a.expires_at)}</span>}
+                          </div>
+                          <p className="whitespace-pre-line text-sm text-gray-600">{a.body}</p>
+                          {manage && (
+                            <div className="mt-3 flex gap-2">
+                              <Link href={`/portal/announcements?edit=${a.id}`} className={btnGhostCls}>
+                                I-edit
+                              </Link>
+                              <form action={toggleAnnouncement}>
+                                <input type="hidden" name="id" value={a.id} />
+                                <input type="hidden" name="publish" value={a.published ? "false" : "true"} />
+                                <button className={btnGhostCls}>{a.published ? "Gawing draft" : "I-publish"}</button>
+                              </form>
+                              <form action={deleteAnnouncement}>
+                                <input type="hidden" name="id" value={a.id} />
+                                <button className={btnDangerCls}>Burahin</button>
+                              </form>
+                            </div>
+                          )}
+                        </>
                       )}
                     </li>
                   );
