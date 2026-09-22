@@ -1,36 +1,80 @@
 "use client";
 
-import { useActionState } from "react";
-import { changePassword, type ChangePasswordState } from "./actions";
-
-const inputCls =
-  "w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm focus:border-emerald-600 focus:outline-none focus:ring-1 focus:ring-emerald-600";
+import { useState, useTransition } from "react";
+import { createClient } from "@/lib/supabase/client";
+import { completePasswordChange } from "./actions";
+import { btnCls, inputCls } from "@/components/portal/ui";
 
 export function ChangePasswordForm() {
-  const [state, action, pending] = useActionState<ChangePasswordState, FormData>(changePassword, null);
+  const [password, setPassword] = useState("");
+  const [confirm, setConfirm] = useState("");
+  const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [isPending, startTransition] = useTransition();
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    setError(null);
+
+    if (password.length < 6) {
+      setError("Kailangan ng hindi bababa sa 6 na letra/numero ang password.");
+      return;
+    }
+    if (password !== confirm) {
+      setError("Hindi magkatugma ang dalawang password.");
+      return;
+    }
+
+    setLoading(true);
+    const supabase = createClient();
+    const { error: updateError } = await supabase.auth.updateUser({ password });
+    setLoading(false);
+
+    if (updateError) {
+      setError("Hindi na-save: " + updateError.message);
+      return;
+    }
+
+    startTransition(() => {
+      completePasswordChange();
+    });
+  }
+
+  const busy = loading || isPending;
 
   return (
-    <form action={action} className="space-y-4">
+    <form onSubmit={handleSubmit} className="grid gap-4">
       <label className="grid gap-1.5">
-        <span className="text-sm font-medium text-gray-700">Bagong password</span>
-        <input type="password" name="password" required minLength={8} autoComplete="new-password" className={inputCls} />
-        <span className="text-xs text-gray-400">Hindi bababa sa 8 na karakter.</span>
+        <span className="text-sm font-medium text-gray-700">Bagong Password</span>
+        <input
+          type="password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          minLength={6}
+          required
+          autoComplete="new-password"
+          className={inputCls}
+        />
       </label>
       <label className="grid gap-1.5">
-        <span className="text-sm font-medium text-gray-700">Ulitin ang bagong password</span>
-        <input type="password" name="confirm" required minLength={8} autoComplete="new-password" className={inputCls} />
+        <span className="text-sm font-medium text-gray-700">Ulitin ang Bagong Password</span>
+        <input
+          type="password"
+          value={confirm}
+          onChange={(e) => setConfirm(e.target.value)}
+          minLength={6}
+          required
+          autoComplete="new-password"
+          className={inputCls}
+        />
       </label>
-      {state?.error && (
-        <p role="alert" className="rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm font-medium text-red-700">
-          {state.error}
+      {error && (
+        <p className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-700">
+          {error}
         </p>
       )}
-      <button
-        type="submit"
-        disabled={pending}
-        className="inline-flex w-full items-center justify-center rounded-md bg-emerald-700 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-800 disabled:opacity-50"
-      >
-        {pending ? "Sine-save..." : "I-save ang bagong password"}
+      <button type="submit" disabled={busy} className={btnCls}>
+        {busy ? "Nagse-save..." : "I-save ang Bagong Password"}
       </button>
     </form>
   );

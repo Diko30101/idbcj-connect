@@ -1,7 +1,7 @@
-import { requirePortalAccess, fmtDate, DPO_CONTACT, CATEGORY_LABEL } from "@/lib/portal";
-import { shownEmail } from "@/lib/username";
+import Link from "next/link";
+import { requirePortalAccess, fmtDate, DPO_CONTACT } from "@/lib/portal";
 import { updateMyProfile } from "../actions";
-import { Field, Notice, Panel, PageHeader, RoleBadge, StatusBadge, btnCls, inputCls } from "@/components/portal/ui";
+import { Field, Notice, Panel, PageHeader, RoleBadge, StatusBadge, btnCls, btnGhostCls, inputCls } from "@/components/portal/ui";
 
 export default async function ProfilePage({
   searchParams,
@@ -51,21 +51,9 @@ export default async function ProfilePage({
         <div className="space-y-6">
           <Panel title="Account">
             <dl className="space-y-3 text-sm">
-              {p.username && (
-                <div>
-                  <dt className="text-xs font-semibold uppercase tracking-wide text-gray-400">Username</dt>
-                  <dd className="break-all font-mono text-gray-800">{p.username}</dd>
-                </div>
-              )}
-              {shownEmail(p.email) && (
-                <div>
-                  <dt className="text-xs font-semibold uppercase tracking-wide text-gray-400">Email</dt>
-                  <dd className="break-all text-gray-800">{p.email}</dd>
-                </div>
-              )}
               <div>
-                <dt className="text-xs font-semibold uppercase tracking-wide text-gray-400">Category</dt>
-                <dd className="text-gray-800">{CATEGORY_LABEL[p.category] ?? p.category}</dd>
+                <dt className="text-xs font-semibold uppercase tracking-wide text-gray-400">Email</dt>
+                <dd className="break-all text-gray-800">{p.email}</dd>
               </div>
               <div className="flex flex-wrap gap-2">
                 <RoleBadge role={p.role} />
@@ -94,6 +82,9 @@ export default async function ProfilePage({
             <p className="mt-4 text-xs text-gray-400">
               Ang status, binyag, at ministry ay inaayos ng secretary o ng Presiding Minister.
             </p>
+            <Link href="/change-password" className={btnGhostCls + " mt-4 inline-block"}>
+              Baguhin ang Password
+            </Link>
           </Panel>
 
           <Panel title="Privacy">
