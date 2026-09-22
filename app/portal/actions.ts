@@ -842,3 +842,85 @@ export async function deleteSermon(fd: FormData) {
   revalidatePath("/sermons");
   redirect("/portal/sermons?ok=" + encodeURIComponent("Nabura ang sermon."));
 }
+
+// ---------------------------------------------------------------
+// EVENTS (Admin/Secretary lang) — special events sa publikong /events
+// ---------------------------------------------------------------
+export async function createEvent(fd: FormData) {
+  const { supabase } = await requireRoles(["admin", "secretary"]);
+  const title = str(fd, "title");
+  const eventDate = str(fd, "event_date");
+  if (!title || !eventDate) back("/portal/events", "error", "Kumpletuhin ang pamagat at petsa.");
+  const locality = strOrNull(fd, "locality");
+  if (locality && !LOCALITIES.includes(locality as Locality)) back("/portal/events", "error", "Di-wastong lokal.");
+  const { data, error } = await supabase
+    .from("events")
+    .insert({
+      title,
+      description: strOrNull(fd, "description"),
+      event_date: eventDate,
+      event_time: strOrNull(fd, "event_time"),
+      locality,
+      location: strOrNull(fd, "location"),
+      link: strOrNull(fd, "link"),
+      published: str(fd, "published") === "on",
+    })
+    .select("id")
+    .single();
+  if (error) back("/portal/events", "error", "Hindi nagawa: " + error.message);
+  revalidatePath("/portal/events");
+  revalidatePath("/events");
+  redirect(`/portal/events/${data!.id}`);
+}
+
+export async function updateEvent(fd: FormData) {
+  const { supabase } = await requireRoles(["admin", "secretary"]);
+  const id = str(fd, "id");
+  const path = `/portal/events/${id}`;
+  const title = str(fd, "title");
+  const eventDate = str(fd, "event_date");
+  if (!title || !eventDate) back(path, "error", "Kumpletuhin ang pamagat at petsa.");
+  const locality = strOrNull(fd, "locality");
+  if (locality && !LOCALITIES.includes(locality as Locality)) back(path, "error", "Di-wastong lokal.");
+  const { error } = await supabase
+    .from("events")
+    .update({
+      title,
+      description: strOrNull(fd, "description"),
+      event_date: eventDate,
+      event_time: strOrNull(fd, "event_time"),
+      locality,
+      location: strOrNull(fd, "location"),
+      link: strOrNull(fd, "link"),
+      published: str(fd, "published") === "on",
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", id);
+  if (error) back(path, "error", "Hindi na-save: " + error.message);
+  revalidatePath("/portal/events", "layout");
+  revalidatePath("/events");
+  back(path, "ok", "Na-update ang event.");
+}
+
+export async function toggleEvent(fd: FormData) {
+  const { supabase } = await requireRoles(["admin", "secretary"]);
+  const id = str(fd, "id");
+  const { error } = await supabase
+    .from("events")
+    .update({ published: str(fd, "publish") === "true" })
+    .eq("id", id);
+  if (error) back(`/portal/events/${id}`, "error", "Hindi na-update: " + error.message);
+  revalidatePath("/portal/events", "layout");
+  revalidatePath("/events");
+  back(`/portal/events/${id}`, "ok", "Na-update ang event.");
+}
+
+export async function deleteEvent(fd: FormData) {
+  const { supabase } = await requireRoles(["admin", "secretary"]);
+  const id = str(fd, "id");
+  const { error } = await supabase.from("events").delete().eq("id", id);
+  if (error) back(`/portal/events/${id}`, "error", "Hindi nabura: " + error.message);
+  revalidatePath("/portal/events", "layout");
+  revalidatePath("/events");
+  redirect("/portal/events?ok=" + encodeURIComponent("Nabura ang event."));
+}
