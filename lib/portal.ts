@@ -79,6 +79,12 @@ export const LOCAL_FINANCE_MINISTRY_NAME = "Local Finance Ministry";
 // Ministry na ang mga miyembro ay may access sa pag-encode ng expenses (buong simbahan, hindi naka-locality)
 export const FINANCE_MINISTRY_NAME = "Finance Ministry";
 
+// Parehong panuntunan ng access na ginagamit ng buong Finance section (tingnan ang requireFinanceSectionAccess).
+// Hiwalay na function na walang redirect, para magamit sa mga lugar (hal. Home dashboard) na dapat lumaktaw
+// lang ng widget imbes na i-redirect ang buong pahina kapag walang access.
+export const isFinanceMember = (role: Role, ministryNames: string[]) =>
+  isFinance(role) || ministryNames.includes(FINANCE_MINISTRY_NAME);
+
 // ---------------------------------------------------------------
 // Petsa (Philippine time)
 // ---------------------------------------------------------------
@@ -174,8 +180,9 @@ export async function requireFinanceSectionAccess() {
   const { supabase, profile } = ctx;
   if (isFinance(profile.role)) return ctx;
   const { data } = await supabase.from("ministry_members").select("ministries(name)").eq("profile_id", profile.id);
-  const isMember = ((data ?? []) as any[]).some((m) => m.ministries?.name === FINANCE_MINISTRY_NAME);
-  if (!isMember) redirect("/portal?error=" + encodeURIComponent("Wala kang access sa pahinang iyon."));
+  const ministryNames = ((data ?? []) as any[]).map((m) => m.ministries?.name).filter(Boolean);
+  if (!isFinanceMember(profile.role, ministryNames))
+    redirect("/portal?error=" + encodeURIComponent("Wala kang access sa pahinang iyon."));
   return ctx;
 }
 

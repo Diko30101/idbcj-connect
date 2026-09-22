@@ -1,6 +1,7 @@
 import Link from "next/link";
-import { requirePortalAccess, isStaff, fmtDate, todayPH, KIND_LABEL } from "@/lib/portal";
+import { requirePortalAccess, isStaff, isFinanceMember, fmtDate, todayPH, KIND_LABEL } from "@/lib/portal";
 import { Empty, Notice, Panel, PageHeader, RoleBadge, StatusBadge } from "@/components/portal/ui";
+import { FinanceSummaryPie } from "@/components/portal/finance-summary-pie";
 
 export default async function PortalHome({
   searchParams,
@@ -51,6 +52,28 @@ export default async function PortalHome({
   const presentCount = myAtt.filter((a) => a.present).length;
 
   const stat = (s: string) => (counts.data ?? []).filter((p) => p.status === s).length;
+
+  const myMinistryNames = ((mine.data ?? []) as any[]).map((m) => m.ministries?.name).filter(Boolean);
+  const financeAccess = isFinanceMember(profile.role, myMinistryNames);
+  const financeYear = today.slice(0, 4);
+  let financeIncome = 0;
+  let financeExpense = 0;
+  if (financeAccess) {
+    const [incomeRes, expenseRes] = await Promise.all([
+      supabase
+        .from("financial_records")
+        .select("amount")
+        .gte("record_month", `${financeYear}-01-01`)
+        .lt("record_month", `${Number(financeYear) + 1}-01-01`),
+      supabase
+        .from("expense_records")
+        .select("amount")
+        .gte("expense_month", `${financeYear}-01-01`)
+        .lt("expense_month", `${Number(financeYear) + 1}-01-01`),
+    ]);
+    financeIncome = ((incomeRes.data ?? []) as any[]).reduce((s, r) => s + Number(r.amount), 0);
+    financeExpense = ((expenseRes.data ?? []) as any[]).reduce((s, r) => s + Number(r.amount), 0);
+  }
 
   const todayMonth = today.slice(5, 7);
   const todayDay = today.slice(8, 10);
@@ -116,6 +139,12 @@ export default async function PortalHome({
         </Panel>
 
         <div className="space-y-6">
+          {financeAccess && (
+            <Panel title="Financial Report — Buod">
+              <FinanceSummaryPie year={financeYear} income={financeIncome} expense={financeExpense} />
+            </Panel>
+          )}
+
           <Panel title={`🎂 Kaarawan ngayong ${monthName}`}>
             {birthdaysThisMonth.length === 0 ? (
               <Empty>Walang may kaarawan ngayong buwan.</Empty>
