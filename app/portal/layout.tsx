@@ -36,6 +36,7 @@ export default async function PortalLayout({ children }: { children: React.React
 
   const items: NavItem[] = [
     { href: "/portal", label: "Home" },
+    { href: "/portal/inbox", label: "Inbox" },
     { href: "/portal/announcements", label: "Announcements" },
     { href: "/portal/ministries", label: "Ministries" },
     { href: "/portal/prayer", label: "Prayer" },

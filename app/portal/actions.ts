@@ -333,7 +333,7 @@ export async function deletePrayer(fd: FormData) {
 // ---------------------------------------------------------------
 export type NotificationItem = {
   id: string;
-  kind: "announcement" | "schedule" | "service";
+  kind: "announcement" | "schedule" | "service" | "letter";
   title: string;
   subtitle: string;
   date: string;
@@ -357,7 +357,7 @@ export async function getNotifications(): Promise<{ items: NotificationItem[] }>
   const { supabase, profile } = await requirePortalAccess();
   const seenAt = profile.notifications_seen_at;
 
-  const [ann, sched, svc, myMinistries] = await Promise.all([
+  const [ann, sched, svc, myMinistries, letters] = await Promise.all([
     supabase
       .from("announcements")
       .select("id, title, ministry_id, created_at, ministries(name)")
@@ -380,6 +380,14 @@ export async function getNotifications(): Promise<{ items: NotificationItem[] }>
       .limit(10),
     // Para malaman kung kabilang ang naka-login sa Administrative Ministry
     supabase.from("ministry_members").select("ministries(name)").eq("profile_id", profile.id),
+    // Bagong mensahe sa Inbox (liham o reply) na hindi galing sa sarili
+    supabase
+      .from("letter_messages")
+      .select("id, letter_id, author_id, created_at, letters(subject), profiles(full_name)")
+      .neq("author_id", profile.id)
+      .gt("created_at", seenAt)
+      .order("created_at", { ascending: false })
+      .limit(10),
   ]);
 
   const isAdminMinistryMember = ((myMinistries.data ?? []) as any[]).some(
@@ -430,6 +438,14 @@ export async function getNotifications(): Promise<{ items: NotificationItem[] }>
       date: s.created_at as string,
       href: "/portal",
     })),
+    ...((letters.data ?? []) as any[]).map((m) => ({
+      id: `lt-${m.id}`,
+      kind: "letter" as const,
+      title: (m.letters?.subject as string | undefined) ?? "Liham",
+      subtitle: `Mula kay ${(m.profiles?.full_name as string | undefined) ?? "Staff"}`,
+      date: m.created_at as string,
+      href: `/portal/inbox/${m.letter_id}`,
+    })),
   ].sort((x, y) => (x.date < y.date ? 1 : -1));
 
   return { items };
@@ -438,4 +454,42 @@ export async function getNotifications(): Promise<{ items: NotificationItem[] }>
 export async function markNotificationsSeen() {
   const { supabase, user } = await requirePortalAccess();
   await supabase.from("profiles").update({ notifications_seen_at: new Date().toISOString() }).eq("id", user.id);
+}
+
+// ---------------------------------------------------------------
+// INBOX (mga liham mula sa Administrative/staff papunta sa piniling members)
+// ---------------------------------------------------------------
+export async function createLetter(fd: FormData) {
+  const { supabase, user } = await requireRoles(["admin", "secretary"]);
+  const subject = str(fd, "subject");
+  const body = str(fd, "body");
+  const recipients = fd.getAll("recipients").map(String);
+  if (!subject || !body) back("/portal/inbox/compose", "error", "Isulat ang paksa at mensahe.");
+  if (recipients.length === 0) back("/portal/inbox/compose", "error", "Pumili ng kahit isang tatanggap.");
+
+  const { data: letter, error } = await supabase.from("letters").insert({ subject, created_by: user.id }).select("id").single();
+  if (error) back("/portal/inbox/compose", "error", "Hindi nagawa: " + error.message);
+
+  const { error: e2 } = await supabase
+    .from("letter_recipients")
+    .insert(recipients.map((id) => ({ letter_id: letter!.id, profile_id: id })));
+  if (e2) back("/portal/inbox/compose", "error", "Hindi na-set ang mga tatanggap: " + e2.message);
+
+  const { error: e3 } = await supabase.from("letter_messages").insert({ letter_id: letter!.id, author_id: user.id, body });
+  if (e3) back("/portal/inbox/compose", "error", "Hindi naipadala ang mensahe: " + e3.message);
+
+  revalidatePath("/portal/inbox", "layout");
+  redirect(`/portal/inbox/${letter!.id}?ok=` + encodeURIComponent("Naipadala ang liham."));
+}
+
+export async function replyToLetter(fd: FormData) {
+  const { supabase, user } = await requirePortalAccess();
+  const letterId = str(fd, "letter_id");
+  const path = `/portal/inbox/${letterId}`;
+  const body = str(fd, "body");
+  if (!body) back(path, "error", "Isulat ang sagot.");
+  const { error } = await supabase.from("letter_messages").insert({ letter_id: letterId, author_id: user.id, body });
+  if (error) back(path, "error", "Hindi naipadala: " + error.message);
+  revalidatePath(path);
+  back(path, "ok", "Naipadala.");
 }

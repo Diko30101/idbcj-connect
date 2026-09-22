@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { Bell, CalendarDays, Church, Megaphone } from "lucide-react";
+import { Bell, CalendarDays, Church, Mail, Megaphone } from "lucide-react";
 import { getNotifications, markNotificationsSeen, type NotificationItem } from "@/app/portal/actions";
 
 // Ilang minuto bago mag-poll ulit para sa bagong notification
@@ -103,6 +103,8 @@ export function NotificationBell() {
                         <Megaphone className="h-4 w-4" />
                       ) : it.kind === "service" ? (
                         <Church className="h-4 w-4" />
+                      ) : it.kind === "letter" ? (
+                        <Mail className="h-4 w-4" />
                       ) : (
                         <CalendarDays className="h-4 w-4" />
                       )}
