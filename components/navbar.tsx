@@ -198,7 +198,7 @@ export function Navbar() {
                     href="/portal"
                     className="font-display rounded-full bg-emerald-800 px-4 py-2 text-sm font-semibold text-white transition hover:bg-emerald-700"
                   >
-                    Member Portal
+                    IDBCJ Connect
                   </Link>
                   <form action="/auth/sign-out" method="post">
                     <button
@@ -283,7 +283,7 @@ export function Navbar() {
                     onClick={closeAll}
                     className="font-display rounded-full bg-emerald-800 px-5 py-3 text-center text-base font-semibold text-white hover:bg-emerald-700"
                   >
-                    Member Portal
+                    IDBCJ Connect
                   </Link>
                   <form action="/auth/sign-out" method="post">
                     <button
