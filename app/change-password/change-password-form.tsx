@@ -3,7 +3,7 @@
 import { useState, useTransition } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { completePasswordChange } from "./actions";
-import { btnCls, inputCls } from "@/components/portal/ui";
+import { btnCls, inputCls } from "@/components/portal/form-bits";
 
 function EyeIcon({ visible }: { visible: boolean }) {
   if (visible) {
