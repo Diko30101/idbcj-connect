@@ -12,11 +12,12 @@ export const DPO_CONTACT = "Ilalagay pagkatapos italaga ang Data Protection Offi
 
 import { CATEGORIES, CATEGORY_LABEL, type Category } from "@/lib/categories";
 import { LOCALITIES, LOCALITY_LABEL, type Locality } from "@/lib/locality";
+import { FINANCE_CATEGORIES, FINANCE_CATEGORY_LABEL, type FinanceCategory } from "@/lib/finance";
 
-export { CATEGORIES, CATEGORY_LABEL, LOCALITIES, LOCALITY_LABEL };
-export type { Category, Locality };
+export { CATEGORIES, CATEGORY_LABEL, LOCALITIES, LOCALITY_LABEL, FINANCE_CATEGORIES, FINANCE_CATEGORY_LABEL };
+export type { Category, Locality, FinanceCategory };
 
-export type Role = "admin" | "secretary" | "leader" | "member";
+export type Role = "admin" | "secretary" | "leader" | "member" | "treasurer";
 export type MemberStatus = "visitor" | "active" | "inactive";
 
 export type Profile = {
@@ -47,6 +48,7 @@ export const ROLE_LABEL: Record<Role, string> = {
   secretary: "Secretary",
   leader: "Ministry Leader",
   member: "Member",
+  treasurer: "Treasurer",
 };
 
 export const STATUS_LABEL: Record<MemberStatus, string> = {
@@ -67,6 +69,9 @@ export const KIND_LABEL: Record<string, string> = {
 export const KINDS = Object.keys(KIND_LABEL);
 
 export const isStaff = (r: Role) => r === "admin" || r === "secretary";
+
+// Admin, Secretary, at Treasurer lang ang may access sa financial records
+export const isFinance = (r: Role) => r === "admin" || r === "secretary" || r === "treasurer";
 
 // ---------------------------------------------------------------
 // Petsa (Philippine time)

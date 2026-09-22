@@ -9,6 +9,7 @@ import {
   setMinistryLeader,
 } from "../../actions";
 import { Empty, Field, Notice, PageHeader, Panel, btnCls, btnDangerCls, btnGhostCls, inputCls } from "@/components/portal/ui";
+import { MinistryControls } from "@/components/portal/ministry-controls";
 
 export default async function MinistryDetail({
   params,
@@ -58,6 +59,12 @@ export default async function MinistryDetail({
         }
       />
       <Notice ok={ok} error={error} />
+
+      {staff && (
+        <div className="mb-6">
+          <MinistryControls ministry={ministry} />
+        </div>
+      )}
 
       <div className="grid gap-6 lg:grid-cols-3">
         <div className="space-y-6 lg:col-span-2">

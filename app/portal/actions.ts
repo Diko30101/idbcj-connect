@@ -17,9 +17,10 @@ import {
 import { CATEGORIES, type Category } from "@/lib/categories";
 import { LOCALITIES, type Locality } from "@/lib/locality";
 import { WORSHIP, WORSHIP_BATANGAS, WORSHIP_ALBERTA } from "@/lib/worship";
+import { FINANCE_CATEGORIES, monthToDate } from "@/lib/finance";
 
 const STATUSES = ["visitor", "active", "inactive"];
-const ROLES: Role[] = ["admin", "secretary", "leader", "member"];
+const ROLES: Role[] = ["admin", "secretary", "leader", "member", "treasurer"];
 const BAPTISM = ["Not Baptized", "Scheduled", "Baptized"];
 
 // ---------------------------------------------------------------
@@ -144,6 +145,33 @@ export async function createMinistry(fd: FormData) {
   if (error) back("/portal/ministries", "error", "Hindi nagawa: " + error.message);
   revalidatePath("/portal/ministries");
   redirect(`/portal/ministries/${data!.id}?ok=` + encodeURIComponent("Nagawa ang ministry."));
+}
+
+export async function updateMinistry(fd: FormData) {
+  const { supabase } = await requireRoles(["admin", "secretary"]);
+  const id = str(fd, "id");
+  const path = `/portal/ministries/${id}`;
+  const name = str(fd, "name");
+  if (!name) back(path, "error", "Isulat ang pangalan ng ministry.");
+  const { error } = await supabase
+    .from("ministries")
+    .update({ name, name_tl: strOrNull(fd, "name_tl"), description: strOrNull(fd, "description") })
+    .eq("id", id);
+  if (error) back(path, "error", "Hindi na-save: " + error.message);
+  revalidatePath("/portal/ministries", "layout");
+  back(path, "ok", "Na-update ang ministry.");
+}
+
+export async function deleteMinistry(fd: FormData) {
+  const { supabase } = await requireRoles(["admin", "secretary"]);
+  const id = str(fd, "id");
+  const { error } = await supabase.from("ministries").delete().eq("id", id);
+  if (error) back(`/portal/ministries/${id}`, "error", "Hindi nabura: " + error.message);
+  revalidatePath("/portal/ministries", "layout");
+  redirect(
+    "/portal/ministries?ok=" +
+      encodeURIComponent("Nabura ang ministry pati na ang mga miyembro, iskedyul, at anunsyo nito."),
+  );
 }
 
 export async function createSchedule(fd: FormData) {
@@ -480,6 +508,44 @@ export async function createLetter(fd: FormData) {
 
   revalidatePath("/portal/inbox", "layout");
   redirect(`/portal/inbox/${letter!.id}?ok=` + encodeURIComponent("Naipadala ang liham."));
+}
+
+// ---------------------------------------------------------------
+// FINANCIAL RECORDS (buwanang koleksyon: abuluyan, ambagan, tulong sa aral, pasalamat)
+// ---------------------------------------------------------------
+export async function saveMonthlyFinancials(fd: FormData) {
+  const { supabase, user } = await requireRoles(["admin", "secretary", "treasurer"]);
+  const month = str(fd, "month");
+  const path = `/portal/finance?month=${encodeURIComponent(month)}`;
+  if (!/^\d{4}-\d{2}$/.test(month)) back(path, "error", "Di-wastong buwan.");
+  const recordMonth = monthToDate(month);
+
+  // Tandaan: ang updated_by ay in-o-overwrite sa bawat save (huling nag-encode); hindi ito
+  // creator log, kundi "sino ang huling nag-save" para sa accountability.
+  const rows: {
+    record_month: string;
+    locality: string;
+    category: string;
+    amount: number;
+    note: string | null;
+    updated_by: string;
+  }[] = [];
+
+  for (const locality of LOCALITIES) {
+    for (const category of FINANCE_CATEGORIES) {
+      const raw = str(fd, `amt_${locality}_${category}`);
+      const amount = raw === "" ? 0 : Math.max(0, Number(raw) || 0);
+      const note = strOrNull(fd, `note_${locality}_${category}`);
+      rows.push({ record_month: recordMonth, locality, category, amount, note, updated_by: user.id });
+    }
+  }
+
+  const { error } = await supabase
+    .from("financial_records")
+    .upsert(rows, { onConflict: "record_month,locality,category" });
+  if (error) back(path, "error", "Hindi na-save: " + error.message);
+  revalidatePath("/portal/finance", "layout");
+  back(path, "ok", `Na-save ang financial records para sa ${month}.`);
 }
 
 export async function replyToLetter(fd: FormData) {

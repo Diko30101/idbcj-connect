@@ -1,7 +1,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { redirect } from "next/navigation";
-import { getPortalContext, isStaff } from "@/lib/portal";
+import { getPortalContext, isStaff, isFinance } from "@/lib/portal";
 import { PortalNav, type NavItem } from "@/components/portal/portal-nav";
 import { NotificationBell } from "@/components/portal/notification-bell";
 import { shownEmail } from "@/lib/username";
@@ -46,6 +46,7 @@ export default async function PortalLayout({ children }: { children: React.React
     items.push({ href: "/portal/attendance", label: "Attendance" });
     items.push({ href: "/portal/members", label: "Members" });
   }
+  if (isFinance(profile.role)) items.push({ href: "/portal/finance", label: "Finance" });
   if (profile.role === "admin") items.push({ href: "/portal/audit", label: "Audit Log" });
 
   return (
