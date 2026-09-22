@@ -70,8 +70,11 @@ export const KINDS = Object.keys(KIND_LABEL);
 
 export const isStaff = (r: Role) => r === "admin" || r === "secretary";
 
-// Admin, Secretary, at Treasurer lang ang may access sa financial records
+// Admin, Secretary, at Treasurer lang ang may access sa financial records (lahat ng lokal)
 export const isFinance = (r: Role) => r === "admin" || r === "secretary" || r === "treasurer";
+
+// Ministry na ang mga miyembro ay may access lang sa financial records ng sariling lokal
+export const LOCAL_FINANCE_MINISTRY_NAME = "Local Finance Ministry";
 
 // ---------------------------------------------------------------
 // Petsa (Philippine time)
@@ -144,6 +147,21 @@ export async function requireRoles(roles: Role[]) {
   const ctx = await requirePortalAccess();
   if (!roles.includes(ctx.profile.role)) redirect("/portal?error=" + encodeURIComponent("Wala kang access sa pahinang iyon."));
   return ctx;
+}
+
+// Para sa Local Treasurer: kasapi ng "Local Finance Ministry" at may naka-set na lokal
+export async function requireLocalFinanceAccess() {
+  const ctx = await requirePortalAccess();
+  const { supabase, profile } = ctx;
+  const { data } = await supabase.from("ministry_members").select("ministries(name)").eq("profile_id", profile.id);
+  const isMember = ((data ?? []) as any[]).some((m) => m.ministries?.name === LOCAL_FINANCE_MINISTRY_NAME);
+  if (!isMember) redirect("/portal?error=" + encodeURIComponent("Wala kang access sa pahinang iyon."));
+  if (!profile.locality)
+    redirect(
+      "/portal?error=" +
+        encodeURIComponent("Wala kang naka-set na lokal sa iyong profile. Ipa-set muna sa Secretary o Admin."),
+    );
+  return { ...ctx, locality: profile.locality as Locality };
 }
 
 // Para sa mensahe pagkatapos ng isang aksyon

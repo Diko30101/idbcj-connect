@@ -1,50 +1,31 @@
 import Link from "next/link";
 import { requireRoles, LOCALITIES, LOCALITY_LABEL, FINANCE_CATEGORIES, FINANCE_CATEGORY_LABEL, type FinanceCategory, type Locality } from "@/lib/portal";
-import { currentMonthPH, monthToDate, monthLabel, fmtPeso } from "@/lib/finance";
+import { monthLabel, fmtPeso } from "@/lib/finance";
 import { Empty, Notice, PageHeader, Panel, btnCls, btnGhostCls, inputCls } from "@/components/portal/ui";
-import { FinanceGrid } from "@/components/portal/finance-grid";
 import { YearlyLocalityGrid } from "@/components/portal/yearly-locality-grid";
 import { FinanceChart } from "@/components/portal/finance-chart";
 
 export default async function FinancePage({
   searchParams,
 }: {
-  searchParams: Promise<{ month?: string; year?: string; locality?: string; ok?: string; error?: string }>;
+  searchParams: Promise<{ year?: string; locality?: string; ok?: string; error?: string }>;
 }) {
-  const { ok, error, month: monthParam, year: yearParam, locality: localityParam } = await searchParams;
+  const { ok, error, year: yearParam, locality: localityParam } = await searchParams;
   const { supabase } = await requireRoles(["admin", "secretary", "treasurer"]);
 
-  const month = monthParam && /^\d{4}-\d{2}$/.test(monthParam) ? monthParam : currentMonthPH();
-  const year = yearParam && /^\d{4}$/.test(yearParam) ? yearParam : month.slice(0, 4);
+  const year = yearParam && /^\d{4}$/.test(yearParam) ? yearParam : String(new Date().getFullYear());
   const localityFilter =
     localityParam && LOCALITIES.includes(localityParam as Locality) ? (localityParam as Locality) : "";
 
-  const [monthRows, yearRows] = await Promise.all([
-    supabase
-      .from("financial_records")
-      .select("locality, category, amount, updated_at, profiles(full_name)")
-      .eq("record_month", monthToDate(month)),
-    supabase
-      .from("financial_records")
-      .select("record_month, locality, category, amount")
-      .gte("record_month", `${year}-01-01`)
-      .lt("record_month", `${Number(year) + 1}-01-01`),
-  ]);
-
-  // Grid ng buwang pinili: locality x category
-  const grid = new Map<string, number>();
-  let lastUpdated: { at: string; by: string } | null = null;
-  for (const r of (monthRows.data ?? []) as any[]) {
-    grid.set(`${r.locality}_${r.category}`, Number(r.amount));
-    if (r.updated_at && (!lastUpdated || r.updated_at > lastUpdated.at)) {
-      lastUpdated = { at: r.updated_at, by: r.profiles?.full_name ?? "Staff" };
-    }
-  }
-  const initialValues: Record<string, number> = Object.fromEntries(grid);
+  const { data: yearRows } = await supabase
+    .from("financial_records")
+    .select("record_month, locality, category, amount")
+    .gte("record_month", `${year}-01-01`)
+    .lt("record_month", `${Number(year) + 1}-01-01`);
 
   // Taunang buod: buwan x kategorya (kinukuha ang lahat ng lokal maliban kung may locality filter)
   const yearGrid = new Map<string, number>(); // key = `${MM}_${category}`
-  for (const r of (yearRows.data ?? []) as any[]) {
+  for (const r of (yearRows ?? []) as any[]) {
     if (localityFilter && r.locality !== localityFilter) continue;
     const mm = (r.record_month as string).slice(5, 7);
     const key = `${mm}_${r.category}`;
@@ -62,33 +43,9 @@ export default async function FinancePage({
     <>
       <PageHeader
         title="Financial Management"
-        subtitle="Buwanang koleksyon: Abuluyan, Ambagan, Tulong sa Aral, Pasalamat"
+        subtitle="Taunang ulat at graph ng koleksyon (Abuluyan, Ambagan, Tulong sa Aral, Pasalamat). Ang pag-encode buwan-buwan ay sa mga Local Finance Ministry member."
       />
       <Notice ok={ok} error={error} />
-
-      <Panel>
-        <form method="get" className="flex flex-wrap items-end gap-3">
-          <label className="grid gap-1.5">
-            <span className="text-sm font-medium text-gray-700">Buwan</span>
-            <input type="month" name="month" defaultValue={month} className={inputCls} />
-          </label>
-          <button className={btnGhostCls}>Ipakita</button>
-        </form>
-      </Panel>
-
-      <div className="mt-6">
-        <Panel title={`I-encode: ${monthLabel(month)}`}>
-          <FinanceGrid
-            month={month}
-            localities={LOCALITIES}
-            localityLabel={LOCALITY_LABEL}
-            categories={FINANCE_CATEGORIES}
-            categoryLabel={FINANCE_CATEGORY_LABEL}
-            initial={initialValues}
-            lastUpdated={lastUpdated}
-          />
-        </Panel>
-      </div>
 
       <div className="mt-6">
         <Panel
@@ -100,7 +57,6 @@ export default async function FinancePage({
         >
           <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
             <form method="get" className="flex flex-wrap items-end gap-2">
-              <input type="hidden" name="month" value={month} />
               <label className="grid gap-1.5">
                 <span className="text-sm font-medium text-gray-700">Taon</span>
                 <input type="number" name="year" defaultValue={year} className={inputCls + " w-28"} />

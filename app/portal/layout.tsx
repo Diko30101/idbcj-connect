@@ -1,7 +1,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { redirect } from "next/navigation";
-import { getPortalContext, isStaff, isFinance } from "@/lib/portal";
+import { getPortalContext, isStaff, isFinance, LOCAL_FINANCE_MINISTRY_NAME } from "@/lib/portal";
 import { PortalNav, type NavItem } from "@/components/portal/portal-nav";
 import { NotificationBell } from "@/components/portal/notification-bell";
 import { shownEmail } from "@/lib/username";
@@ -9,7 +9,7 @@ import { shownEmail } from "@/lib/username";
 export const metadata = { title: "IDBCJ Connect", robots: { index: false, follow: false } };
 
 export default async function PortalLayout({ children }: { children: React.ReactNode }) {
-  const { profile } = await getPortalContext();
+  const { supabase, profile } = await getPortalContext();
   if (profile.must_change_password) redirect("/change-password");
 
   const signOut = (
@@ -46,7 +46,18 @@ export default async function PortalLayout({ children }: { children: React.React
     items.push({ href: "/portal/attendance", label: "Attendance" });
     items.push({ href: "/portal/members", label: "Members" });
   }
-  if (isFinance(profile.role)) items.push({ href: "/portal/finance", label: "Finance" });
+  if (isFinance(profile.role)) {
+    items.push({ href: "/portal/finance", label: "Finance" });
+  } else {
+    const { data: localFinanceMembership } = await supabase
+      .from("ministry_members")
+      .select("ministries(name)")
+      .eq("profile_id", profile.id);
+    const isLocalFinanceMember = ((localFinanceMembership ?? []) as any[]).some(
+      (m) => m.ministries?.name === LOCAL_FINANCE_MINISTRY_NAME,
+    );
+    if (isLocalFinanceMember) items.push({ href: "/portal/finance/local", label: "Local Finance" });
+  }
   if (profile.role === "admin") items.push({ href: "/portal/audit", label: "Audit Log" });
 
   return (
