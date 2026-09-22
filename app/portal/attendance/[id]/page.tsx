@@ -1,9 +1,10 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { requireRoles, fmtDate, KIND_LABEL } from "@/lib/portal";
+import { requireRoles, fmtDate, KINDS, KIND_LABEL } from "@/lib/portal";
 import { saveAttendance } from "../../actions";
 import { Empty, Notice, PageHeader, Panel, btnGhostCls } from "@/components/portal/ui";
 import { AttendanceList } from "@/components/portal/attendance-list";
+import { ServiceControls } from "@/components/portal/service-controls";
 
 export default async function ServiceAttendance({
   params,
@@ -44,6 +45,13 @@ export default async function ServiceAttendance({
         }
       />
       <Notice ok={ok} error={error} />
+
+      <div className="mb-6">
+        <ServiceControls
+          service={{ id: service.id, service_date: service.service_date, kind: service.kind, title: service.title }}
+          kindOptions={KINDS.map((k) => ({ value: k, label: KIND_LABEL[k] ?? k }))}
+        />
+      </div>
 
       <form action={saveAttendance}>
         <input type="hidden" name="service_id" value={id} />

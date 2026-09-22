@@ -7,6 +7,7 @@ import {
   fmtDate,
   getPortalContext,
   isStaff,
+  KINDS,
   requirePortalAccess,
   requireRoles,
   str,
@@ -18,14 +19,6 @@ import { LOCALITIES, type Locality } from "@/lib/locality";
 
 const STATUSES = ["visitor", "active", "inactive"];
 const ROLES: Role[] = ["admin", "secretary", "leader", "member"];
-const KINDS = [
-  "sunday",
-  "new_year_thanksgiving",
-  "yearly_thanksgiving",
-  "extra_thanksgiving",
-  "monthly_ministerial_class",
-  "other",
-];
 const BAPTISM = ["Not Baptized", "Scheduled", "Baptized"];
 
 // ---------------------------------------------------------------
@@ -203,6 +196,37 @@ export async function createService(fd: FormData) {
   }
   revalidatePath("/portal/attendance");
   redirect(`/portal/attendance/${data!.id}`);
+}
+
+export async function updateService(fd: FormData) {
+  const { supabase } = await requireRoles(["admin", "secretary"]);
+  const id = str(fd, "id");
+  const path = `/portal/attendance/${id}`;
+  const date = str(fd, "service_date");
+  const kind = str(fd, "kind");
+  if (!date || !KINDS.includes(kind)) back(path, "error", "Kumpletuhin ang petsa at uri.");
+  const { error } = await supabase
+    .from("services")
+    .update({ service_date: date, kind, title: strOrNull(fd, "title") })
+    .eq("id", id);
+  if (error) {
+    back(
+      path,
+      "error",
+      error.code === "23505" ? "May naka-tala nang serbisyo sa petsa at uring iyon." : "Hindi na-save: " + error.message,
+    );
+  }
+  revalidatePath("/portal/attendance", "layout");
+  back(path, "ok", "Na-update ang detalye ng serbisyo.");
+}
+
+export async function deleteService(fd: FormData) {
+  const { supabase } = await requireRoles(["admin", "secretary"]);
+  const id = str(fd, "id");
+  const { error } = await supabase.from("services").delete().eq("id", id);
+  if (error) back(`/portal/attendance/${id}`, "error", "Hindi nabura: " + error.message);
+  revalidatePath("/portal/attendance", "layout");
+  redirect("/portal/attendance?ok=" + encodeURIComponent("Nabura ang serbisyo pati na ang mga naitalang attendance dito."));
 }
 
 export async function saveAttendance(fd: FormData) {

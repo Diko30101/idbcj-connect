@@ -64,6 +64,8 @@ export const KIND_LABEL: Record<string, string> = {
   other: "Others",
 };
 
+export const KINDS = Object.keys(KIND_LABEL);
+
 export const isStaff = (r: Role) => r === "admin" || r === "secretary";
 
 // ---------------------------------------------------------------
