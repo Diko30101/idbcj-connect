@@ -713,3 +713,132 @@ export async function replyToLetter(fd: FormData) {
   revalidatePath(path);
   back(path, "ok", "Naipadala.");
 }
+
+// ---------------------------------------------------------------
+// SERMONS (Admin/Secretary lang) — Sermon Library sa publikong /sermons
+// ---------------------------------------------------------------
+function parseVerses(fd: FormData): { ref: string; text?: string; translation?: string }[] {
+  const refs = fd.getAll("verse_ref").map(String);
+  const texts = fd.getAll("verse_text").map(String);
+  const translations = fd.getAll("verse_translation").map(String);
+  const verses: { ref: string; text?: string; translation?: string }[] = [];
+  refs.forEach((ref, i) => {
+    if (!ref.trim()) return;
+    verses.push({
+      ref: ref.trim(),
+      text: texts[i]?.trim() || undefined,
+      translation: translations[i]?.trim() || undefined,
+    });
+  });
+  return verses;
+}
+
+function parseQuestions(fd: FormData): string[] {
+  return str(fd, "questions")
+    .split("\n")
+    .map((q) => q.trim())
+    .filter(Boolean);
+}
+
+export async function createSermon(fd: FormData) {
+  const { supabase } = await requireRoles(["admin", "secretary"]);
+  const slug = str(fd, "slug");
+  const title = str(fd, "title");
+  const speaker = str(fd, "speaker");
+  const sermonDate = str(fd, "sermon_date");
+  if (!slug || !title || !speaker || !sermonDate) back("/portal/sermons", "error", "Kumpletuhin ang slug, pamagat, speaker, at petsa.");
+  if (!/^[a-z0-9]+(-[a-z0-9]+)*$/.test(slug)) back("/portal/sermons", "error", "Ang slug ay maliliit na letra at numero lang, gitling ang pantugma (hal. walking-in-faith).");
+  const { data, error } = await supabase
+    .from("sermons")
+    .insert({
+      slug,
+      title,
+      title_tl: strOrNull(fd, "title_tl"),
+      speaker,
+      sermon_date: sermonDate,
+      category: str(fd, "category") || "General",
+      video_id: strOrNull(fd, "video_id"),
+      summary: str(fd, "summary"),
+      summary_tl: strOrNull(fd, "summary_tl"),
+      verses: parseVerses(fd),
+      questions: parseQuestions(fd),
+      pdf_path: strOrNull(fd, "pdf_path"),
+      published: str(fd, "published") === "on",
+    })
+    .select("id")
+    .single();
+  if (error) {
+    back(
+      "/portal/sermons",
+      "error",
+      error.code === "23505" ? "May sermon na gumagamit na ng slug na iyon." : "Hindi nagawa: " + error.message,
+    );
+  }
+  revalidatePath("/portal/sermons");
+  revalidatePath("/sermons");
+  redirect(`/portal/sermons/${data!.id}`);
+}
+
+export async function updateSermon(fd: FormData) {
+  const { supabase } = await requireRoles(["admin", "secretary"]);
+  const id = str(fd, "id");
+  const path = `/portal/sermons/${id}`;
+  const slug = str(fd, "slug");
+  const title = str(fd, "title");
+  const speaker = str(fd, "speaker");
+  const sermonDate = str(fd, "sermon_date");
+  if (!slug || !title || !speaker || !sermonDate) back(path, "error", "Kumpletuhin ang slug, pamagat, speaker, at petsa.");
+  if (!/^[a-z0-9]+(-[a-z0-9]+)*$/.test(slug)) back(path, "error", "Ang slug ay maliliit na letra at numero lang, gitling ang pantugma.");
+  const { error } = await supabase
+    .from("sermons")
+    .update({
+      slug,
+      title,
+      title_tl: strOrNull(fd, "title_tl"),
+      speaker,
+      sermon_date: sermonDate,
+      category: str(fd, "category") || "General",
+      video_id: strOrNull(fd, "video_id"),
+      summary: str(fd, "summary"),
+      summary_tl: strOrNull(fd, "summary_tl"),
+      verses: parseVerses(fd),
+      questions: parseQuestions(fd),
+      pdf_path: strOrNull(fd, "pdf_path"),
+      published: str(fd, "published") === "on",
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", id);
+  if (error) {
+    back(
+      path,
+      "error",
+      error.code === "23505" ? "May sermon na gumagamit na ng slug na iyon." : "Hindi na-save: " + error.message,
+    );
+  }
+  revalidatePath("/portal/sermons", "layout");
+  revalidatePath("/sermons");
+  back(path, "ok", "Na-update ang sermon.");
+}
+
+export async function toggleSermon(fd: FormData) {
+  const { supabase } = await requireRoles(["admin", "secretary"]);
+  const id = str(fd, "id");
+  const { error } = await supabase
+    .from("sermons")
+    .update({ published: str(fd, "publish") === "true" })
+    .eq("id", id);
+  if (error) back(`/portal/sermons/${id}`, "error", "Hindi na-update: " + error.message);
+  revalidatePath("/portal/sermons", "layout");
+  revalidatePath("/sermons");
+  back(`/portal/sermons/${id}`, "ok", "Na-update ang sermon.");
+}
+
+export async function deleteSermon(fd: FormData) {
+  const { supabase } = await requireRoles(["admin", "secretary"]);
+  const id = str(fd, "id");
+  const { error } = await supabase.from("sermons").delete().eq("id", id);
+  if (error) back(`/portal/sermons/${id}`, "error", "Hindi nabura: " + error.message);
+  revalidatePath("/portal/sermons", "layout");
+  revalidatePath("/sermons");
+  redirect("/portal/sermons?ok=" + encodeURIComponent("Nabura ang sermon."));
+}
