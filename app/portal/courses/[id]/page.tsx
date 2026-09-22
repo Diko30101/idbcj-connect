@@ -30,13 +30,16 @@ export default async function CourseDetailPage({
     .order("position", { ascending: true });
   const lessons = (lessonsData ?? []) as LessonRow[];
 
-  const { data: completionsData } = await supabase
-    .from("lesson_completions")
-    .select("lesson_id, passed, correct_count, total_count")
-    .eq("profile_id", profile.id);
-  const completionByLesson = new Map(
-    ((completionsData ?? []) as CompletionRow[]).map((c) => [c.lesson_id, c]),
-  );
+  let completionByLesson = new Map<string, CompletionRow>();
+  let completionsError: string | null = null;
+  if (!staff) {
+    const { data: completionsData, error: completionsQueryError } = await supabase
+      .from("lesson_completions")
+      .select("lesson_id, passed, correct_count, total_count")
+      .eq("profile_id", profile.id);
+    completionByLesson = new Map(((completionsData ?? []) as CompletionRow[]).map((c) => [c.lesson_id, c]));
+    completionsError = completionsQueryError?.message ?? null;
+  }
 
   const lessonsPanel = (
     <Panel title="Mga Aralin">
@@ -55,17 +58,20 @@ export default async function CourseDetailPage({
                 >
                   {l.title}
                 </Link>
-                {completion ? (
-                  completion.passed ? (
-                    <span className="shrink-0 rounded bg-emerald-50 px-1.5 py-0.5 text-xs text-emerald-700">Pasado</span>
-                  ) : (
-                    <span className="shrink-0 rounded bg-amber-50 px-1.5 py-0.5 text-xs text-amber-700">
-                      Kailangan Ulitin
+                {!staff &&
+                  (completion ? (
+                    completion.passed ? (
+                      <span className="shrink-0 rounded bg-emerald-50 px-1.5 py-0.5 text-xs text-emerald-700">Pasado</span>
+                    ) : (
+                      <span className="shrink-0 rounded bg-amber-50 px-1.5 py-0.5 text-xs text-amber-700">
+                        Kailangan Ulitin
+                      </span>
+                    )
+                  ) : quiz.length > 0 ? (
+                    <span className="shrink-0 rounded bg-gray-100 px-1.5 py-0.5 text-xs text-gray-500">
+                      Hindi pa kinuha
                     </span>
-                  )
-                ) : quiz.length > 0 ? (
-                  <span className="shrink-0 rounded bg-gray-100 px-1.5 py-0.5 text-xs text-gray-500">Hindi pa kinuha</span>
-                ) : null}
+                  ) : null)}
               </li>
             );
           })}
@@ -97,7 +103,10 @@ export default async function CourseDetailPage({
           </Link>
         }
       />
-      <Notice ok={ok} error={error} />
+      <Notice
+        ok={ok}
+        error={error ?? (completionsError ? "Hindi ma-load ang katayuan ng mga aralin: " + completionsError : undefined)}
+      />
       {!staff && course.description && <p className="mb-6 text-sm text-gray-600">{course.description}</p>}
 
       <div className="grid gap-6 lg:grid-cols-3">

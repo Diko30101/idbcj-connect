@@ -37,6 +37,15 @@ Change the Bible Study Courses feature (shipped in the prior
   not completable/gradeable under this design — there is nothing to
   submit, so no completion row is ever created for them, and the
   lesson list shows no status badge for such a lesson.
+- No hardening against a member directly writing their own `lesson_completions`
+  row via the API (bypassing `submitQuizAttempt`'s server-side grading).
+  RLS only restricts writes to the row's own `profile_id`; it does not
+  verify the score was actually computed by the grading action. Low risk
+  today (self-informational, no oversight view reads this data), but
+  must be revisited before any staff-facing report is built on these
+  rows. (Found during final review; documented here rather than
+  code-gated, since RLS already permits it regardless of an app-layer
+  guard.)
 
 ## 3. Access control changes
 
