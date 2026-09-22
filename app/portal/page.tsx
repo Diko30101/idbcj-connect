@@ -12,7 +12,7 @@ export default async function PortalHome({
   const staff = isStaff(profile.role);
   const today = todayPH();
 
-  const [ann, mine, sched, att, counts] = await Promise.all([
+  const [ann, mine, sched, att, counts, birthdays] = await Promise.all([
     supabase
       .from("announcements")
       .select("id, title, body, ministry_id, publish_at, ministries(name)")
@@ -37,6 +37,11 @@ export default async function PortalHome({
     staff
       ? supabase.from("profiles").select("status")
       : Promise.resolve({ data: null as { status: string }[] | null }),
+    supabase
+      .from("profiles")
+      .select("id, full_name, birthday")
+      .not("birthday", "is", null)
+      .neq("status", "inactive"),
   ]);
 
   const myAtt = ((att.data ?? []) as any[])
@@ -46,6 +51,13 @@ export default async function PortalHome({
   const presentCount = myAtt.filter((a) => a.present).length;
 
   const stat = (s: string) => (counts.data ?? []).filter((p) => p.status === s).length;
+
+  const todayMonth = today.slice(5, 7);
+  const todayDay = today.slice(8, 10);
+  const monthName = new Date(today + "T00:00:00Z").toLocaleDateString("en-US", { month: "long", timeZone: "UTC" });
+  const birthdaysThisMonth = ((birthdays.data ?? []) as any[])
+    .filter((p) => p.birthday && p.birthday.slice(5, 7) === todayMonth)
+    .sort((a, b) => a.birthday.slice(8, 10).localeCompare(b.birthday.slice(8, 10)));
 
   return (
     <>
@@ -104,6 +116,33 @@ export default async function PortalHome({
         </Panel>
 
         <div className="space-y-6">
+          <Panel title={`🎂 Kaarawan ngayong ${monthName}`}>
+            {birthdaysThisMonth.length === 0 ? (
+              <Empty>Walang may kaarawan ngayong buwan.</Empty>
+            ) : (
+              <ul className="space-y-2 text-sm">
+                {birthdaysThisMonth.map((p) => {
+                  const isToday = p.birthday.slice(8, 10) === todayDay;
+                  const day = new Date(p.birthday.slice(0, 10) + "T00:00:00Z").toLocaleDateString("en-US", {
+                    month: "short",
+                    day: "numeric",
+                    timeZone: "UTC",
+                  });
+                  return (
+                    <li key={p.id} className="flex items-center justify-between gap-2">
+                      <span className={isToday ? "font-semibold text-emerald-800" : "text-gray-700"}>
+                        {p.full_name || "Member"}
+                      </span>
+                      <span className={isToday ? "font-semibold text-emerald-700" : "text-gray-400"}>
+                        {isToday ? "Ngayon! 🎉" : day}
+                      </span>
+                    </li>
+                  );
+                })}
+              </ul>
+            )}
+          </Panel>
+
           <Panel title="Ang aking mga Ministry">
             {(mine.data ?? []).length === 0 ? (
               <Empty>Wala ka pang ministry.</Empty>
