@@ -3,6 +3,7 @@ import Image from "next/image";
 import { redirect } from "next/navigation";
 import { getPortalContext, isStaff } from "@/lib/portal";
 import { PortalNav, type NavItem } from "@/components/portal/portal-nav";
+import { NotificationBell } from "@/components/portal/notification-bell";
 import { shownEmail } from "@/lib/username";
 
 export const metadata = { title: "IDBCJ Connect", robots: { index: false, follow: false } };
@@ -61,6 +62,7 @@ export default async function PortalLayout({ children }: { children: React.React
               ← Website
             </Link>
             <span className="hidden text-sm text-gray-500 sm:inline">{profile.full_name || profile.username || shownEmail(profile.email)}</span>
+            <NotificationBell />
             {signOut}
           </div>
         </div>

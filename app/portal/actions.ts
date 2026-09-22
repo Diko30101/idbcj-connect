@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import {
   back,
+  fmtDate,
   getPortalContext,
   isStaff,
   requirePortalAccess,
@@ -300,4 +301,62 @@ export async function deletePrayer(fd: FormData) {
   if (error) back("/portal/prayer", "error", "Hindi nabura: " + error.message);
   revalidatePath("/portal/prayer");
   back("/portal/prayer", "ok", "Nabura ang kahilingan.");
+}
+
+// ---------------------------------------------------------------
+// NOTIFICATION BELL (mga bagong anunsyo at iskedyul ng ministry)
+// ---------------------------------------------------------------
+export type NotificationItem = {
+  id: string;
+  kind: "announcement" | "schedule";
+  title: string;
+  subtitle: string;
+  date: string;
+  href: string;
+};
+
+export async function getNotifications(): Promise<{ items: NotificationItem[] }> {
+  const { supabase, profile } = await requirePortalAccess();
+  const seenAt = profile.notifications_seen_at;
+
+  const [ann, sched] = await Promise.all([
+    supabase
+      .from("announcements")
+      .select("id, title, ministry_id, created_at, ministries(name)")
+      .gt("created_at", seenAt)
+      .order("created_at", { ascending: false })
+      .limit(15),
+    supabase
+      .from("ministry_schedule")
+      .select("id, title, service_date, ministry_id, created_at, ministries(name)")
+      .gt("created_at", seenAt)
+      .order("created_at", { ascending: false })
+      .limit(15),
+  ]);
+
+  const items: NotificationItem[] = [
+    ...((ann.data ?? []) as any[]).map((a) => ({
+      id: `a-${a.id}`,
+      kind: "announcement" as const,
+      title: a.title as string,
+      subtitle: (a.ministries?.name as string | undefined) ?? "Para sa lahat",
+      date: a.created_at as string,
+      href: "/portal/announcements",
+    })),
+    ...((sched.data ?? []) as any[]).map((s) => ({
+      id: `s-${s.id}`,
+      kind: "schedule" as const,
+      title: s.title as string,
+      subtitle: `${(s.ministries?.name as string | undefined) ?? "Ministry"} · ${fmtDate(s.service_date)}`,
+      date: s.created_at as string,
+      href: `/portal/ministries/${s.ministry_id}`,
+    })),
+  ].sort((x, y) => (x.date < y.date ? 1 : -1));
+
+  return { items };
+}
+
+export async function markNotificationsSeen() {
+  const { supabase, user } = await requirePortalAccess();
+  await supabase.from("profiles").update({ notifications_seen_at: new Date().toISOString() }).eq("id", user.id);
 }

@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { Search, X } from "lucide-react";
-import { LOCALITY_LABEL, type Locality } from "@/lib/locality";
+import { LOCALITIES, LOCALITY_LABEL, type Locality } from "@/lib/locality";
 import { Field, btnCls, btnGhostCls, inputCls } from "./form-bits";
 
 type Member = { id: string; full_name: string | null; locality: Locality | null };
@@ -30,10 +30,11 @@ export function AttendanceList({
   const [locFilter, setLocFilter] = useState<string>("");
   const [checked, setChecked] = useState<Set<string>>(() => new Set(presentIds));
 
-  // Lokalidad na talagang mayroon sa listahan, ayon sa pagkakasunod sa LOCALITY_LABEL
+  // Palaging ipakita lahat ng lokalidad (kahit walang member pa dito ngayon) para magamit sa filter/research;
+  // dagdag lang ang "(Walang lokalidad)" kung talagang may member na wala pang locality.
   const localitiesPresent = useMemo(() => {
     const have = new Set(members.map((m) => m.locality ?? NO_LOCALITY));
-    const ordered = (Object.keys(LOCALITY_LABEL) as Locality[]).filter((l) => have.has(l));
+    const ordered: Locality[] = [...LOCALITIES];
     if (have.has(NO_LOCALITY)) ordered.push(NO_LOCALITY as unknown as Locality);
     return ordered;
   }, [members]);

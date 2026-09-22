@@ -39,6 +39,7 @@ export type Profile = {
   member_since: string | null;
   consent_at: string | null;
   consent_version: string | null;
+  notifications_seen_at: string;
 };
 
 export const ROLE_LABEL: Record<Role, string> = {
