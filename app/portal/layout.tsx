@@ -46,6 +46,7 @@ export default async function PortalLayout({ children }: { children: React.React
     items.push({ href: "/portal/attendance", label: "Attendance" });
     items.push({ href: "/portal/members", label: "Members" });
     items.push({ href: "/portal/sermons", label: "Sermons" });
+    items.push({ href: "/portal/events", label: "Events" });
   }
   {
     const needsMinistryCheck = !isFinance(profile.role);
