@@ -59,13 +59,18 @@ export default async function PortalLayout({ children }: { children: React.React
     );
 
     if (isFinance(profile.role)) {
-      items.push({ href: "/portal/finance", label: "Finance" });
-      items.push({ href: "/portal/finance/report", label: "Audit Report" });
-    } else if (isLocalFinanceMember) {
-      items.push({ href: "/portal/finance/local", label: "Local Finance" });
-    }
-    if (isFinance(profile.role) || isFinanceMinistryMember) {
-      items.push({ href: "/portal/finance/expenses", label: "Gastusin" });
+      items.push({
+        href: "/portal/finance",
+        label: "Finance",
+        children: [
+          { href: "/portal/finance", label: "Financial Management" },
+          { href: "/portal/finance/report", label: "Audit Report" },
+          { href: "/portal/finance/expenses", label: "Expenses" },
+        ],
+      });
+    } else {
+      if (isLocalFinanceMember) items.push({ href: "/portal/finance/local", label: "Local Finance" });
+      if (isFinanceMinistryMember) items.push({ href: "/portal/finance/expenses", label: "Expenses" });
     }
   }
   if (profile.role === "admin") items.push({ href: "/portal/audit", label: "Audit Log" });
