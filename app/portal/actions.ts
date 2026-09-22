@@ -16,6 +16,7 @@ import {
 } from "@/lib/portal";
 import { CATEGORIES, type Category } from "@/lib/categories";
 import { LOCALITIES, type Locality } from "@/lib/locality";
+import { WORSHIP, WORSHIP_BATANGAS, WORSHIP_ALBERTA } from "@/lib/worship";
 
 const STATUSES = ["visitor", "active", "inactive"];
 const ROLES: Role[] = ["admin", "secretary", "leader", "member"];
@@ -328,22 +329,32 @@ export async function deletePrayer(fd: FormData) {
 }
 
 // ---------------------------------------------------------------
-// NOTIFICATION BELL (mga bagong anunsyo at iskedyul ng ministry)
+// NOTIFICATION BELL (mga bagong anunsyo, iskedyul ng ministry, at bagong serbisyo)
 // ---------------------------------------------------------------
 export type NotificationItem = {
   id: string;
-  kind: "announcement" | "schedule";
+  kind: "announcement" | "schedule" | "service";
   title: string;
   subtitle: string;
   date: string;
   href: string;
 };
 
+// Maikling buod ng oras/lugar ng Sunday Worship, kinuha sa lib/worship.ts (iisang pinagmumulan)
+function worshipSummary(): string {
+  const place = (loc: string) => loc.split(",")[0];
+  return [
+    `${place(WORSHIP.location)} ${WORSHIP.displayTime}`,
+    `${place(WORSHIP_BATANGAS.location)} ${WORSHIP_BATANGAS.displayTimes.join("/")}`,
+    `${place(WORSHIP_ALBERTA.location)} ${WORSHIP_ALBERTA.displayTime}`,
+  ].join(" · ");
+}
+
 export async function getNotifications(): Promise<{ items: NotificationItem[] }> {
   const { supabase, profile } = await requirePortalAccess();
   const seenAt = profile.notifications_seen_at;
 
-  const [ann, sched] = await Promise.all([
+  const [ann, sched, svc] = await Promise.all([
     supabase
       .from("announcements")
       .select("id, title, ministry_id, created_at, ministries(name)")
@@ -356,6 +367,14 @@ export async function getNotifications(): Promise<{ items: NotificationItem[] }>
       .gt("created_at", seenAt)
       .order("created_at", { ascending: false })
       .limit(15),
+    // Bagong Sunday Worship service (manual o awtomatiko bawat Linggo) — ipaalam sa lahat ng members
+    supabase
+      .from("services")
+      .select("id, service_date, kind, created_at")
+      .eq("kind", "sunday")
+      .gt("created_at", seenAt)
+      .order("created_at", { ascending: false })
+      .limit(10),
   ]);
 
   const items: NotificationItem[] = [
@@ -374,6 +393,14 @@ export async function getNotifications(): Promise<{ items: NotificationItem[] }>
       subtitle: `${(s.ministries?.name as string | undefined) ?? "Ministry"} · ${fmtDate(s.service_date)}`,
       date: s.created_at as string,
       href: `/portal/ministries/${s.ministry_id}`,
+    })),
+    ...((svc.data ?? []) as any[]).map((s) => ({
+      id: `sv-${s.id}`,
+      kind: "service" as const,
+      title: `Sunday Worship · ${fmtDate(s.service_date)}`,
+      subtitle: worshipSummary(),
+      date: s.created_at as string,
+      href: "/portal",
     })),
   ].sort((x, y) => (x.date < y.date ? 1 : -1));
 
