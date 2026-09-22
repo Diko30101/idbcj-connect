@@ -339,10 +339,15 @@ Co-Authored-By: Claude Sonnet 5 <noreply@anthropic.com>"
 **Files:**
 - Modify: `app/sermons/page.tsx`
 - Modify: `app/sermons/[slug]/page.tsx`
+- Create: `lib/sermon-format.ts` (discovered during this task's build verification — see note below)
+- Modify: `lib/sermons.ts` (re-export `formatSermonDate` from the new file instead of defining it locally)
+- Modify: `components/sermon-list.tsx` (import `formatSermonDate` from the new file instead of `@/lib/sermons`)
 
 **Interfaces:**
 - Consumes: `getPublishedSermons()`, `getSermon(slug)` from Task 2 (both now `Promise`-returning).
-- Produces: nothing new consumed elsewhere in this plan — this is the last stop for the sermon read path.
+- Produces: `formatSermonDate` moves to its own client-safe module — nothing new consumed elsewhere in this plan — this is the last stop for the sermon read path.
+
+**Build-time discovery:** After Task 2 made `lib/sermons.ts` import `getSupabase` (which pulls in `next/headers`), `npm run build` failed at the *compile* step (not just the pre-existing `/reset-password` static-export failure) with "You're importing a component that needs next/headers... not supported in the pages/ directory" — traced to `components/sermon-list.tsx` (a `"use client"` component) doing a *value* import of `formatSermonDate` from `@/lib/sermons`. Even though `formatSermonDate` itself is a pure function, importing any value from a module pulls the whole module — including its now-server-only top-level import — into the client bundle graph. `import type { Sermon } from "@/lib/sermons"` in the same file is fine (type-only imports are erased at compile time and never reach the bundle). Fix: extract the pure `formatSermonDate` into its own zero-dependency file (`lib/sermon-format.ts`), have `lib/sermons.ts` re-export it (`export { formatSermonDate } from "@/lib/sermon-format";`) so server-side consumers like `app/sermons/[slug]/page.tsx` don't need an import path change, and point `components/sermon-list.tsx`'s value import directly at `@/lib/sermon-format` instead.
 
 - [ ] **Step 1: Update `app/sermons/page.tsx`**
 
@@ -402,6 +407,45 @@ export default async function SermonsPage() {
 ```
 
 (`Link` stays imported even though unused directly here — check with the next step; if `tsc`/`eslint` flags it as unused, remove it. It was unused in the original file too, so no behavior change either way.)
+
+- [ ] **Step 1b: Create `lib/sermon-format.ts` and repoint the client-side import**
+
+Create `lib/sermon-format.ts`:
+
+```ts
+// Client-safe: walang server-only import (kaya puwedeng gamitin ng
+// components/sermon-list.tsx, isang client component). Ang lib/sermons.ts
+// ay may server-only Supabase access, kaya hiwalay ito dito.
+export function formatSermonDate(iso: string): string {
+  return new Date(iso + "T00:00:00Z").toLocaleDateString("en-US", {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+    timeZone: "UTC",
+  });
+}
+```
+
+In `lib/sermons.ts`, remove the local `formatSermonDate` function body and add a re-export right after the `getSupabase` import instead:
+
+```ts
+import { getSupabase } from "@/lib/portal";
+export { formatSermonDate } from "@/lib/sermon-format";
+```
+
+In `components/sermon-list.tsx`, change:
+
+```ts
+import type { Sermon } from "@/lib/sermons";
+import { formatSermonDate } from "@/lib/sermons";
+```
+
+to:
+
+```ts
+import type { Sermon } from "@/lib/sermons";
+import { formatSermonDate } from "@/lib/sermon-format";
+```
 
 - [ ] **Step 2: Update `app/sermons/[slug]/page.tsx`**
 

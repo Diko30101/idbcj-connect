@@ -5,13 +5,15 @@ import { Button } from "@/components/ui/button";
 import { SermonList } from "@/components/sermon-list";
 import { getPublishedSermons } from "@/lib/sermons";
 
+export const revalidate = 300;
+
 export const metadata: Metadata = {
   title: "Sermon Library | IDBCJ",
   description: "Watch and study sermons with summaries, Bible verses, and review questions.",
 };
 
-export default function SermonsPage() {
-  const sermons = getPublishedSermons();
+export default async function SermonsPage() {
+  const sermons = await getPublishedSermons();
 
   return (
     <div className="min-h-screen bg-slate-50 font-sans">

@@ -4,13 +4,9 @@ import type { Metadata } from "next";
 import { Calendar, User, Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { SermonPlayer } from "@/components/sermon-player";
-import { getPublishedSermons, getSermon, formatSermonDate } from "@/lib/sermons";
+import { getSermon, formatSermonDate } from "@/lib/sermons";
 
-export const dynamicParams = false;
-
-export function generateStaticParams() {
-  return getPublishedSermons().map((s) => ({ slug: s.slug }));
-}
+export const revalidate = 300;
 
 export async function generateMetadata({
   params,
@@ -18,7 +14,7 @@ export async function generateMetadata({
   params: Promise<{ slug: string }>;
 }): Promise<Metadata> {
   const { slug } = await params;
-  const sermon = getSermon(slug);
+  const sermon = await getSermon(slug);
   if (!sermon) return {};
   return {
     title: `${sermon.title} | IDBCJ Sermons`,
@@ -32,7 +28,7 @@ export default async function SermonPage({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
-  const sermon = getSermon(slug);
+  const sermon = await getSermon(slug);
   if (!sermon) notFound();
 
   const verses = sermon.verses ?? [];

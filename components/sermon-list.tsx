@@ -4,7 +4,7 @@ import { useMemo, useState } from "react";
 import Link from "next/link";
 import { PlayCircle, Search, User, Calendar } from "lucide-react";
 import type { Sermon } from "@/lib/sermons";
-import { formatSermonDate } from "@/lib/sermons";
+import { formatSermonDate } from "@/lib/sermon-format";
 
 export function SermonList({ sermons }: { sermons: Sermon[] }) {
   const [query, setQuery] = useState("");

@@ -1,4 +1,5 @@
 import { getSupabase } from "@/lib/portal";
+export { formatSermonDate } from "@/lib/sermon-format";
 
 // ============================================================
 // SERMON LIBRARY DATA
@@ -87,11 +88,3 @@ export async function getSermon(slug: string): Promise<Sermon | undefined> {
   return data ? rowToSermon(data as SermonRow) : undefined;
 }
 
-export function formatSermonDate(iso: string): string {
-  return new Date(iso + "T00:00:00Z").toLocaleDateString("en-US", {
-    year: "numeric",
-    month: "long",
-    day: "numeric",
-    timeZone: "UTC",
-  });
-}
