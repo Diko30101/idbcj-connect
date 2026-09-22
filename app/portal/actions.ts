@@ -22,7 +22,7 @@ import { CATEGORIES, type Category } from "@/lib/categories";
 import { LOCALITIES, type Locality } from "@/lib/locality";
 import { WORSHIP, WORSHIP_BATANGAS, WORSHIP_ALBERTA } from "@/lib/worship";
 import { FINANCE_CATEGORIES, monthToDate } from "@/lib/finance";
-import { parseQuizText, countQuizBlocks } from "@/lib/courses";
+import { parseQuizText, countQuizBlocks, type QuizQuestion } from "@/lib/courses";
 
 const STATUSES = ["visitor", "active", "inactive"];
 const ROLES: Role[] = ["admin", "secretary", "leader", "member", "treasurer"];
@@ -928,11 +928,11 @@ export async function deleteEvent(fd: FormData) {
 }
 
 // ---------------------------------------------------------------
-// BIBLE STUDY COURSES (Admin/Secretary o Pastoral Ministry) --
-// courses + lessons, parehong view at edit access
+// BIBLE STUDY COURSES -- write (create/edit/delete) ay Admin/Secretary
+// lang; view ay Admin/Secretary o Pastoral Ministry member
 // ---------------------------------------------------------------
 export async function createCourse(fd: FormData) {
-  const { supabase } = await requirePastoralAccess();
+  const { supabase } = await requireRoles(["admin", "secretary"]);
   const title = str(fd, "title");
   if (!title) back("/portal/courses", "error", "Kailangan ng pamagat.");
   const { data, error } = await supabase
@@ -950,7 +950,7 @@ export async function createCourse(fd: FormData) {
 }
 
 export async function updateCourse(fd: FormData) {
-  const { supabase } = await requirePastoralAccess();
+  const { supabase } = await requireRoles(["admin", "secretary"]);
   const id = str(fd, "id");
   const path = `/portal/courses/${id}`;
   const title = str(fd, "title");
@@ -969,7 +969,7 @@ export async function updateCourse(fd: FormData) {
 }
 
 export async function toggleCourse(fd: FormData) {
-  const { supabase } = await requirePastoralAccess();
+  const { supabase } = await requireRoles(["admin", "secretary"]);
   const id = str(fd, "id");
   const { error } = await supabase
     .from("courses")
@@ -981,7 +981,7 @@ export async function toggleCourse(fd: FormData) {
 }
 
 export async function deleteCourse(fd: FormData) {
-  const { supabase } = await requirePastoralAccess();
+  const { supabase } = await requireRoles(["admin", "secretary"]);
   const id = str(fd, "id");
   const { error } = await supabase.from("courses").delete().eq("id", id);
   if (error) back(`/portal/courses/${id}`, "error", "Hindi nabura: " + error.message);
@@ -990,7 +990,7 @@ export async function deleteCourse(fd: FormData) {
 }
 
 export async function createLesson(fd: FormData) {
-  const { supabase } = await requirePastoralAccess();
+  const { supabase } = await requireRoles(["admin", "secretary"]);
   const courseId = str(fd, "course_id");
   const title = str(fd, "title");
   if (!title) back(`/portal/courses/${courseId}`, "error", "Kailangan ng pamagat ng aralin.");
@@ -1009,7 +1009,7 @@ export async function createLesson(fd: FormData) {
 }
 
 export async function updateLesson(fd: FormData) {
-  const { supabase } = await requirePastoralAccess();
+  const { supabase } = await requireRoles(["admin", "secretary"]);
   const id = str(fd, "id");
   const courseId = str(fd, "course_id");
   const path = `/portal/courses/${courseId}/lessons/${id}`;
@@ -1040,11 +1040,53 @@ export async function updateLesson(fd: FormData) {
 }
 
 export async function deleteLesson(fd: FormData) {
-  const { supabase } = await requirePastoralAccess();
+  const { supabase } = await requireRoles(["admin", "secretary"]);
   const id = str(fd, "id");
   const courseId = str(fd, "course_id");
   const { error } = await supabase.from("lessons").delete().eq("id", id);
   if (error) back(`/portal/courses/${courseId}/lessons/${id}`, "error", "Hindi nabura: " + error.message);
   revalidatePath(`/portal/courses/${courseId}`, "layout");
   redirect(`/portal/courses/${courseId}?ok=` + encodeURIComponent("Nabura ang aralin."));
+}
+
+export async function submitQuizAttempt(fd: FormData) {
+  const { supabase, profile } = await requirePastoralAccess();
+  const lessonId = str(fd, "lesson_id");
+  const courseId = str(fd, "course_id");
+  const path = `/portal/courses/${courseId}/lessons/${lessonId}`;
+
+  const { data: lesson } = await supabase.from("lessons").select("quiz").eq("id", lessonId).maybeSingle();
+  if (!lesson) back(path, "error", "Hindi mahanap ang aralin.");
+
+  const quiz = (lesson.quiz ?? []) as QuizQuestion[];
+  let correctCount = 0;
+  quiz.forEach((q, i) => {
+    // Ginagamit ang fd.get (hindi ang str() helper) dahil kailangang
+    // makilala ang "walang sagot" (null) mula sa "sagot #0" -- kung
+    // gagamitin ang str(), parehong "" ang ibabalik, at ang Number("")
+    // ay 0, na maaaring maling mabilang bilang tama kung ang choice #0
+    // ay siyang tamang sagot.
+    const raw = fd.get(`q${i}`);
+    const chosen = raw === null ? -1 : Number(raw);
+    if (q.choices[chosen]?.correct) correctCount++;
+  });
+  const totalCount = quiz.length;
+  const passed = correctCount === totalCount;
+
+  const { error } = await supabase.from("lesson_completions").upsert({
+    profile_id: profile.id,
+    lesson_id: lessonId,
+    correct_count: correctCount,
+    total_count: totalCount,
+    passed,
+    completed_at: new Date().toISOString(),
+  });
+  if (error) back(path, "error", "Hindi na-save ang resulta: " + error.message);
+
+  revalidatePath(path);
+  back(
+    path,
+    "ok",
+    passed ? "Pasado ka! Tama ang lahat ng sagot." : `Kailangan ulitin: ${correctCount}/${totalCount} lang ang tama.`,
+  );
 }
