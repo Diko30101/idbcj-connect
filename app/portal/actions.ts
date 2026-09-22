@@ -646,7 +646,7 @@ export async function saveLocalYearlyFinancials(fd: FormData) {
 }
 
 // ---------------------------------------------------------------
-// GASTUSIN (buwanang listahan ng gastos, buong simbahan, hindi naka-locality)
+// EXPENSES (buwanang listahan ng gastos, buong simbahan, hindi naka-locality)
 // ---------------------------------------------------------------
 export async function addExpense(fd: FormData) {
   const { supabase, user } = await requireExpenseAccess();

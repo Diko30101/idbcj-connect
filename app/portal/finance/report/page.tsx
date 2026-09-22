@@ -6,7 +6,7 @@ import { FinanceChart } from "@/components/portal/finance-chart";
 const REPORT_CATEGORIES = ["income", "expense"];
 const REPORT_CATEGORY_LABEL: Record<string, string> = {
   income: "Pumasok (Koleksyon)",
-  expense: "Lumabas (Gastusin)",
+  expense: "Lumabas (Expenses)",
 };
 
 export default async function FinanceAuditReportPage({
@@ -69,7 +69,7 @@ export default async function FinanceAuditReportPage({
     <>
       <PageHeader
         title="Audit Report"
-        subtitle="Buwanang ulat ng kabuuang pumasok (koleksyon, lahat ng lokal) laban sa kabuuang lumabas (gastusin) para sa buong simbahan."
+        subtitle="Buwanang ulat ng kabuuang pumasok (koleksyon, lahat ng lokal) laban sa kabuuang lumabas (expenses) para sa buong simbahan."
       />
       <Notice ok={ok} error={error} />
 
@@ -112,7 +112,7 @@ export default async function FinanceAuditReportPage({
         </div>
 
         {!hasData ? (
-          <Empty>Wala pang naitatalang koleksyon o gastusin para sa {year}.</Empty>
+          <Empty>Wala pang naitatalang koleksyon o expenses para sa {year}.</Empty>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full min-w-[640px] border-collapse text-sm">

@@ -5,7 +5,7 @@ import { ExpenseList, type ExpenseRowData } from "@/components/portal/expense-li
 import { FinanceChart } from "@/components/portal/finance-chart";
 
 const EXPENSE_CHART_CATEGORIES = ["total"];
-const EXPENSE_CHART_LABEL = { total: "Gastusin" };
+const EXPENSE_CHART_LABEL = { total: "Expenses" };
 
 export default async function ExpensesPage({
   searchParams,
@@ -41,7 +41,7 @@ export default async function ExpensesPage({
   }));
   const total = rows.reduce((s, r) => s + r.amount, 0);
 
-  // Taunang buod: total ng gastusin bawat buwan
+  // Taunang buod: total ng expenses bawat buwan
   const yearGrid = new Map<string, number>(); // key = MM
   for (const r of (yearRes.data ?? []) as any[]) {
     const mm = (r.expense_month as string).slice(5, 7);
@@ -55,8 +55,8 @@ export default async function ExpensesPage({
   return (
     <>
       <PageHeader
-        title="Gastusin"
-        subtitle="Buwanang listahan ng gastusin ng simbahan (buong simbahan, hindi naka-per-lokal)"
+        title="Expenses"
+        subtitle="Buwanang listahan ng expenses ng simbahan (buong simbahan, hindi naka-per-lokal)"
       />
       <Notice ok={ok} error={error} />
 
@@ -77,7 +77,7 @@ export default async function ExpensesPage({
       </div>
 
       <div className="mt-6">
-        <Panel title={`Taunang Buod ng Gastusin · ${year}`}>
+        <Panel title={`Taunang Buod ng Expenses · ${year}`}>
           <form method="get" className="mb-4 flex flex-wrap items-end gap-2">
             <input type="hidden" name="month" value={month} />
             <label className="grid gap-1.5">

@@ -76,7 +76,7 @@ export const isFinance = (r: Role) => r === "admin" || r === "secretary" || r ==
 // Ministry na ang mga miyembro ay may access lang sa financial records ng sariling lokal
 export const LOCAL_FINANCE_MINISTRY_NAME = "Local Finance Ministry";
 
-// Ministry na ang mga miyembro ay may access sa pag-encode ng gastusin (buong simbahan, hindi naka-locality)
+// Ministry na ang mga miyembro ay may access sa pag-encode ng expenses (buong simbahan, hindi naka-locality)
 export const FINANCE_MINISTRY_NAME = "Finance Ministry";
 
 // ---------------------------------------------------------------
@@ -167,7 +167,7 @@ export async function requireLocalFinanceAccess() {
   return { ...ctx, locality: profile.locality as Locality };
 }
 
-// Para sa pag-encode ng gastusin: Admin/Secretary/Treasurer, o kasapi ng "Finance Ministry"
+// Para sa pag-encode ng expenses: Admin/Secretary/Treasurer, o kasapi ng "Finance Ministry"
 export async function requireExpenseAccess() {
   const ctx = await requirePortalAccess();
   const { supabase, profile } = ctx;
