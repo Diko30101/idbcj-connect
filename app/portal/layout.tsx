@@ -45,6 +45,7 @@ export default async function PortalLayout({ children }: { children: React.React
   if (isStaff(profile.role)) {
     items.push({ href: "/portal/attendance", label: "Attendance" });
     items.push({ href: "/portal/members", label: "Members" });
+    items.push({ href: "/portal/sermons", label: "Sermons" });
   }
   {
     const needsMinistryCheck = !isFinance(profile.role);
