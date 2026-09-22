@@ -2,7 +2,8 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 
 export type NavItem = { href: string; label: string; children?: NavItem[] };
 
@@ -12,33 +13,59 @@ function isActive(pathname: string, href: string) {
 
 function NavDropdown({ item, active }: { item: NavItem; active: boolean }) {
   const [open, setOpen] = useState(false);
-  const ref = useRef<HTMLLIElement>(null);
+  const [mounted, setMounted] = useState(false);
+  const [pos, setPos] = useState({ top: 0, left: 0 });
+  const btnRef = useRef<HTMLButtonElement>(null);
+  const menuRef = useRef<HTMLUListElement>(null);
   const pathname = usePathname();
+
+  useEffect(() => setMounted(true), []);
 
   // Isara ang dropdown kapag lumipat ng page
   useEffect(() => {
     setOpen(false);
   }, [pathname]);
 
+  // I-kalkula ang posisyon ng dropdown (nasa document.body ito, hindi naka-clip sa loob ng
+  // nav na may overflow-x-auto)
+  useLayoutEffect(() => {
+    if (!open || !btnRef.current) return;
+    const rect = btnRef.current.getBoundingClientRect();
+    setPos({ top: rect.bottom + 4, left: rect.left });
+  }, [open]);
+
   useEffect(() => {
     if (!open) return;
+    function reposition() {
+      if (!btnRef.current) return;
+      const rect = btnRef.current.getBoundingClientRect();
+      setPos({ top: rect.bottom + 4, left: rect.left });
+    }
     function onOutside(e: MouseEvent) {
-      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+      const target = e.target as Node;
+      if (btnRef.current?.contains(target)) return;
+      if (menuRef.current?.contains(target)) return;
+      setOpen(false);
     }
     function onEscape(e: KeyboardEvent) {
       if (e.key === "Escape") setOpen(false);
     }
+    window.addEventListener("scroll", reposition, true);
+    window.addEventListener("resize", reposition);
     document.addEventListener("mousedown", onOutside);
     document.addEventListener("keydown", onEscape);
     return () => {
+      window.removeEventListener("scroll", reposition, true);
+      window.removeEventListener("resize", reposition);
       document.removeEventListener("mousedown", onOutside);
       document.removeEventListener("keydown", onEscape);
     };
   }, [open]);
 
   return (
-    <li ref={ref} className="relative">
+    <li>
       <button
+        ref={btnRef}
         type="button"
         onClick={() => setOpen((v) => !v)}
         aria-expanded={open}
@@ -61,28 +88,35 @@ function NavDropdown({ item, active }: { item: NavItem; active: boolean }) {
           />
         </svg>
       </button>
-      {open && (
-        <ul className="absolute left-0 top-full z-20 mt-1 min-w-[200px] rounded-lg border border-gray-200 bg-white py-1 shadow-lg">
-          {item.children!.map((child) => {
-            const childActive = pathname === child.href;
-            return (
-              <li key={child.href}>
-                <Link
-                  href={child.href}
-                  onClick={() => setOpen(false)}
-                  className={`block px-4 py-2 text-sm ${
-                    childActive
-                      ? "bg-emerald-50 font-medium text-emerald-800"
-                      : "text-gray-600 hover:bg-emerald-50 hover:text-emerald-800"
-                  }`}
-                >
-                  {child.label}
-                </Link>
-              </li>
-            );
-          })}
-        </ul>
-      )}
+      {mounted && open
+        ? createPortal(
+            <ul
+              ref={menuRef}
+              style={{ position: "fixed", top: pos.top, left: pos.left }}
+              className="z-50 min-w-[200px] rounded-lg border border-gray-200 bg-white py-1 shadow-lg"
+            >
+              {item.children!.map((child) => {
+                const childActive = pathname === child.href;
+                return (
+                  <li key={child.href}>
+                    <Link
+                      href={child.href}
+                      onClick={() => setOpen(false)}
+                      className={`block px-4 py-2 text-sm ${
+                        childActive
+                          ? "bg-emerald-50 font-medium text-emerald-800"
+                          : "text-gray-600 hover:bg-emerald-50 hover:text-emerald-800"
+                      }`}
+                    >
+                      {child.label}
+                    </Link>
+                  </li>
+                );
+              })}
+            </ul>,
+            document.body,
+          )
+        : null}
     </li>
   );
 }
