@@ -1089,7 +1089,7 @@ export async function submitQuizAttempt(fd: FormData) {
     path,
     "ok",
     passed
-      ? `Pasado ka! ${correctCount}/${totalCount} ang tama.`r
+      ? `Pasado ka! ${correctCount}/${totalCount} ang tama.`
       : `Kailangan ulitin: ${correctCount}/${totalCount} lang ang tama (kailangan ${Math.ceil(totalCount * PASS_THRESHOLD)}/${totalCount} pataas).`,
   );
 }
