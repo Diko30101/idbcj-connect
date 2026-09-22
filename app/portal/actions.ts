@@ -1071,7 +1071,8 @@ export async function submitQuizAttempt(fd: FormData) {
     if (q.choices[chosen]?.correct) correctCount++;
   });
   const totalCount = quiz.length;
-  const passed = correctCount === totalCount;
+  const PASS_THRESHOLD = 0.8; // 80% pataas para pumasa
+  const passed = totalCount > 0 && correctCount / totalCount >= PASS_THRESHOLD;
 
   const { error } = await supabase.from("lesson_completions").upsert({
     profile_id: profile.id,
@@ -1087,6 +1088,9 @@ export async function submitQuizAttempt(fd: FormData) {
   back(
     path,
     "ok",
-    passed ? "Pasado ka! Tama ang lahat ng sagot." : `Kailangan ulitin: ${correctCount}/${totalCount} lang ang tama.`,
+    passed
+      ? `Pasado ka! ${correctCount}/${totalCount} ang tama.`r
+      : `Kailangan ulitin: ${correctCount}/${totalCount} lang ang tama (kailangan ${Math.ceil(totalCount * PASS_THRESHOLD)}/${totalCount} pataas).`,
   );
 }
+
