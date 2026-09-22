@@ -11,7 +11,7 @@ export default async function CoursesPage({
   const { ok, error } = await searchParams;
   const { supabase } = await requirePastoralAccess();
 
-  const { data } = await supabase
+  const { data, error: queryError } = await supabase
     .from("courses")
     .select("id, title, description, published")
     .order("created_at", { ascending: false })
@@ -21,7 +21,7 @@ export default async function CoursesPage({
   return (
     <>
       <PageHeader title="Bible Study" subtitle="Pamahalaan ang mga Bible Study course para sa Pastoral Ministry." />
-      <Notice ok={ok} error={error} />
+      <Notice ok={ok} error={error ?? (queryError ? "Hindi ma-load ang listahan ng courses: " + queryError.message : undefined)} />
 
       <div className="grid gap-6 lg:grid-cols-3">
         <div className="lg:col-span-2">

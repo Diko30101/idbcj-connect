@@ -86,7 +86,7 @@ export default async function CourseDetailPage({
         <div className="space-y-4">
           <Panel title="Katayuan">
             <p className="mb-3 text-sm text-gray-600">
-              {course.published ? "Nakikita na ito ng Pastoral Ministry." : "Draft pa lang."}
+              {course.published ? "Handa na ang course na ito." : "Ginagawa pa — hindi pa handa."}
             </p>
             <form action={toggleCourse}>
               <input type="hidden" name="id" value={course.id} />

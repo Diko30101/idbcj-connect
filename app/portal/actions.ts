@@ -22,7 +22,7 @@ import { CATEGORIES, type Category } from "@/lib/categories";
 import { LOCALITIES, type Locality } from "@/lib/locality";
 import { WORSHIP, WORSHIP_BATANGAS, WORSHIP_ALBERTA } from "@/lib/worship";
 import { FINANCE_CATEGORIES, monthToDate } from "@/lib/finance";
-import { parseQuizText } from "@/lib/courses";
+import { parseQuizText, countQuizBlocks } from "@/lib/courses";
 
 const STATUSES = ["visitor", "active", "inactive"];
 const ROLES: Role[] = ["admin", "secretary", "leader", "member", "treasurer"];
@@ -1015,19 +1015,28 @@ export async function updateLesson(fd: FormData) {
   const path = `/portal/courses/${courseId}/lessons/${id}`;
   const title = str(fd, "title");
   if (!title) back(path, "error", "Kailangan ng pamagat.");
+  const quizText = str(fd, "quiz");
+  const quiz = parseQuizText(quizText);
+  const droppedCount = countQuizBlocks(quizText) - quiz.length;
   const { error } = await supabase
     .from("lessons")
     .update({
       title,
       position: Number(str(fd, "position")) || 0,
       content: str(fd, "content"),
-      quiz: parseQuizText(str(fd, "quiz")),
+      quiz,
       updated_at: new Date().toISOString(),
     })
     .eq("id", id);
   if (error) back(path, "error", "Hindi na-save: " + error.message);
   revalidatePath(`/portal/courses/${courseId}`, "layout");
-  back(path, "ok", "Na-update ang aralin.");
+  back(
+    path,
+    "ok",
+    droppedCount > 0
+      ? `Na-update ang aralin. ${droppedCount} sa quiz ang hindi na-save (siguraduhing may tamang format at may tamang sagot ang bawat tanong).`
+      : "Na-update ang aralin.",
+  );
 }
 
 export async function deleteLesson(fd: FormData) {

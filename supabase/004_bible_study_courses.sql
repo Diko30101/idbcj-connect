@@ -45,16 +45,18 @@ create table if not exists public.lessons (
 -- ---------------------------------------------------------------------
 create or replace function public.in_named_ministry(ministry_name text)
 returns boolean
-language sql
-stable
+language sql stable security definer set search_path = ''
 as $$
   select exists (
     select 1
     from public.ministry_members mm
     join public.ministries m on m.id = mm.ministry_id
     where mm.profile_id = auth.uid() and m.name = ministry_name
-  );
+  ) and public.is_member();
 $$;
+
+revoke execute on function public.in_named_ministry(text) from public, anon;
+grant execute on function public.in_named_ministry(text) to authenticated;
 
 -- ---------------------------------------------------------------------
 -- 4. SEED: "Pastoral Ministry" (kung wala pa)

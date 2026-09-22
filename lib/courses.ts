@@ -43,6 +43,17 @@ export function parseQuizText(text: string): QuizQuestion[] {
   return quiz;
 }
 
+// Bilangin ang mga "block" (pinaghihiwalay ng blangkong linya) sa raw text,
+// para malaman kung may na-drop na tanong ang parseQuizText (hal. dahil sa
+// maling format o walang tamang sagot).
+export function countQuizBlocks(text: string): number {
+  return text
+    .replace(/\r\n/g, "\n")
+    .split(/\n\s*\n/)
+    .map((b) => b.trim())
+    .filter(Boolean).length;
+}
+
 export function formatQuizText(quiz: QuizQuestion[]): string {
   return quiz
     .map((q) => [q.question, ...q.choices.map((c) => `${c.correct ? "*" : "-"} ${c.text}`)].join("\n"))
