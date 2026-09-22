@@ -128,7 +128,13 @@ export function PortalNav({ items }: { items: NavItem[] }) {
       <div className="mx-auto max-w-6xl overflow-x-auto px-4">
         <ul className="flex gap-1 py-2 whitespace-nowrap">
           {items.map((item) => {
-            const active = isActive(pathname, item.href);
+            // Kapag may children (dropdown), i-check kung active ang alinman sa mga ito --
+            // hindi lang ang sarili nitong href, dahil hindi lahat ng dropdown (hal. "More")
+            // ay may iisang shared na URL prefix gaya ng Finance.
+            const active =
+              item.children && item.children.length > 0
+                ? item.children.some((c) => isActive(pathname, c.href))
+                : isActive(pathname, item.href);
             if (item.children && item.children.length > 0) {
               return <NavDropdown key={item.href} item={item} active={active} />;
             }

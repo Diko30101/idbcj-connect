@@ -85,6 +85,25 @@ export default async function PortalLayout({ children }: { children: React.React
   }
   if (profile.role === "admin") items.push({ href: "/portal/audit", label: "Audit Log" });
 
+  // Grupohin ang mga hindi gaanong ginagamit na item sa ilalim ng "More", para hindi
+  // mag-overflow ang nav bar sa mobile/normal width. Ang bawat item dito ay dati nang
+  // na-filter base sa role (sa itaas), kaya ang pag-grupo lang ang binabago dito --
+  // hindi apektado ang access control.
+  const ALWAYS_VISIBLE_HREFS = new Set([
+    "/portal",
+    "/portal/inbox",
+    "/portal/announcements",
+    "/portal/members",
+    "/portal/courses",
+  ]);
+  const alwaysVisible = items.filter((i) => ALWAYS_VISIBLE_HREFS.has(i.href));
+  const finance = items.find((i) => i.href === "/portal/finance");
+  const overflow = items.filter((i) => !ALWAYS_VISIBLE_HREFS.has(i.href) && i.href !== "/portal/finance");
+
+  const navItems: NavItem[] = [...alwaysVisible];
+  if (finance) navItems.push(finance);
+  if (overflow.length > 0) navItems.push({ href: overflow[0].href, label: "More", children: overflow });
+
   return (
     <div className="min-h-screen bg-slate-50 pb-16">
       <header className="border-b border-emerald-100 bg-white shadow-sm">
@@ -105,7 +124,7 @@ export default async function PortalLayout({ children }: { children: React.React
           </div>
         </div>
       </header>
-      <PortalNav items={items} />
+      <PortalNav items={navItems} />
       <main className="mx-auto max-w-6xl px-4 py-8">{children}</main>
     </div>
   );
