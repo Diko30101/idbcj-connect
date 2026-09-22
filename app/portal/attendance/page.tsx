@@ -105,8 +105,11 @@ export default async function AttendancePage({
             <Field label="Uri">
               <select name="kind" className={inputCls} defaultValue="sunday">
                 <option value="sunday">Sunday Worship</option>
-                <option value="midweek">Midweek</option>
-                <option value="special">Special</option>
+                <option value="new_year_thanksgiving">New Year Thanksgiving</option>
+                <option value="yearly_thanksgiving">Yearly Thanksgiving</option>
+                <option value="extra_thanksgiving">Extra Thanksgiving</option>
+                <option value="monthly_ministerial_class">Monthly Ministerial Class</option>
+                <option value="other">Others</option>
               </select>
             </Field>
             <Field label="Pamagat (opsyonal)">

@@ -17,7 +17,14 @@ import { LOCALITIES, type Locality } from "@/lib/locality";
 
 const STATUSES = ["visitor", "active", "inactive"];
 const ROLES: Role[] = ["admin", "secretary", "leader", "member"];
-const KINDS = ["sunday", "midweek", "special"];
+const KINDS = [
+  "sunday",
+  "new_year_thanksgiving",
+  "yearly_thanksgiving",
+  "extra_thanksgiving",
+  "monthly_ministerial_class",
+  "other",
+];
 const BAPTISM = ["Not Baptized", "Scheduled", "Baptized"];
 
 // ---------------------------------------------------------------

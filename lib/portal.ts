@@ -56,8 +56,11 @@ export const STATUS_LABEL: Record<MemberStatus, string> = {
 
 export const KIND_LABEL: Record<string, string> = {
   sunday: "Sunday Worship",
-  midweek: "Midweek",
-  special: "Special",
+  new_year_thanksgiving: "New Year Thanksgiving",
+  yearly_thanksgiving: "Yearly Thanksgiving",
+  extra_thanksgiving: "Extra Thanksgiving",
+  monthly_ministerial_class: "Monthly Ministerial Class",
+  other: "Others",
 };
 
 export const isStaff = (r: Role) => r === "admin" || r === "secretary";
