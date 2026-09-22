@@ -58,7 +58,9 @@ export default async function PortalLayout({ children }: { children: React.React
       (m) => m.ministries?.name === FINANCE_MINISTRY_NAME,
     );
 
-    if (isFinance(profile.role)) {
+    // Finance role (Admin/Secretary/Treasurer) at Finance Ministry members ay parehong may
+    // buong access sa Finance section (Financial Management, Audit Report, Expenses)
+    if (isFinance(profile.role) || isFinanceMinistryMember) {
       items.push({
         href: "/portal/finance",
         label: "Finance",
@@ -68,10 +70,8 @@ export default async function PortalLayout({ children }: { children: React.React
           { href: "/portal/finance/expenses", label: "Expenses" },
         ],
       });
-    } else {
-      if (isLocalFinanceMember) items.push({ href: "/portal/finance/local", label: "Local Finance" });
-      if (isFinanceMinistryMember) items.push({ href: "/portal/finance/expenses", label: "Expenses" });
     }
+    if (isLocalFinanceMember) items.push({ href: "/portal/finance/local", label: "Local Finance" });
   }
   if (profile.role === "admin") items.push({ href: "/portal/audit", label: "Audit Log" });
 

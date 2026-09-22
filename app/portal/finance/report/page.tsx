@@ -1,4 +1,4 @@
-import { requireRoles } from "@/lib/portal";
+import { requireFinanceSectionAccess } from "@/lib/portal";
 import { monthLabel, fmtPeso } from "@/lib/finance";
 import { Empty, Notice, PageHeader, Panel, btnGhostCls, inputCls } from "@/components/portal/ui";
 import { FinanceChart } from "@/components/portal/finance-chart";
@@ -15,7 +15,7 @@ export default async function FinanceAuditReportPage({
   searchParams: Promise<{ year?: string; ok?: string; error?: string }>;
 }) {
   const { ok, error, year: yearParam } = await searchParams;
-  const { supabase } = await requireRoles(["admin", "secretary", "treasurer"]);
+  const { supabase } = await requireFinanceSectionAccess();
 
   const year = yearParam && /^\d{4}$/.test(yearParam) ? yearParam : String(new Date().getFullYear());
 

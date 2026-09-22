@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { requireRoles, LOCALITIES, LOCALITY_LABEL, FINANCE_CATEGORIES, FINANCE_CATEGORY_LABEL, type FinanceCategory, type Locality } from "@/lib/portal";
+import { requireFinanceSectionAccess, LOCALITIES, LOCALITY_LABEL, FINANCE_CATEGORIES, FINANCE_CATEGORY_LABEL, type FinanceCategory, type Locality } from "@/lib/portal";
 import { monthLabel, fmtPeso } from "@/lib/finance";
 import { Empty, Notice, PageHeader, Panel, btnCls, btnGhostCls, inputCls } from "@/components/portal/ui";
 import { YearlyLocalityGrid } from "@/components/portal/yearly-locality-grid";
@@ -11,7 +11,7 @@ export default async function FinancePage({
   searchParams: Promise<{ year?: string; locality?: string; ok?: string; error?: string }>;
 }) {
   const { ok, error, year: yearParam, locality: localityParam } = await searchParams;
-  const { supabase } = await requireRoles(["admin", "secretary", "treasurer"]);
+  const { supabase } = await requireFinanceSectionAccess();
 
   const year = yearParam && /^\d{4}$/.test(yearParam) ? yearParam : String(new Date().getFullYear());
   const localityFilter =

@@ -1,5 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getPortalContext, isFinance, LOCALITY_LABEL, FINANCE_CATEGORY_LABEL, type Locality, type FinanceCategory } from "@/lib/portal";
+import {
+  getPortalContext,
+  isFinance,
+  FINANCE_MINISTRY_NAME,
+  LOCALITY_LABEL,
+  FINANCE_CATEGORY_LABEL,
+  type Locality,
+  type FinanceCategory,
+} from "@/lib/portal";
 
 // Iwas CSV injection (mga cell na nagsisimula sa = + - @)
 function cell(v: unknown): string {
@@ -11,7 +19,9 @@ function cell(v: unknown): string {
 export async function GET(req: NextRequest) {
   const { supabase, profile } = await getPortalContext();
   if (!isFinance(profile.role)) {
-    return new NextResponse("Forbidden", { status: 403 });
+    const { data } = await supabase.from("ministry_members").select("ministries(name)").eq("profile_id", profile.id);
+    const isFinanceMinistryMember = ((data ?? []) as any[]).some((m) => m.ministries?.name === FINANCE_MINISTRY_NAME);
+    if (!isFinanceMinistryMember) return new NextResponse("Forbidden", { status: 403 });
   }
 
   const yearParam = req.nextUrl.searchParams.get("year") ?? "";

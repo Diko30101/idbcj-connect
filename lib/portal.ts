@@ -167,8 +167,9 @@ export async function requireLocalFinanceAccess() {
   return { ...ctx, locality: profile.locality as Locality };
 }
 
-// Para sa pag-encode ng expenses: Admin/Secretary/Treasurer, o kasapi ng "Finance Ministry"
-export async function requireExpenseAccess() {
+// Buong Finance section (Financial Management, Audit Report, Expenses):
+// Admin/Secretary/Treasurer, o kasapi ng "Finance Ministry" (parehong rights)
+export async function requireFinanceSectionAccess() {
   const ctx = await requirePortalAccess();
   const { supabase, profile } = ctx;
   if (isFinance(profile.role)) return ctx;
@@ -177,6 +178,9 @@ export async function requireExpenseAccess() {
   if (!isMember) redirect("/portal?error=" + encodeURIComponent("Wala kang access sa pahinang iyon."));
   return ctx;
 }
+
+// Alias para sa dating pangalan (Expenses page lang gumagamit nito dati)
+export const requireExpenseAccess = requireFinanceSectionAccess;
 
 // Para sa mensahe pagkatapos ng isang aksyon
 export function back(path: string, kind: "ok" | "error", msg: string): never {

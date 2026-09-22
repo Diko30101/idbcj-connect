@@ -9,6 +9,7 @@ import {
   isStaff,
   KINDS,
   requireExpenseAccess,
+  requireFinanceSectionAccess,
   requireLocalFinanceAccess,
   requirePortalAccess,
   requireRoles,
@@ -516,7 +517,7 @@ export async function createLetter(fd: FormData) {
 // FINANCIAL RECORDS (buwanang koleksyon: abuluyan, ambagan, tulong sa aral, pasalamat)
 // ---------------------------------------------------------------
 export async function saveMonthlyFinancials(fd: FormData) {
-  const { supabase, user } = await requireRoles(["admin", "secretary", "treasurer"]);
+  const { supabase, user } = await requireFinanceSectionAccess();
   const month = str(fd, "month");
   const path = `/portal/finance?month=${encodeURIComponent(month)}`;
   if (!/^\d{4}-\d{2}$/.test(month)) back(path, "error", "Di-wastong buwan.");
@@ -552,7 +553,7 @@ export async function saveMonthlyFinancials(fd: FormData) {
 
 // Pag-edit ng buong taon para sa isang lokal (mula sa Taunang Buod report)
 export async function saveYearlyLocalityFinancials(fd: FormData) {
-  const { supabase, user } = await requireRoles(["admin", "secretary", "treasurer"]);
+  const { supabase, user } = await requireFinanceSectionAccess();
   const year = str(fd, "year");
   const locality = str(fd, "locality");
   const path = `/portal/finance?year=${encodeURIComponent(year)}&locality=${encodeURIComponent(locality)}`;
