@@ -11,6 +11,7 @@ import {
   requireExpenseAccess,
   requireFinanceSectionAccess,
   requireLocalFinanceAccess,
+  requirePastoralAccess,
   requirePortalAccess,
   requireRoles,
   str,
@@ -21,6 +22,7 @@ import { CATEGORIES, type Category } from "@/lib/categories";
 import { LOCALITIES, type Locality } from "@/lib/locality";
 import { WORSHIP, WORSHIP_BATANGAS, WORSHIP_ALBERTA } from "@/lib/worship";
 import { FINANCE_CATEGORIES, monthToDate } from "@/lib/finance";
+import { parseQuizText, countQuizBlocks } from "@/lib/courses";
 
 const STATUSES = ["visitor", "active", "inactive"];
 const ROLES: Role[] = ["admin", "secretary", "leader", "member", "treasurer"];
@@ -923,4 +925,126 @@ export async function deleteEvent(fd: FormData) {
   revalidatePath("/portal/events", "layout");
   revalidatePath("/events");
   redirect("/portal/events?ok=" + encodeURIComponent("Nabura ang event."));
+}
+
+// ---------------------------------------------------------------
+// BIBLE STUDY COURSES (Admin/Secretary o Pastoral Ministry) --
+// courses + lessons, parehong view at edit access
+// ---------------------------------------------------------------
+export async function createCourse(fd: FormData) {
+  const { supabase } = await requirePastoralAccess();
+  const title = str(fd, "title");
+  if (!title) back("/portal/courses", "error", "Kailangan ng pamagat.");
+  const { data, error } = await supabase
+    .from("courses")
+    .insert({
+      title,
+      description: strOrNull(fd, "description"),
+      published: str(fd, "published") === "on",
+    })
+    .select("id")
+    .single();
+  if (error) back("/portal/courses", "error", "Hindi nagawa: " + error.message);
+  revalidatePath("/portal/courses");
+  redirect(`/portal/courses/${data!.id}`);
+}
+
+export async function updateCourse(fd: FormData) {
+  const { supabase } = await requirePastoralAccess();
+  const id = str(fd, "id");
+  const path = `/portal/courses/${id}`;
+  const title = str(fd, "title");
+  if (!title) back(path, "error", "Kailangan ng pamagat.");
+  const { error } = await supabase
+    .from("courses")
+    .update({
+      title,
+      description: strOrNull(fd, "description"),
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", id);
+  if (error) back(path, "error", "Hindi na-save: " + error.message);
+  revalidatePath("/portal/courses", "layout");
+  back(path, "ok", "Na-update ang course.");
+}
+
+export async function toggleCourse(fd: FormData) {
+  const { supabase } = await requirePastoralAccess();
+  const id = str(fd, "id");
+  const { error } = await supabase
+    .from("courses")
+    .update({ published: str(fd, "publish") === "true" })
+    .eq("id", id);
+  if (error) back(`/portal/courses/${id}`, "error", "Hindi na-update: " + error.message);
+  revalidatePath("/portal/courses", "layout");
+  back(`/portal/courses/${id}`, "ok", "Na-update ang course.");
+}
+
+export async function deleteCourse(fd: FormData) {
+  const { supabase } = await requirePastoralAccess();
+  const id = str(fd, "id");
+  const { error } = await supabase.from("courses").delete().eq("id", id);
+  if (error) back(`/portal/courses/${id}`, "error", "Hindi nabura: " + error.message);
+  revalidatePath("/portal/courses", "layout");
+  redirect("/portal/courses?ok=" + encodeURIComponent("Nabura ang course."));
+}
+
+export async function createLesson(fd: FormData) {
+  const { supabase } = await requirePastoralAccess();
+  const courseId = str(fd, "course_id");
+  const title = str(fd, "title");
+  if (!title) back(`/portal/courses/${courseId}`, "error", "Kailangan ng pamagat ng aralin.");
+  const { data, error } = await supabase
+    .from("lessons")
+    .insert({
+      course_id: courseId,
+      title,
+      position: Number(str(fd, "position")) || 0,
+    })
+    .select("id")
+    .single();
+  if (error) back(`/portal/courses/${courseId}`, "error", "Hindi nagawa: " + error.message);
+  revalidatePath(`/portal/courses/${courseId}`);
+  redirect(`/portal/courses/${courseId}/lessons/${data!.id}`);
+}
+
+export async function updateLesson(fd: FormData) {
+  const { supabase } = await requirePastoralAccess();
+  const id = str(fd, "id");
+  const courseId = str(fd, "course_id");
+  const path = `/portal/courses/${courseId}/lessons/${id}`;
+  const title = str(fd, "title");
+  if (!title) back(path, "error", "Kailangan ng pamagat.");
+  const quizText = str(fd, "quiz");
+  const quiz = parseQuizText(quizText);
+  const droppedCount = countQuizBlocks(quizText) - quiz.length;
+  const { error } = await supabase
+    .from("lessons")
+    .update({
+      title,
+      position: Number(str(fd, "position")) || 0,
+      content: str(fd, "content"),
+      quiz,
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", id);
+  if (error) back(path, "error", "Hindi na-save: " + error.message);
+  revalidatePath(`/portal/courses/${courseId}`, "layout");
+  back(
+    path,
+    "ok",
+    droppedCount > 0
+      ? `Na-update ang aralin. ${droppedCount} sa quiz ang hindi na-save (siguraduhing may tamang format at may tamang sagot ang bawat tanong).`
+      : "Na-update ang aralin.",
+  );
+}
+
+export async function deleteLesson(fd: FormData) {
+  const { supabase } = await requirePastoralAccess();
+  const id = str(fd, "id");
+  const courseId = str(fd, "course_id");
+  const { error } = await supabase.from("lessons").delete().eq("id", id);
+  if (error) back(`/portal/courses/${courseId}/lessons/${id}`, "error", "Hindi nabura: " + error.message);
+  revalidatePath(`/portal/courses/${courseId}`, "layout");
+  redirect(`/portal/courses/${courseId}?ok=` + encodeURIComponent("Nabura ang aralin."));
 }
