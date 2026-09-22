@@ -47,6 +47,13 @@ export function monthLabel(month: string): string {
   return `${MONTH_NAMES_TL[(m ?? 1) - 1] ?? month} ${y}`;
 }
 
+// year="2026", month=9 -> "Enero–Setyembre 2026" (o "Enero 2026" kung Enero pa lang)
+export function yearToDateLabel(year: string, month: number): string {
+  const from = MONTH_NAMES_TL[0];
+  const through = MONTH_NAMES_TL[month - 1] ?? from;
+  return month <= 1 ? `${from} ${year}` : `${from}–${through} ${year}`;
+}
+
 export function fmtPeso(n: number): string {
   return "₱" + n.toLocaleString("en-PH", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }

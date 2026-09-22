@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { requirePortalAccess, isStaff, isFinanceMember, fmtDate, todayPH, KIND_LABEL } from "@/lib/portal";
+import { yearToDateLabel } from "@/lib/finance";
 import { Empty, Notice, Panel, PageHeader, RoleBadge, StatusBadge } from "@/components/portal/ui";
 import { FinanceSummaryPie } from "@/components/portal/finance-summary-pie";
 
@@ -74,6 +75,7 @@ export default async function PortalHome({
     financeIncome = ((incomeRes.data ?? []) as any[]).reduce((s, r) => s + Number(r.amount), 0);
     financeExpense = ((expenseRes.data ?? []) as any[]).reduce((s, r) => s + Number(r.amount), 0);
   }
+  const financePeriodLabel = yearToDateLabel(financeYear, Number(today.slice(5, 7)));
 
   const todayMonth = today.slice(5, 7);
   const todayDay = today.slice(8, 10);
@@ -140,7 +142,7 @@ export default async function PortalHome({
 
         <div className="space-y-6">
           {financeAccess && (
-            <Panel title="Financial Report — Buod">
+            <Panel title="Financial Report — Buod" subtitle={financePeriodLabel}>
               <FinanceSummaryPie year={financeYear} income={financeIncome} expense={financeExpense} />
             </Panel>
           )}
