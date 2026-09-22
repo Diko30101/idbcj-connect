@@ -189,6 +189,23 @@ export async function requireFinanceSectionAccess() {
 // Alias para sa dating pangalan (Expenses page lang gumagamit nito dati)
 export const requireExpenseAccess = requireFinanceSectionAccess;
 
+// Ministry na ang mga miyembro ay may access sa Bible Study Courses
+// (parehong view at edit -- walang ibang audience)
+export const PASTORAL_MINISTRY_NAME = "Pastoral Ministry";
+
+// Buong Bible Study Courses section: Admin/Secretary, o kasapi ng
+// "Pastoral Ministry" (parehong rights, kagaya ng Finance Ministry pattern)
+export async function requirePastoralAccess() {
+  const ctx = await requirePortalAccess();
+  const { supabase, profile } = ctx;
+  if (isStaff(profile.role)) return ctx;
+  const { data } = await supabase.from("ministry_members").select("ministries(name)").eq("profile_id", profile.id);
+  const ministryNames = ((data ?? []) as any[]).map((m) => m.ministries?.name).filter(Boolean);
+  if (!ministryNames.includes(PASTORAL_MINISTRY_NAME))
+    redirect("/portal?error=" + encodeURIComponent("Wala kang access sa pahinang iyon."));
+  return ctx;
+}
+
 // Para sa mensahe pagkatapos ng isang aksyon
 export function back(path: string, kind: "ok" | "error", msg: string): never {
   const sep = path.includes("?") ? "&" : "?";
