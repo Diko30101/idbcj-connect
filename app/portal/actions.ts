@@ -18,6 +18,14 @@ import {
   strOrNull,
   type Role,
 } from "@/lib/portal";
+import {
+  addMinistryMember,
+  createMinistryOp,
+  deleteMinistryOp,
+  removeMinistryMember,
+  setMinistryLeaderOp,
+  updateMinistryOp,
+} from "@/lib/ministry-ops";
 import { CATEGORIES, type Category } from "@/lib/categories";
 import { LOCALITIES, type Locality } from "@/lib/locality";
 import { WORSHIP, WORSHIP_BATANGAS, WORSHIP_ALBERTA } from "@/lib/worship";
@@ -92,47 +100,37 @@ export async function updateMember(fd: FormData) {
 }
 
 export async function addMemberToMinistry(fd: FormData) {
-  const { supabase } = await requireRoles(["admin", "secretary"]);
+  const { supabase, profile } = await requireRoles(["admin", "secretary"]);
   const profileId = str(fd, "profile_id");
   const ministryId = str(fd, "ministry_id");
   const returnTo = str(fd, "return_to") || `/portal/members/${profileId}`;
-  if (!profileId || !ministryId) back(returnTo, "error", "Pumili muna ng ministry o member.");
-  const { error } = await supabase
-    .from("ministry_members")
-    .upsert({ ministry_id: ministryId, profile_id: profileId }, { onConflict: "ministry_id,profile_id", ignoreDuplicates: true });
-  if (error) back(returnTo, "error", "Hindi nadagdag: " + error.message);
+  const r = await addMinistryMember(supabase, profile.role, ministryId, profileId);
+  if (!r.ok) back(returnTo, "error", r.message);
   revalidatePath("/portal/ministries", "layout");
-  back(returnTo, "ok", "Nadagdag sa ministry.");
+  back(returnTo, "ok", r.message);
 }
 
 export async function removeFromMinistry(fd: FormData) {
-  const { supabase } = await requireRoles(["admin", "secretary"]);
+  const { supabase, profile } = await requireRoles(["admin", "secretary"]);
   const profileId = str(fd, "profile_id");
   const ministryId = str(fd, "ministry_id");
   const returnTo = str(fd, "return_to") || `/portal/members/${profileId}`;
-  const { error } = await supabase
-    .from("ministry_members")
-    .delete()
-    .eq("ministry_id", ministryId)
-    .eq("profile_id", profileId);
-  if (error) back(returnTo, "error", "Hindi naalis: " + error.message);
+  const r = await removeMinistryMember(supabase, profile.role, ministryId, profileId);
+  if (!r.ok) back(returnTo, "error", r.message);
   revalidatePath("/portal/ministries", "layout");
-  back(returnTo, "ok", "Naalis sa ministry.");
+  back(returnTo, "ok", r.message);
 }
 
 export async function setMinistryLeader(fd: FormData) {
-  const { supabase } = await requireRoles(["admin", "secretary"]);
+  const { supabase, profile } = await requireRoles(["admin", "secretary"]);
   const profileId = str(fd, "profile_id");
   const ministryId = str(fd, "ministry_id");
   const makeLeader = str(fd, "make_leader") === "true";
   const returnTo = str(fd, "return_to") || `/portal/ministries/${ministryId}`;
-  const { error } = await supabase
-    .from("ministry_members")
-    .update({ is_leader: makeLeader })
-    .eq("ministry_id", ministryId)
-    .eq("profile_id", profileId);
-  if (error) back(returnTo, "error", "Hindi na-update: " + error.message);
-  back(returnTo, "ok", makeLeader ? "Ginawang leader." : "Tinanggal bilang leader.");
+  const r = await setMinistryLeaderOp(supabase, profile.role, ministryId, profileId, makeLeader);
+  if (!r.ok) back(returnTo, "error", r.message);
+  revalidatePath("/portal/ministries", "layout");
+  back(returnTo, "ok", r.message);
 }
 
 // ---------------------------------------------------------------
@@ -140,43 +138,29 @@ export async function setMinistryLeader(fd: FormData) {
 // ---------------------------------------------------------------
 export async function createMinistry(fd: FormData) {
   const { supabase } = await requireRoles(["admin", "secretary"]);
-  const name = str(fd, "name");
-  if (!name) back("/portal/ministries", "error", "Isulat ang pangalan ng ministry.");
-  const { data, error } = await supabase
-    .from("ministries")
-    .insert({ name, name_tl: strOrNull(fd, "name_tl"), description: strOrNull(fd, "description") })
-    .select("id")
-    .single();
-  if (error) back("/portal/ministries", "error", "Hindi nagawa: " + error.message);
+  const r = await createMinistryOp(supabase, { name: str(fd, "name"), name_tl: strOrNull(fd, "name_tl"), description: strOrNull(fd, "description") });
+  if (!r.ok || !r.id) back("/portal/ministries", "error", r.message);
   revalidatePath("/portal/ministries");
-  redirect(`/portal/ministries/${data!.id}?ok=` + encodeURIComponent("Nagawa ang ministry."));
+  redirect(`/portal/ministries/${r.id}?ok=` + encodeURIComponent(r.message));
 }
 
 export async function updateMinistry(fd: FormData) {
   const { supabase } = await requireRoles(["admin", "secretary"]);
   const id = str(fd, "id");
   const path = `/portal/ministries/${id}`;
-  const name = str(fd, "name");
-  if (!name) back(path, "error", "Isulat ang pangalan ng ministry.");
-  const { error } = await supabase
-    .from("ministries")
-    .update({ name, name_tl: strOrNull(fd, "name_tl"), description: strOrNull(fd, "description") })
-    .eq("id", id);
-  if (error) back(path, "error", "Hindi na-save: " + error.message);
+  const r = await updateMinistryOp(supabase, id, { name: str(fd, "name"), name_tl: strOrNull(fd, "name_tl"), description: strOrNull(fd, "description") });
+  if (!r.ok) back(path, "error", r.message);
   revalidatePath("/portal/ministries", "layout");
-  back(path, "ok", "Na-update ang ministry.");
+  back(path, "ok", r.message);
 }
 
 export async function deleteMinistry(fd: FormData) {
   const { supabase } = await requireRoles(["admin", "secretary"]);
   const id = str(fd, "id");
-  const { error } = await supabase.from("ministries").delete().eq("id", id);
-  if (error) back(`/portal/ministries/${id}`, "error", "Hindi nabura: " + error.message);
+  const r = await deleteMinistryOp(supabase, id);
+  if (!r.ok) back(`/portal/ministries/${id}`, "error", r.message);
   revalidatePath("/portal/ministries", "layout");
-  redirect(
-    "/portal/ministries?ok=" +
-      encodeURIComponent("Nabura ang ministry pati na ang mga miyembro, iskedyul, at anunsyo nito."),
-  );
+  redirect("/portal/ministries?ok=" + encodeURIComponent(r.message));
 }
 
 export async function createSchedule(fd: FormData) {
