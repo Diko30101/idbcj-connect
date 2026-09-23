@@ -26,6 +26,11 @@ export default async function InboxPage({
   const deletedIds = new Set(((deletedRes.data ?? []) as any[]).map((d) => d.letter_id));
   const list = ((lettersRes.data ?? []) as any[]).filter((l) => !deletedIds.has(l.id));
 
+  // PANSAMANTALANG DEBUG: ipakita ang tunay na error kung bakit walang laman
+  // ang listahan, para malaman natin agad ang eksaktong dahilan.
+  const debugError =
+    lettersRes.error?.message || deletedRes.error?.message || mineRes.error?.message || undefined;
+
   return (
     <>
       <PageHeader
@@ -44,7 +49,7 @@ export default async function InboxPage({
           </div>
         }
       />
-      <Notice ok={ok} error={error} />
+      <Notice ok={ok} error={error || debugError} />
 
       <Panel>
         {list.length === 0 ? (
