@@ -731,6 +731,36 @@ export async function replyToLetter(fd: FormData) {
   back(path, "ok", "Naipadala.");
 }
 
+// Nagtatago ng liham mula sa sariling inbox lamang (hindi sa ibang tatanggap).
+// Nasa Basurahan ito sa loob ng 30 araw at puwedeng ibalik; pagkatapos noon
+// ay hindi na ito makikita sa Basurahan at permanente na itong nakatago.
+export async function deleteLetterFromInbox(fd: FormData) {
+  const { supabase, user } = await requirePortalAccess();
+  const letterId = str(fd, "id");
+  const { error } = await supabase
+    .from("letter_deletions")
+    .upsert({ letter_id: letterId, profile_id: user.id, deleted_at: new Date().toISOString() });
+  if (error) back("/portal/inbox", "error", "Hindi nabura: " + error.message);
+  revalidatePath("/portal/inbox", "layout");
+  back("/portal/inbox", "ok", "Inilipat sa Basurahan ang liham. Puwede pa itong ibalik sa loob ng 30 araw.");
+}
+
+export async function restoreLetterFromTrash(fd: FormData) {
+  const { supabase, user } = await requirePortalAccess();
+  const letterId = str(fd, "id");
+  const { error } = await supabase
+    .from("letter_deletions")
+    .delete()
+    .eq("letter_id", letterId)
+    .eq("profile_id", user.id);
+  if (error) back("/portal/inbox/trash", "error", "Hindi naibalik: " + error.message);
+  revalidatePath("/portal/inbox", "layout");
+  back("/portal/inbox/trash", "ok", "Naibalik ang liham sa Inbox.");
+}
+
+// ---------------------------------------------------------------
+// SERMONS (Admin/Secretary lang) — Sermon Library sa publikong /sermons
+
 // ---------------------------------------------------------------
 // SERMONS (Admin/Secretary lang) — Sermon Library sa publikong /sermons
 // ---------------------------------------------------------------
