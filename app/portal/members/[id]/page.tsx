@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { requireRoles, fmtDate, KIND_LABEL, ROLE_LABEL, CATEGORY_LABEL, LOCALITY_LABEL } from "@/lib/portal";
+import { requireRoles, fmtDate, KIND_LABEL, ROLE_LABEL, CATEGORY_LABEL, LOCALITY_LABEL, isProtectedMinistryName } from "@/lib/portal";
 import { shownEmail } from "@/lib/username";
 import { ResetPasswordButton } from "@/components/portal/reset-password-button";
 import { addMemberToMinistry, removeFromMinistry, updateMember } from "../../actions";
@@ -27,7 +27,7 @@ export default async function MemberDetail({
   ]);
 
   const joinedIds = new Set(((memberships.data ?? []) as any[]).map((x) => x.ministries?.id));
-  const available = ((allMinistries.data ?? []) as any[]).filter((x) => !joinedIds.has(x.id));
+  const available = ((allMinistries.data ?? []) as any[]).filter((x) => !joinedIds.has(x.id) && (me.role === "admin" || !isProtectedMinistryName(x.name)));
   const history = ((att.data ?? []) as any[])
     .filter((a) => a.services)
     .sort((a, b) => b.services.service_date.localeCompare(a.services.service_date))
@@ -158,7 +158,7 @@ export default async function MemberDetail({
                     <form action={removeFromMinistry}>
                       <input type="hidden" name="profile_id" value={m.id} />
                       <input type="hidden" name="ministry_id" value={x.ministries?.id} />
-                      <button className={btnDangerCls}>Alisin</button>
+                      {(me.role === "admin" || !isProtectedMinistryName(x.ministries?.name)) && <button className={btnDangerCls}>Alisin</button>}
                     </form>
                   </li>
                 ))}

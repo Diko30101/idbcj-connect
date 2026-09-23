@@ -6,7 +6,7 @@ import { Field, btnCls, btnDangerCls, btnGhostCls, inputCls } from "./form-bits"
 
 type Ministry = { id: string; name: string; name_tl: string | null; description: string | null };
 
-export function MinistryControls({ ministry }: { ministry: Ministry }) {
+export function MinistryControls({ ministry, protectedMinistry = false }: { ministry: Ministry; protectedMinistry?: boolean }) {
   const [editing, setEditing] = useState(false);
   const [confirmingDelete, setConfirmingDelete] = useState(false);
 
@@ -15,7 +15,7 @@ export function MinistryControls({ ministry }: { ministry: Ministry }) {
       <form action={updateMinistry} className="grid gap-3 rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
         <input type="hidden" name="id" value={ministry.id} />
         <Field label="Pangalan (English)">
-          <input name="name" defaultValue={ministry.name} required className={inputCls} />
+          <input name="name" defaultValue={ministry.name} required readOnly={protectedMinistry} className={inputCls} />
         </Field>
         <Field label="Pangalan (Tagalog, opsyonal)">
           <input name="name_tl" defaultValue={ministry.name_tl ?? ""} className={inputCls} />
@@ -40,7 +40,7 @@ export function MinistryControls({ ministry }: { ministry: Ministry }) {
       <button type="button" onClick={() => setEditing(true)} className={btnGhostCls}>
         I-edit ang ministry
       </button>
-      {!confirmingDelete ? (
+      {protectedMinistry ? null : !confirmingDelete ? (
         <button type="button" onClick={() => setConfirmingDelete(true)} className={btnDangerCls}>
           Burahin ang ministry
         </button>
