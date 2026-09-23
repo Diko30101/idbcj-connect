@@ -15,7 +15,7 @@ export default async function InboxPage({
   const [lettersRes, mineRes, deletedRes] = await Promise.all([
     supabase
       .from("letters")
-      .select("id, subject, created_at, created_by, profiles(full_name)")
+      .select("id, subject, created_at, created_by, profiles!letters_created_by_fkey(full_name)")
       .order("created_at", { ascending: false })
       .limit(100),
     supabase.from("letter_recipients").select("letter_id, read_at").eq("profile_id", profile.id),

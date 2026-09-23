@@ -18,7 +18,7 @@ export default async function LetterThreadPage({
 
   const { data: letter } = await supabase
     .from("letters")
-    .select("id, subject, created_at, created_by, profiles(full_name)")
+    .select("id, subject, created_at, created_by, profiles!letters_created_by_fkey(full_name)")
     .eq("id", id)
     .maybeSingle();
   if (!letter) notFound();
@@ -26,13 +26,13 @@ export default async function LetterThreadPage({
   const [messages, myRecipient, recipients] = await Promise.all([
     supabase
       .from("letter_messages")
-      .select("id, body, created_at, author_id, profiles(full_name)")
+      .select("id, body, created_at, author_id, profiles!letter_messages_author_id_fkey(full_name)")
       .eq("letter_id", id)
       .order("created_at", { ascending: true })
       .limit(500),
     supabase.from("letter_recipients").select("id, read_at").eq("letter_id", id).eq("profile_id", profile.id).maybeSingle(),
     staff
-      ? supabase.from("letter_recipients").select("profile_id, read_at, profiles(full_name)").eq("letter_id", id)
+      ? supabase.from("letter_recipients").select("profile_id, read_at, profiles!letter_recipients_profile_id_fkey(full_name)").eq("letter_id", id)
       : Promise.resolve({ data: null as any[] | null }),
   ]);
 
