@@ -73,6 +73,9 @@ export const isStaff = (r: Role) => r === "admin" || r === "secretary";
 // Admin, Secretary, at Treasurer lang ang may access sa financial records (lahat ng lokal)
 export const isFinance = (r: Role) => r === "admin" || r === "secretary" || r === "treasurer";
 
+// Mga ministry na ang mga kasapi (at ang mismong ministry) ay Admin lang ang makapagbabago (010 at 018)
+export { PROTECTED_MINISTRY_NAMES, isProtectedMinistryName } from "./ministry-ops";
+
 // Ministry na ang mga miyembro ay may access lang sa financial records ng sariling lokal
 export const LOCAL_FINANCE_MINISTRY_NAME = "Local Finance Ministry";
 
