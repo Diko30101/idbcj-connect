@@ -1,9 +1,7 @@
-import Link from "next/link";
-import Image from "next/image";
 import { redirect } from "next/navigation";
 import { getPortalContext, isStaff, isFinance, LOCAL_FINANCE_MINISTRY_NAME, FINANCE_MINISTRY_NAME, PASTORAL_MINISTRY_NAME, ROSTER_MINISTRY_NAMES } from "@/lib/portal";
-import { PortalNav, type NavItem } from "@/components/portal/portal-nav";
-import { NotificationBell } from "@/components/portal/notification-bell";
+import { PortalShell } from "@/components/portal/portal-shell";
+import type { NavItem } from "@/components/portal/portal-nav";
 import { shownEmail } from "@/lib/username";
 
 export const metadata = { title: "IDBCJ Connect", robots: { index: false, follow: false } };
@@ -124,28 +122,18 @@ export default async function PortalLayout({ children }: { children: React.React
   if (finance) navItems.push(finance);
   if (overflow.length > 0) navItems.push({ href: overflow[0].href, label: "More", children: overflow });
 
+  // Ang PortalShell (client) ang nagpapasya ng shell base sa pathname:
+  // sidebar theme para lang sa /portal, klasikong header + pill nav sa iba.
+  const displayName = profile.full_name || profile.username || shownEmail(profile.email) || "Kapatid";
+
   return (
-    <div className="min-h-screen bg-slate-50 pb-16">
-      <header className="border-b border-emerald-100 bg-white shadow-sm">
-        <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-3">
-          <Link href="/portal" className="flex items-center gap-3 text-lg font-bold text-emerald-900">
-            <span className="relative h-10 w-10 shrink-0 overflow-hidden rounded-full border-2 border-emerald-100 shadow-sm">
-              <Image src="/logo.png" alt="IDBCJ Logo" fill sizes="40px" className="object-cover" />
-            </span>
-            IDBCJ Connect
-          </Link>
-          <div className="flex items-center gap-3">
-            <Link href="/" className="text-sm font-medium text-gray-500 hover:text-emerald-700">
-              ← Website
-            </Link>
-            <span className="hidden text-sm text-gray-500 sm:inline">{profile.full_name || profile.username || shownEmail(profile.email)}</span>
-            <NotificationBell />
-            {signOut}
-          </div>
-        </div>
-      </header>
-      <PortalNav items={navItems} />
-      <main className="mx-auto max-w-6xl px-4 py-8">{children}</main>
-    </div>
+    <PortalShell
+      navItems={navItems}
+      displayName={displayName}
+      role={profile.role}
+      status={profile.status}
+    >
+      {children}
+    </PortalShell>
   );
 }

@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { requirePortalAccess, isStaff, isFinanceMember, fmtDate, todayPH, KIND_LABEL } from "@/lib/portal";
 import { yearToDateLabel } from "@/lib/finance";
-import { Empty, Notice, Panel, PageHeader, RoleBadge, StatusBadge } from "@/components/portal/ui";
+import { Empty, Notice, Panel, RoleBadge, StatusBadge } from "@/components/portal/ui";
 import { FinanceSummaryPie } from "@/components/portal/finance-summary-pie";
 
 export default async function PortalHome({
@@ -82,16 +82,19 @@ export default async function PortalHome({
 
   return (
     <>
-      <PageHeader
-        title={`Welcome, ${profile.full_name || "Member"}`}
-        subtitle="Maligayang pagdating sa IDBCJ Connect."
-        action={
-          <div className="flex gap-2">
-            <RoleBadge role={profile.role} />
-            <StatusBadge status={profile.status} />
-          </div>
-        }
-      />
+      {/* Welcome banner — istilo mula sa aprubadong sidebar mockup */}
+      <div className="mb-7 flex flex-wrap items-start justify-between gap-4">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight text-gray-900">
+            Welcome, {profile.full_name || "Member"}
+          </h1>
+          <p className="mt-1 text-[15px] text-gray-500">Maligayang pagdating sa IDBCJ Connect.</p>
+        </div>
+        <div className="flex gap-2">
+          <RoleBadge role={profile.role} />
+          <StatusBadge status={profile.status} />
+        </div>
+      </div>
       <Notice ok={ok} error={error} />
 
       {staff && (
