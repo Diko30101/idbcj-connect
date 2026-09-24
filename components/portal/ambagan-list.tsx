@@ -3,7 +3,7 @@
 import { useState, type FormEvent } from "react";
 import { AmbaganForm } from "./ambagan-form";
 import { btnCls, btnDangerCls, btnGhostCls } from "./form-bits";
-import { updateAmbagan, submitAmbagan, voidAmbagan } from "@/app/portal/finance/ambagan/actions";
+import { updateAmbagan } from "@/app/portal/finance/ambagan/actions";
 import { fmtPeso, monthLabel } from "@/lib/finance";
 import { GIVING_STATUS_LABEL, type AmbaganRecord, type GivingStatus } from "@/lib/giving";
 
@@ -21,8 +21,10 @@ function StatusPill({ status }: { status: GivingStatus }) {
   return <span className={`inline-block rounded-full border px-2.5 py-0.5 text-xs font-semibold ${cls}`}>{GIVING_STATUS_LABEL[status]}</span>;
 }
 
-// mode "local": Local Finance (draft lang ang mae-edit/mapapadala/mave-void nila).
-// mode "church": church-wide Finance (maaari ring mag-edit ng naipadala at mag-void nito; ayon sa 011).
+// mode "local": Local Finance; mode "church": church-wide Finance.
+// Ang Ambagan ay walang indibidwal na Ipadala at walang I-void: draft ang
+// pag-iipon, at isang bulk na "Ipadala lahat" ang nagpapadala nang sabay-sabay.
+// (Ang Tulong ay may sarili pa ring indibidwal na Ipadala/I-void sa ngayon.)
 type ActionFn = (fd: FormData) => void | Promise<void>;
 
 // Ginagamit din ng Tulong sa Klase Ministeryal (parehong hugis ng record): ibinibigay ang sariling mga action at label.
@@ -34,20 +36,26 @@ export function AmbaganList({
   mode,
   actions,
   labels,
+  bulkSubmitAll,
+  bulkLocalId,
 }: {
   records: AmbaganRecord[];
   names: Record<string, string>;
   timezone: string;
   path: string;
   mode: "local" | "church";
-  actions?: { update: ActionFn; submit: ActionFn; void: ActionFn };
+  actions?: { update: ActionFn; submit?: ActionFn; void?: ActionFn };
   labels?: { monthPhrase: string; empty: string; periodLabel?: string };
+  bulkSubmitAll?: { action: ActionFn; label: string };
+  bulkLocalId?: string;
 }) {
   const [editingId, setEditingId] = useState<string | null>(null);
-  const act = actions ?? { update: updateAmbagan, submit: submitAmbagan, void: voidAmbagan };
+  const act = actions ?? { update: updateAmbagan };
   const L = labels ?? { monthPhrase: "Ambag para sa", empty: "Wala pang naitatalang Ambagan." };
 
   if (records.length === 0) return <p className="text-sm text-gray-500 py-4 text-center">{L.empty}</p>;
+
+  const draftCount = records.filter((r) => r.status === "draft").length;
 
   const confirmSubmit = (e: FormEvent<HTMLFormElement>) => {
     if (!window.confirm("Sigurado ka bang ipapadala? Hindi na ito puwedeng i-edit ng Local Finance pagkatapos.")) e.preventDefault();
@@ -55,14 +63,39 @@ export function AmbaganList({
   const confirmVoid = (e: FormEvent<HTMLFormElement>) => {
     if (!window.confirm("Sigurado ka bang i-void ang record na ito? Pinal ito at hindi na maibabalik.")) e.preventDefault();
   };
+  const confirmBulkSubmit = (e: FormEvent<HTMLFormElement>) => {
+    if (
+      !window.confirm(
+        `Sigurado ka bang ipapadala ang lahat ng ${draftCount} draft na Ambagan? Hindi na ito puwedeng i-edit ng Local Finance pagkatapos.`,
+      )
+    )
+      e.preventDefault();
+  };
 
   return (
-    <div className="divide-y divide-gray-100">
+    <>
+      {bulkSubmitAll && draftCount > 0 && (
+        <form
+          action={bulkSubmitAll.action}
+          onSubmit={confirmBulkSubmit}
+          className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-lg border border-emerald-200 bg-emerald-50/70 px-4 py-3"
+        >
+          <p className="text-sm text-emerald-800">
+            <strong>{draftCount}</strong> draft na Ambagan ang naghihintay. Ipadala ang lahat nang sabay-sabay.
+          </p>
+          <input type="hidden" name="path" value={path} />
+          {bulkLocalId && <input type="hidden" name="local_id" value={bulkLocalId} />}
+          <button type="submit" className={btnCls}>
+            {bulkSubmitAll.label}
+          </button>
+        </form>
+      )}
+      <div className="divide-y divide-gray-100">
       {records.map((r) => {
         const name = names[r.member_id] ?? "(hindi mabasa ang pangalan)";
         const canEdit = r.status === "draft" || (r.status === "submitted" && mode === "church");
-        const canSubmit = r.status === "draft";
-        const canVoid = r.status === "draft" || (r.status === "submitted" && mode === "church");
+        const canSubmit = r.status === "draft" && !!act.submit;
+        const canVoid = (r.status === "draft" || (r.status === "submitted" && mode === "church")) && !!act.void;
         return (
           <div key={r.id} className="py-4">
             {editingId === r.id ? (
@@ -90,7 +123,7 @@ export function AmbaganList({
                       Edit
                     </button>
                   )}
-                  {canSubmit && (
+                  {canSubmit && act.submit && (
                     <form action={act.submit} onSubmit={confirmSubmit}>
                       <input type="hidden" name="path" value={path} />
                       <input type="hidden" name="id" value={r.id} />
@@ -99,7 +132,7 @@ export function AmbaganList({
                       </button>
                     </form>
                   )}
-                  {canVoid && (
+                  {canVoid && act.void && (
                     <form action={act.void} onSubmit={confirmVoid}>
                       <input type="hidden" name="path" value={path} />
                       <input type="hidden" name="id" value={r.id} />
@@ -114,6 +147,7 @@ export function AmbaganList({
           </div>
         );
       })}
-    </div>
+      </div>
+    </>
   );
 }
