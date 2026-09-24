@@ -1,12 +1,13 @@
 import { NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { getFinanceMinistryRecipientIds } from "@/lib/portal";
 import { monthlySummaryText, prevMonth } from "@/lib/abuluyan";
 import { currentMonthPH, monthLabel } from "@/lib/finance";
 import { getMonthlySummary } from "@/app/portal/finance/abuluyan/buwanan/summary";
 
-// Awtomatikong pagpapadala ng Buwanang Ulat ng Abuluyan sa Admin tuwing ika-1
-// ng buwan, 8:00 AM Edmonton (14:00 UTC) — para sa NAKARAANG buwan.
-// Tingnan ang vercel.json para sa schedule.
+// Awtomatikong pagpapadala ng Buwanang Ulat ng Abuluyan sa Finance Ministry
+// (sila ang "Admin" sa sistemang ito) tuwing ika-1 ng buwan, 8:00 AM Edmonton
+// (14:00 UTC) — para sa NAKARAANG buwan. Tingnan ang vercel.json para sa schedule.
 export const dynamic = "force-dynamic";
 
 export async function GET(request: Request) {
@@ -31,9 +32,10 @@ export async function GET(request: Request) {
   const { summary, submittedCount } = await getMonthlySummary(supabase, { wide: true }, buwan);
   if (submittedCount === 0) return NextResponse.json({ skipped: true, month: buwan });
 
-  const { data: admins } = await supabase.from("profiles").select("id").eq("role", "admin").eq("status", "active");
-  const recipientIds = ((admins ?? []) as { id: string }[]).map((a) => a.id);
-  if (recipientIds.length === 0) return NextResponse.json({ ok: false, error: "no active admins" }, { status: 500 });
+  // Ang tatanggap: mga aktibong miyembro ng Finance Ministry (sila ang "Admin" sa sistemang ito)
+  const recipientIds = await getFinanceMinistryRecipientIds(supabase);
+  if (recipientIds.length === 0)
+    return NextResponse.json({ ok: false, error: "no active finance ministry members" }, { status: 500 });
 
   // Walang tao ang nagpadala; ang unang Admin ang ilalagay na may-akda ng liham
   const authorId = recipientIds[0];

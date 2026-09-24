@@ -1,7 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { back, getAbuluyanContext, denyAbuluyan, str } from "@/lib/portal";
+import { back, getAbuluyanContext, denyAbuluyan, getFinanceMinistryRecipientIds, str } from "@/lib/portal";
 import { isValidMonth } from "@/lib/abuluyan";
 import { monthLabel } from "@/lib/finance";
 import { RESIBO_BASE, resiboText } from "@/lib/resibo";
@@ -37,9 +37,9 @@ export async function sendResiboToAdmin(fd: FormData) {
   if (summary.submittedCount === 0)
     back(pagePath, "error", "Walang naitalang handog para sa buwang ito sa lokal na ito.");
 
-  const { data: admins } = await ctx.supabase.from("profiles").select("id").eq("role", "admin").eq("status", "active");
-  const recipientIds = ((admins ?? []) as { id: string }[]).map((a) => a.id);
-  if (recipientIds.length === 0) back(pagePath, "error", "Walang aktibong Admin na mapapadalhan.");
+  // Ang tatanggap: mga aktibong miyembro ng Finance Ministry (sila ang "Admin" sa sistemang ito)
+  const recipientIds = await getFinanceMinistryRecipientIds(ctx.supabase);
+  if (recipientIds.length === 0) back(pagePath, "error", "Walang aktibong miyembro ng Finance Ministry na mapapadalhan.");
 
   const subject = `Buwanang Resibo — ${localName} — ${monthLabel(buwan)}`;
   const { data: letter, error } = await ctx.supabase
@@ -60,5 +60,5 @@ export async function sendResiboToAdmin(fd: FormData) {
   if (e3) back(pagePath, "error", "Hindi naipadala ang mensahe: " + e3.message);
 
   revalidatePath(RESIBO_BASE, "layout");
-  back(pagePath, "ok", "Naipadala ang buwanang resibo sa Admin.");
+  back(pagePath, "ok", "Naipadala ang buwanang resibo sa Finance Ministry.");
 }

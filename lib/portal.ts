@@ -1,6 +1,7 @@
 import { cache } from "react";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
+import type { SupabaseClient } from "@supabase/supabase-js";
 import { createClient } from "@/lib/supabase/server";
 
 // ---------------------------------------------------------------
@@ -87,6 +88,17 @@ export const FINANCE_MINISTRY_NAME = "Finance Ministry";
 // lang ng widget imbes na i-redirect ang buong pahina kapag walang access.
 export const isFinanceMember = (role: Role, ministryNames: string[]) =>
   isFinance(role) || ministryNames.includes(FINANCE_MINISTRY_NAME);
+
+// Ang "Admin" na tumatanggap ng mga buwanang ulat at resibo: mga AKTIBONG miyembro ng
+// Finance Ministry (hindi ang mga profile na role='admin'). Ibinabalik ang mga profile id.
+export async function getFinanceMinistryRecipientIds(supabase: SupabaseClient): Promise<string[]> {
+  const { data } = await supabase
+    .from("ministry_members")
+    .select("profile_id, ministries!inner(name), profiles!inner(status)")
+    .eq("ministries.name", FINANCE_MINISTRY_NAME)
+    .eq("profiles.status", "active");
+  return [...new Set(((data ?? []) as { profile_id: string }[]).map((m) => m.profile_id))];
+}
 
 // Mga ministry na nagma-manage ng roster (public.members) ng sariling local (kasama ang Admin, na lahat ng local)
 export const ROSTER_MINISTRY_NAMES = ["Administrative Ministry", "Local Admin Ministry"];

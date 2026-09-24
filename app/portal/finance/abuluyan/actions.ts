@@ -1,7 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { back, getAbuluyanContext, denyAbuluyan, str, strOrNull } from "@/lib/portal";
+import { back, getAbuluyanContext, denyAbuluyan, getFinanceMinistryRecipientIds, str, strOrNull } from "@/lib/portal";
 import { isSunday } from "@/lib/finance";
 import {
   ABULUYAN_BASE,
@@ -134,9 +134,9 @@ export async function sendAbuluyanMonthlySummary(fd: FormData) {
   const { summary, submittedCount } = await getMonthlySummary(ctx.supabase, scope, buwan);
   if (submittedCount === 0) back(pagePath, "error", "Walang naipadalang Abuluyan para sa buwang ito.");
 
-  const { data: admins } = await ctx.supabase.from("profiles").select("id").eq("role", "admin").eq("status", "active");
-  const recipientIds = ((admins ?? []) as { id: string }[]).map((a) => a.id);
-  if (recipientIds.length === 0) back(pagePath, "error", "Walang aktibong Admin na mapapadalhan.");
+  // Ang tatanggap: mga aktibong miyembro ng Finance Ministry (sila ang "Admin" sa sistemang ito)
+  const recipientIds = await getFinanceMinistryRecipientIds(ctx.supabase);
+  if (recipientIds.length === 0) back(pagePath, "error", "Walang aktibong miyembro ng Finance Ministry na mapapadalhan.");
 
   const subject = `Buwanang Ulat ng Abuluyan — ${monthLabel(buwan)}`;
   const { data: letter, error } = await ctx.supabase
@@ -157,5 +157,5 @@ export async function sendAbuluyanMonthlySummary(fd: FormData) {
   if (e3) back(pagePath, "error", "Hindi naipadala ang mensahe: " + e3.message);
 
   revalidatePath(ABULUYAN_BASE, "layout");
-  back(pagePath, "ok", "Naipadala ang buwanang ulat sa Admin.");
+  back(pagePath, "ok", "Naipadala ang buwanang ulat sa Finance Ministry.");
 }
