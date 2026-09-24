@@ -296,11 +296,11 @@ function SidebarShell({
           onClick={() => setDrawerOpen(true)}
           aria-expanded={drawerOpen}
           aria-label="Buksan ang menu"
-          className="rounded-lg p-2 text-gray-600 transition hover:bg-emerald-50 hover:text-emerald-700"
+          className="rounded-lg p-2 text-gray-600 transition hover:bg-emerald-50 hover:text-[#075f47]"
         >
           <Menu className="h-6 w-6" aria-hidden="true" />
         </button>
-        <span className="text-base font-bold text-emerald-900">IDBCJ Connect</span>
+        <span className="text-base font-bold text-[#075f47]">IDBCJ Connect</span>
         <div className="ml-auto">
           <NotificationBell />
         </div>
@@ -318,7 +318,7 @@ function SidebarShell({
       {/* Sidebar — fixed sa desktop, slide-out drawer sa mobile */}
       <aside
         aria-label="Pangunahing menu"
-        className={`fixed inset-y-0 left-0 z-50 flex w-64 flex-col bg-[#072f27] text-[#dceae4] shadow-2xl transition-transform duration-200 lg:translate-x-0 lg:shadow-none ${
+        className={`fixed inset-y-0 left-0 z-50 flex w-64 flex-col bg-[#075f47] text-[#dceae4] shadow-2xl transition-transform duration-200 lg:translate-x-0 lg:shadow-none ${
           drawerOpen ? "translate-x-0" : "-translate-x-full"
         }`}
       >
@@ -333,7 +333,7 @@ function SidebarShell({
             type="button"
             onClick={closeDrawer}
             aria-label="Isara ang menu"
-            className="ml-auto shrink-0 rounded-lg p-2 text-[#93b5a7] transition hover:bg-white/10 hover:text-white lg:hidden"
+            className="ml-auto shrink-0 rounded-lg p-2 text-[#b7d2c4] transition hover:bg-white/10 hover:text-white lg:hidden"
           >
             <X className="h-5 w-5" aria-hidden="true" />
           </button>
@@ -363,14 +363,14 @@ function SidebarShell({
             </span>
             <div className="min-w-0 flex-1">
               <p className="truncate text-sm font-semibold text-white">{displayName}</p>
-              <p className="truncate text-xs text-[#93b5a7]">{ROLE_LABEL[role] ?? role}</p>
+              <p className="truncate text-xs text-[#b7d2c4]">{ROLE_LABEL[role] ?? role}</p>
             </div>
           </div>
           <div className="mt-3">{signOutDark}</div>
           <Link
             href="/"
             onClick={closeDrawer}
-            className="mt-2 inline-block text-xs font-medium text-[#93b5a7] transition hover:text-white"
+            className="mt-2 inline-block text-xs font-medium text-[#b7d2c4] transition hover:text-white"
           >
             ← Website
           </Link>
