@@ -103,24 +103,51 @@ export default async function PortalLayout({ children }: { children: React.React
   }
   if (profile.role === "admin") items.push({ href: "/portal/audit", label: "Audit Log" });
 
-  // Grupohin ang mga hindi gaanong ginagamit na item sa ilalim ng "More", para hindi
-  // mag-overflow ang nav bar sa mobile/normal width. Ang bawat item dito ay dati nang
-  // na-filter base sa role (sa itaas), kaya ang pag-grupo lang ang binabago dito --
-  // hindi apektado ang access control.
+  // Paggrupohin ang mga hindi gaanong ginagamit na item sa mga dropdown
+  // (Gawain, Mga Kaloob, Pangasiwaan) para hindi humaba nang sobra ang nav bar.
+  // Ang bawat item ay dati nang na-filter base sa role (sa itaas), kaya ang
+  // pag-grupo lang ang binabago dito -- hindi apektado ang access control.
   const ALWAYS_VISIBLE_HREFS = new Set([
     "/portal",
     "/portal/inbox",
     "/portal/announcements",
     "/portal/members",
     "/portal/courses",
+    "/portal/profile",
   ]);
+  const GROUP_DEFS: { label: string; hrefs: string[] }[] = [
+    {
+      label: "Gawain",
+      hrefs: ["/portal/ministries", "/portal/prayer", "/portal/attendance", "/portal/sermons", "/portal/events"],
+    },
+    {
+      label: "Mga Kaloob",
+      hrefs: [
+        "/portal/finance/abuluyan",
+        "/portal/finance/ambagan",
+        "/portal/finance/tulong",
+        "/portal/finance/pasalamat",
+        "/portal/giving-permissions",
+      ],
+    },
+    {
+      label: "Pangasiwaan",
+      hrefs: ["/portal/roster", "/portal/finance/local", "/portal/finance/audit", "/portal/audit"],
+    },
+  ];
   const alwaysVisible = items.filter((i) => ALWAYS_VISIBLE_HREFS.has(i.href));
   const finance = items.find((i) => i.href === "/portal/finance");
   const overflow = items.filter((i) => !ALWAYS_VISIBLE_HREFS.has(i.href) && i.href !== "/portal/finance");
 
   const navItems: NavItem[] = [...alwaysVisible];
   if (finance) navItems.push(finance);
-  if (overflow.length > 0) navItems.push({ href: overflow[0].href, label: "More", children: overflow });
+  for (const def of GROUP_DEFS) {
+    const children = def.hrefs.flatMap((h) => overflow.filter((i) => i.href === h));
+    if (children.length === 0) continue;
+    // Kung iisa lang ang laman ng grupo, direktang link na lang -- huwag nang i-dropdown.
+    if (children.length === 1) navItems.push(children[0]);
+    else navItems.push({ href: children[0].href, label: def.label, children });
+  }
 
   // Ang PortalShell (client) ang nagpapasya ng shell base sa pathname:
   // sidebar theme para lang sa /portal, klasikong header + pill nav sa iba.

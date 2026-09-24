@@ -263,16 +263,9 @@ function SidebarShell({
 
   const closeDrawer = () => setDrawerOpen(false);
 
-  // Ang "More" grouping ay para lang sa horizontal nav; sa sidebar ay
-  // direktang nire-render ang lahat ng item.
-  const sidebarItems: NavItem[] = [];
-  for (const item of navItems) {
-    if (item.label === "More" && item.children && item.children.length > 0) {
-      sidebarItems.push(...item.children);
-    } else {
-      sidebarItems.push(item);
-    }
-  }
+  // Ang mga dropdown group (hal. Finance, Gawain, Mga Kaloob, Pangasiwaan) ay
+  // nire-render nang direkta bilang expandable na SidebarGroup sa sidebar.
+  const sidebarItems: NavItem[] = navItems;
 
   // Isara ang drawer kapag lumipat ng page.
   useEffect(() => {

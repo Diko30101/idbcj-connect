@@ -129,7 +129,7 @@ export function PortalNav({ items }: { items: NavItem[] }) {
         <ul className="flex gap-1 py-2 whitespace-nowrap">
           {items.map((item) => {
             // Kapag may children (dropdown), i-check kung active ang alinman sa mga ito --
-            // hindi lang ang sarili nitong href, dahil hindi lahat ng dropdown (hal. "More")
+            // hindi lang ang sarili nitong href, dahil hindi lahat ng dropdown (hal. "Gawain")
             // ay may iisang shared na URL prefix gaya ng Finance.
             const active =
               item.children && item.children.length > 0
