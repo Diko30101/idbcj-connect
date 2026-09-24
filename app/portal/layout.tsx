@@ -1,7 +1,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { redirect } from "next/navigation";
-import { getPortalContext, isStaff, isFinance, LOCAL_FINANCE_MINISTRY_NAME, FINANCE_MINISTRY_NAME, PASTORAL_MINISTRY_NAME } from "@/lib/portal";
+import { getPortalContext, isStaff, isFinance, LOCAL_FINANCE_MINISTRY_NAME, FINANCE_MINISTRY_NAME, PASTORAL_MINISTRY_NAME, ROSTER_MINISTRY_NAMES } from "@/lib/portal";
 import { PortalNav, type NavItem } from "@/components/portal/portal-nav";
 import { NotificationBell } from "@/components/portal/notification-bell";
 import { shownEmail } from "@/lib/username";
@@ -50,9 +50,14 @@ export default async function PortalLayout({ children }: { children: React.React
   }
   {
     const needsMinistryCheck = !(isFinance(profile.role) && isStaff(profile.role));
-    const { data: myMinistries } = needsMinistryCheck
-      ? await supabase.from("ministry_members").select("ministries(name)").eq("profile_id", profile.id)
-      : { data: null };
+    // Kinukuha palagi (para sa nav ng Roster); ang lohika ng Finance sa ibaba ay hindi nagbabago (myMinistries ay null kung isFinance ang role)
+    const { data: allMinistries } = await supabase.from("ministry_members").select("ministries(name)").eq("profile_id", profile.id);
+    const myMinistries = needsMinistryCheck ? allMinistries : null;
+    const isRosterMember = ((allMinistries ?? []) as any[]).some((m) => ROSTER_MINISTRY_NAMES.includes(m.ministries?.name));
+    const isPastoralMember = ((allMinistries ?? []) as any[]).some((m) => m.ministries?.name === "Pastoral Ministry");
+    const inFinanceMinistry = ((allMinistries ?? []) as any[]).some((m) => m.ministries?.name === FINANCE_MINISTRY_NAME);
+    // Church-wide Finance: sinusuri lang kung kasapi ng Finance Ministry (para hindi dagdag na tawag sa lahat)
+    const { data: isChurchWide } = inFinanceMinistry ? await supabase.rpc("is_church_wide_finance") : { data: false };
     const isLocalFinanceMember = ((myMinistries ?? []) as any[]).some(
       (m) => m.ministries?.name === LOCAL_FINANCE_MINISTRY_NAME,
     );
@@ -82,6 +87,21 @@ export default async function PortalLayout({ children }: { children: React.React
     if (isStaff(profile.role) || isPastoralMinistryMember) {
       items.push({ href: "/portal/courses", label: "Bible Study" });
     }
+    // Isang link; ang pahina ang nagre-redirect ayon sa role (Local Finance, church-wide Finance, o Admin)
+    if (isLocalFinanceMember || isFinanceMinistryMember || profile.role === "admin")
+      items.push({ href: "/portal/finance/abuluyan", label: "Abuluyan" });
+    // Ambagan (per-member): Local Finance at church-wide Finance lang; ang pahina ang nagsasala
+    if (isLocalFinanceMember || isFinanceMinistryMember) {
+      items.push({ href: "/portal/finance/ambagan", label: "Ambagan" });
+      items.push({ href: "/portal/finance/tulong", label: "Tulong sa Klase" });
+      items.push({ href: "/portal/finance/pasalamat", label: "Pasalamat" });
+    }
+    // Roster ng mga kaanib: Admin, Administrative Ministry o Local Admin Ministry (ang pahina ang nagsasala ng local)
+    if (profile.role === "admin" || isRosterMember) items.push({ href: "/portal/roster", label: "Roster" });
+    // Pahintulot sa Inactive na kaanib: lider ng Pastoral Ministry na Admin (bumibigay), at church-wide Finance (nagbabasa)
+    if ((profile.role === "admin" && isPastoralMember) || isChurchWide === true) items.push({ href: "/portal/giving-permissions", label: "Pahintulot" });
+    // Audit ng pananalapi: church-wide Finance lang
+    if (isChurchWide === true) items.push({ href: "/portal/finance/audit", label: "Audit ng Pananalapi" });
   }
   if (profile.role === "admin") items.push({ href: "/portal/audit", label: "Audit Log" });
 
