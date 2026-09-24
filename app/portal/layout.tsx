@@ -123,7 +123,6 @@ export default async function PortalLayout({ children }: { children: React.React
     {
       label: "Mga Kaloob",
       hrefs: [
-        "/portal/finance/abuluyan",
         "/portal/finance/ambagan",
         "/portal/finance/tulong",
         "/portal/finance/pasalamat",
@@ -132,7 +131,7 @@ export default async function PortalLayout({ children }: { children: React.React
     },
     {
       label: "Pangasiwaan",
-      hrefs: ["/portal/roster", "/portal/finance/local", "/portal/finance/audit", "/portal/audit"],
+      hrefs: ["/portal/roster", "/portal/finance/abuluyan", "/portal/finance/local", "/portal/finance/audit", "/portal/audit"],
     },
   ];
   const alwaysVisible = items.filter((i) => ALWAYS_VISIBLE_HREFS.has(i.href));
