@@ -2,10 +2,10 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getAbuluyanContext, denyAbuluyan } from "@/lib/portal";
 import { createAbuluyan } from "../actions";
-import { Notice, PageHeader, Panel } from "@/components/portal/ui";
+import { Notice, PageHeader, Panel, btnGhostCls } from "@/components/portal/ui";
 import { AbuluyanForm } from "@/components/portal/abuluyan-form";
 import { AbuluyanList } from "@/components/portal/abuluyan-list";
-import { ABULUYAN_BASE, type AbuluyanRecord } from "@/lib/abuluyan";
+import { ABULUYAN_BASE, ABULUYAN_BUWANAN_PATH, type AbuluyanRecord } from "@/lib/abuluyan";
 
 // Pahina ng church-wide Finance: lahat ng local. Dito nagvo-void at gumagawa ng kapalit.
 export default async function AbuluyanChurchPage({
@@ -44,7 +44,15 @@ export default async function AbuluyanChurchPage({
 
   return (
     <>
-      <PageHeader title="Abuluyan — lahat ng local" subtitle="Church-wide Finance: i-void ang naipadala at gumawa ng kapalit" />
+      <PageHeader
+        title="Abuluyan — lahat ng local"
+        subtitle="Church-wide Finance: i-void ang naipadala at gumawa ng kapalit"
+        action={
+          <Link href={ABULUYAN_BUWANAN_PATH} className={btnGhostCls}>
+            Buwanang Ulat
+          </Link>
+        }
+      />
       <Notice ok={ok} error={error} />
 
       <div className="mt-6 flex flex-wrap gap-2">

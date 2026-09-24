@@ -1,8 +1,9 @@
 import { redirect } from "next/navigation";
+import Link from "next/link";
 import { getAbuluyanContext, denyAbuluyan } from "@/lib/portal";
-import { Notice, PageHeader, Panel } from "@/components/portal/ui";
+import { Notice, PageHeader, Panel, btnGhostCls } from "@/components/portal/ui";
 import { AbuluyanVoidForm } from "@/components/portal/abuluyan-void-form";
-import { ABULUYAN_BASE } from "@/lib/abuluyan";
+import { ABULUYAN_BASE, ABULUYAN_BUWANAN_PATH } from "@/lib/abuluyan";
 
 // Pahina ng Admin: pag-void lamang. Hindi nakikita ng Admin ang mga halaga (kabuuan lang sa ulat, Plan B),
 // kaya pumipili ng local at Linggo; ang database (void_abuluyan) ang nagsasabi kung may naipadalang record.
@@ -24,7 +25,15 @@ export default async function AbuluyanVoidPage({
 
   return (
     <>
-      <PageHeader title="I-void ang Abuluyan" subtitle="Admin: pag-void ng maling naipadalang Abuluyan. Pinal ang void; church-wide Finance ang gagawa ng kapalit." />
+      <PageHeader
+        title="I-void ang Abuluyan"
+        subtitle="Admin: pag-void ng maling naipadalang Abuluyan. Pinal ang void; church-wide Finance ang gagawa ng kapalit."
+        action={
+          <Link href={ABULUYAN_BUWANAN_PATH} className={btnGhostCls}>
+            Buwanang Ulat
+          </Link>
+        }
+      />
       <Notice ok={ok} error={error} />
       <div className="mt-6">
         <Panel title="Pag-void">

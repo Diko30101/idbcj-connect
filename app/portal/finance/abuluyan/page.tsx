@@ -1,10 +1,11 @@
 import { redirect } from "next/navigation";
+import Link from "next/link";
 import { getAbuluyanContext, denyAbuluyan } from "@/lib/portal";
 import { createAbuluyan } from "./actions";
-import { Notice, PageHeader, Panel } from "@/components/portal/ui";
+import { Notice, PageHeader, Panel, btnGhostCls } from "@/components/portal/ui";
 import { AbuluyanForm } from "@/components/portal/abuluyan-form";
 import { AbuluyanList } from "@/components/portal/abuluyan-list";
-import { ABULUYAN_BASE, type AbuluyanRecord } from "@/lib/abuluyan";
+import { ABULUYAN_BASE, ABULUYAN_BUWANAN_PATH, type AbuluyanRecord } from "@/lib/abuluyan";
 
 // Pahina ng Local Finance (sariling local). Ang church-wide Finance at Admin ay may sariling pahina.
 export default async function AbuluyanPage({
@@ -40,6 +41,11 @@ export default async function AbuluyanPage({
       <PageHeader
         title="Abuluyan"
         subtitle={`Pag-encode ng Abuluyan bawat Linggo ng pagsamba · ${local.name}`}
+        action={
+          <Link href={ABULUYAN_BUWANAN_PATH} className={btnGhostCls}>
+            Buwanang Ulat
+          </Link>
+        }
       />
       <Notice ok={ok} error={error} />
 

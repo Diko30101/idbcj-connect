@@ -3,7 +3,17 @@
 import { revalidatePath } from "next/cache";
 import { back, getAbuluyanContext, denyAbuluyan, str, strOrNull } from "@/lib/portal";
 import { isSunday } from "@/lib/finance";
-import { ABULUYAN_BASE, abuluyanErrorMessage, parseAmount, safeAbuluyanPath } from "@/lib/abuluyan";
+import {
+  ABULUYAN_BASE,
+  ABULUYAN_BUWANAN_PATH,
+  abuluyanErrorMessage,
+  isValidMonth,
+  monthlySummaryText,
+  parseAmount,
+  safeAbuluyanPath,
+} from "@/lib/abuluyan";
+import { monthLabel } from "@/lib/finance";
+import { getMonthlySummary, type AbuluyanSummaryScope } from "./buwanan/summary";
 
 // Ang server ang nagpapasya kung sino ang makagagawa ng ano; ang database (RLS, trigger, void_abuluyan) ang huling harang.
 // Ang petsa ng pagpapadala, ang nag-encode at ang status ay itinatakda ng database, hindi ng client.
@@ -100,4 +110,52 @@ export async function voidAbuluyan(fd: FormData) {
   if (error) back(path, "error", abuluyanErrorMessage(error, "Hindi na-void. Subukan ulit."));
   revalidatePath(ABULUYAN_BASE, "layout");
   back(path, "ok", "Na-void ang Abuluyan record. Pinal na ito.");
+}
+
+// Buwanang Ulat ng Abuluyan: ipadala bilang liham sa lahat ng aktibong Admin.
+// Church-wide Finance at Admin: lahat ng local. Local Finance: sariling local lang.
+// Ang padron ng pag-insert ng liham ay gaya ng createLetter (letters -> letter_recipients -> letter_messages).
+export async function sendAbuluyanMonthlySummary(fd: FormData) {
+  const ctx = await getAbuluyanContext();
+  const wide = ctx.isChurch || ctx.isAdmin;
+  let scope: AbuluyanSummaryScope;
+  if (wide) {
+    scope = { wide: true };
+  } else {
+    const local = ctx.local;
+    if (!local) denyAbuluyan();
+    scope = { wide: false, localId: local.id, localName: local.name };
+  }
+
+  const buwan = str(fd, "buwan");
+  if (!isValidMonth(buwan)) back(ABULUYAN_BASE, "error", "Di-wastong buwan.");
+  const pagePath = `${ABULUYAN_BUWANAN_PATH}?buwan=${buwan}`;
+
+  const { summary, submittedCount } = await getMonthlySummary(ctx.supabase, scope, buwan);
+  if (submittedCount === 0) back(pagePath, "error", "Walang naipadalang Abuluyan para sa buwang ito.");
+
+  const { data: admins } = await ctx.supabase.from("profiles").select("id").eq("role", "admin").eq("status", "active");
+  const recipientIds = ((admins ?? []) as { id: string }[]).map((a) => a.id);
+  if (recipientIds.length === 0) back(pagePath, "error", "Walang aktibong Admin na mapapadalhan.");
+
+  const subject = `Buwanang Ulat ng Abuluyan — ${monthLabel(buwan)}`;
+  const { data: letter, error } = await ctx.supabase
+    .from("letters")
+    .insert({ subject, created_by: ctx.user.id })
+    .select("id")
+    .single();
+  if (error || !letter) back(pagePath, "error", "Hindi nagawa ang liham: " + (error?.message ?? "hindi alam na dahilan."));
+
+  const { error: e2 } = await ctx.supabase
+    .from("letter_recipients")
+    .insert(recipientIds.map((id) => ({ letter_id: letter.id, profile_id: id })));
+  if (e2) back(pagePath, "error", "Hindi na-set ang mga tatanggap: " + e2.message);
+
+  const { error: e3 } = await ctx.supabase
+    .from("letter_messages")
+    .insert({ letter_id: letter.id, author_id: ctx.user.id, body: monthlySummaryText(summary) });
+  if (e3) back(pagePath, "error", "Hindi naipadala ang mensahe: " + e3.message);
+
+  revalidatePath(ABULUYAN_BASE, "layout");
+  back(pagePath, "ok", "Naipadala ang buwanang ulat sa Admin.");
 }
