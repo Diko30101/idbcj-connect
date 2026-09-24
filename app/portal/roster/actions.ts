@@ -99,3 +99,76 @@ export async function confirmMember(fd: FormData) {
   revalidatePath(ROSTER_BASE, "layout");
   back(path, "ok", "Nakumpirma ang kaanib. Puwede na itong tumanggap ng handog.");
 }
+
+// CSV na may mga column na full_name at locale. Ang locale ay hinahanap sa pangalan
+// (hindi case-sensitive) sa mga local na sakop ng naka-log in. Nilalaktawan ang mga
+// row na may maling pangalan o hindi kilalang locale.
+function parseCsvRows(text: string): string[][] {
+  const rows: string[][] = [];
+  let row: string[] = [];
+  let field = "";
+  let inQuotes = false;
+  for (let i = 0; i < text.length; i++) {
+    const c = text[i];
+    if (inQuotes) {
+      if (c === '"') {
+        if (text[i + 1] === '"') {
+          field += '"';
+          i++;
+        } else {
+          inQuotes = false;
+        }
+      } else {
+        field += c;
+      }
+    } else if (c === '"') {
+      inQuotes = true;
+    } else if (c === ",") {
+      row.push(field);
+      field = "";
+    } else if (c === "\n") {
+      row.push(field);
+      rows.push(row);
+      row = [];
+      field = "";
+    } else if (c === "\r") {
+      // balewalain (Windows line endings)
+    } else {
+      field += c;
+    }
+  }
+  row.push(field);
+  rows.push(row);
+  return rows.filter((r) => r.some((c) => c.trim() !== ""));
+}
+
+export async function importMembers(fd: FormData) {
+  const ctx = await getRosterContext();
+  const path = target(fd);
+  const file = fd.get("file");
+  if (!(file instanceof File) || file.size === 0) back(path, "error", "Pumili ng CSV file na ia-upload.");
+  if (file.size > 2 * 1024 * 1024) back(path, "error", "Masyadong malaki ang file (hanggang 2MB lang).");
+
+  const rows = parseCsvRows(await file.text());
+  let start = 0;
+  if (rows.length > 0 && rows[0].some((c) => c.trim().toLowerCase() === "full_name")) start = 1;
+  const localByName = new Map(ctx.locals.map((l) => [l.name.trim().toLowerCase(), l.id]));
+
+  let added = 0;
+  let skipped = 0;
+  const total = Math.max(0, rows.length - start);
+  for (let i = start; i < rows.length; i++) {
+    const name = normalizeName(rows[i][0] ?? "");
+    const localId = localByName.get((rows[i][1] ?? "").trim().toLowerCase());
+    if (nameError(name) !== null || !localId) {
+      skipped++;
+      continue;
+    }
+    const { error } = await ctx.supabase.from("members").insert({ local_id: localId, full_name: name });
+    if (error) skipped++;
+    else added++;
+  }
+  revalidatePath(ROSTER_BASE, "layout");
+  if (total === 0) back(path, "error", "Walang nabasang row sa CSV.");
+  back(path, "ok", `Na-import ang ${added} sa ${total} na row; ${skipped} nilaktawan.`);
+}
