@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { back, getAbuluyanContext, denyAbuluyan, getFinanceMinistryRecipientIds, str } from "@/lib/portal";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { isValidMonth } from "@/lib/abuluyan";
 import { monthLabel } from "@/lib/finance";
 import { RESIBO_BASE, resiboText } from "@/lib/resibo";
@@ -42,21 +43,33 @@ export async function sendResiboToAdmin(fd: FormData) {
   if (recipientIds.length === 0) back(pagePath, "error", "Walang miyembro ng Finance Ministry na mapapadalhan.");
 
   const subject = `Buwanang Resibo — ${localName} — ${monthLabel(buwan)}`;
-  const { data: letter, error } = await ctx.supabase
+  const body = resiboText(summary);
+
+  // Sistemang operasyon ang paglikha ng liham: service-role client ang gamit
+  // dahil hinaharangan ng RLS ng "letters" ang user client. Ang pahintulot ng
+  // gumagamit ay nasuri na sa itaas (getAbuluyanContext).
+  let admin;
+  try {
+    admin = createAdminClient();
+  } catch {
+    back(pagePath, "error", "Hindi maipadala ang liham: kulang ang server configuration.");
+  }
+
+  const { data: letter, error } = await admin
     .from("letters")
     .insert({ subject, created_by: ctx.user.id })
     .select("id")
     .single();
   if (error || !letter) back(pagePath, "error", "Hindi nagawa ang liham: " + (error?.message ?? "hindi alam na dahilan."));
 
-  const { error: e2 } = await ctx.supabase
+  const { error: e2 } = await admin
     .from("letter_recipients")
     .insert(recipientIds.map((id) => ({ letter_id: letter.id, profile_id: id })));
   if (e2) back(pagePath, "error", "Hindi na-set ang mga tatanggap: " + e2.message);
 
-  const { error: e3 } = await ctx.supabase
+  const { error: e3 } = await admin
     .from("letter_messages")
-    .insert({ letter_id: letter.id, author_id: ctx.user.id, body: resiboText(summary) });
+    .insert({ letter_id: letter.id, author_id: ctx.user.id, body });
   if (e3) back(pagePath, "error", "Hindi naipadala ang mensahe: " + e3.message);
 
   revalidatePath(RESIBO_BASE, "layout");
