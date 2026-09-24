@@ -60,5 +60,5 @@ export async function sendResiboToAdmin(fd: FormData) {
   if (e3) back(pagePath, "error", "Hindi naipadala ang mensahe: " + e3.message);
 
   revalidatePath(RESIBO_BASE, "layout");
-  back(pagePath, "ok", "Naipadala ang buwanang resibo sa Finance Ministry.");
+  back(pagePath, "ok", "Naisumite na ang buwanang resibo sa Finance Ministry.");
 }

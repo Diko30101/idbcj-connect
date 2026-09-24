@@ -157,5 +157,5 @@ export async function sendAbuluyanMonthlySummary(fd: FormData) {
   if (e3) back(pagePath, "error", "Hindi naipadala ang mensahe: " + e3.message);
 
   revalidatePath(ABULUYAN_BASE, "layout");
-  back(pagePath, "ok", "Naipadala ang buwanang ulat sa Finance Ministry.");
+  back(pagePath, "ok", "Naisumite na ang buwanang ulat sa Finance Ministry.");
 }

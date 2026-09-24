@@ -123,14 +123,14 @@ export default async function AbuluyanBuwananPage({
       </Panel>
 
       <div className="no-print mt-6">
-        <Panel title="Ipadala sa Admin">
+        <Panel title="Submit">
           <form action={sendAbuluyanMonthlySummary} className="flex flex-wrap items-center gap-3">
             <input type="hidden" name="buwan" value={buwan} />
             <button type="submit" className={btnCls}>
-              Ipadala sa Admin
+              Submit
             </button>
             <p className="text-xs text-gray-500">
-              Ipapadala ang ulat na ito bilang liham sa mga miyembro ng Finance Ministry.
+              Isusumite ang ulat na ito bilang liham sa Finance Ministry.
             </p>
           </form>
         </Panel>
