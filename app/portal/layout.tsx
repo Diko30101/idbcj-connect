@@ -95,7 +95,7 @@ export default async function PortalLayout({ children }: { children: React.React
       items.push({ href: "/portal/finance/pasalamat", label: "Pasalamat" });
     }
     // Roster ng mga kaanib: Admin, Administrative Ministry o Local Admin Ministry (ang pahina ang nagsasala ng local)
-    if (profile.role === "admin" || isRosterMember) items.push({ href: "/portal/roster", label: "Roster" });
+    if (profile.role === "admin" || isRosterMember) items.push({ href: "/portal/roster", label: "Membership Record" });
     // Pahintulot sa Inactive na kaanib: lider ng Pastoral Ministry na Admin (bumibigay), at church-wide Finance (nagbabasa)
     if ((profile.role === "admin" && isPastoralMember) || isChurchWide === true) items.push({ href: "/portal/giving-permissions", label: "Pahintulot" });
     // Audit ng pananalapi: church-wide Finance lang
