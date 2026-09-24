@@ -130,7 +130,7 @@ export default async function AbuluyanBuwananPage({
               Ipadala sa Admin
             </button>
             <p className="text-xs text-gray-500">
-              Ipapadala ang ulat na ito bilang liham sa mga aktibong miyembro ng Finance Ministry.
+              Ipapadala ang ulat na ito bilang liham sa mga miyembro ng Finance Ministry.
             </p>
           </form>
         </Panel>

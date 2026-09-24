@@ -7,7 +7,7 @@ import { monthLabel } from "@/lib/finance";
 import { RESIBO_BASE, resiboText } from "@/lib/resibo";
 import { getResiboSummary } from "./summary";
 
-// Ipinapadala ang Buwanang Resibo bilang liham sa lahat ng aktibong Admin.
+// Ipinapadala ang Buwanang Resibo bilang liham sa mga miyembro ng Finance Ministry.
 // Ang server ang nagpapasya kung aling lokal ang sakop; ang database (RLS) ang huling harang.
 export async function sendResiboToAdmin(fd: FormData) {
   const ctx = await getAbuluyanContext();
@@ -37,9 +37,9 @@ export async function sendResiboToAdmin(fd: FormData) {
   if (summary.submittedCount === 0)
     back(pagePath, "error", "Walang naitalang handog para sa buwang ito sa lokal na ito.");
 
-  // Ang tatanggap: mga aktibong miyembro ng Finance Ministry (sila ang "Admin" sa sistemang ito)
+  // Ang tatanggap: mga miyembro ng Finance Ministry (sila ang "Admin" sa sistemang ito)
   const recipientIds = await getFinanceMinistryRecipientIds(ctx.supabase);
-  if (recipientIds.length === 0) back(pagePath, "error", "Walang aktibong miyembro ng Finance Ministry na mapapadalhan.");
+  if (recipientIds.length === 0) back(pagePath, "error", "Walang miyembro ng Finance Ministry na mapapadalhan.");
 
   const subject = `Buwanang Resibo — ${localName} — ${monthLabel(buwan)}`;
   const { data: letter, error } = await ctx.supabase

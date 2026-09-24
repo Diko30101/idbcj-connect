@@ -112,7 +112,7 @@ export async function voidAbuluyan(fd: FormData) {
   back(path, "ok", "Na-void ang Abuluyan record. Pinal na ito.");
 }
 
-// Buwanang Ulat ng Abuluyan: ipadala bilang liham sa lahat ng aktibong Admin.
+// Buwanang Ulat ng Abuluyan: ipadala bilang liham sa mga miyembro ng Finance Ministry.
 // Church-wide Finance at Admin: lahat ng local. Local Finance: sariling local lang.
 // Ang padron ng pag-insert ng liham ay gaya ng createLetter (letters -> letter_recipients -> letter_messages).
 export async function sendAbuluyanMonthlySummary(fd: FormData) {
@@ -134,9 +134,9 @@ export async function sendAbuluyanMonthlySummary(fd: FormData) {
   const { summary, submittedCount } = await getMonthlySummary(ctx.supabase, scope, buwan);
   if (submittedCount === 0) back(pagePath, "error", "Walang naipadalang Abuluyan para sa buwang ito.");
 
-  // Ang tatanggap: mga aktibong miyembro ng Finance Ministry (sila ang "Admin" sa sistemang ito)
+  // Ang tatanggap: mga miyembro ng Finance Ministry (sila ang "Admin" sa sistemang ito)
   const recipientIds = await getFinanceMinistryRecipientIds(ctx.supabase);
-  if (recipientIds.length === 0) back(pagePath, "error", "Walang aktibong miyembro ng Finance Ministry na mapapadalhan.");
+  if (recipientIds.length === 0) back(pagePath, "error", "Walang miyembro ng Finance Ministry na mapapadalhan.");
 
   const subject = `Buwanang Ulat ng Abuluyan — ${monthLabel(buwan)}`;
   const { data: letter, error } = await ctx.supabase

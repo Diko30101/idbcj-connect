@@ -238,7 +238,7 @@ export default async function ResiboPage({
               Ipadala sa Admin
             </button>
             <p className="text-xs text-gray-500">
-              Ipapadala ang resibong ito bilang liham sa mga aktibong miyembro ng Finance Ministry.
+              Ipapadala ang resibong ito bilang liham sa mga miyembro ng Finance Ministry.
             </p>
           </form>
         </Panel>

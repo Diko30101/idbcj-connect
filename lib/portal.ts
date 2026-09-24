@@ -89,14 +89,13 @@ export const FINANCE_MINISTRY_NAME = "Finance Ministry";
 export const isFinanceMember = (role: Role, ministryNames: string[]) =>
   isFinance(role) || ministryNames.includes(FINANCE_MINISTRY_NAME);
 
-// Ang "Admin" na tumatanggap ng mga buwanang ulat at resibo: mga AKTIBONG miyembro ng
+// Ang "Admin" na tumatanggap ng mga buwanang ulat at resibo: mga miyembro ng
 // Finance Ministry (hindi ang mga profile na role='admin'). Ibinabalik ang mga profile id.
 export async function getFinanceMinistryRecipientIds(supabase: SupabaseClient): Promise<string[]> {
   const { data } = await supabase
     .from("ministry_members")
-    .select("profile_id, ministries!inner(name), profiles!inner(status)")
-    .eq("ministries.name", FINANCE_MINISTRY_NAME)
-    .eq("profiles.status", "active");
+    .select("profile_id, ministries!inner(name)")
+    .eq("ministries.name", FINANCE_MINISTRY_NAME);
   return [...new Set(((data ?? []) as { profile_id: string }[]).map((m) => m.profile_id))];
 }
 

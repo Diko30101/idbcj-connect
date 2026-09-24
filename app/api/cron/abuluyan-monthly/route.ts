@@ -32,10 +32,10 @@ export async function GET(request: Request) {
   const { summary, submittedCount } = await getMonthlySummary(supabase, { wide: true }, buwan);
   if (submittedCount === 0) return NextResponse.json({ skipped: true, month: buwan });
 
-  // Ang tatanggap: mga aktibong miyembro ng Finance Ministry (sila ang "Admin" sa sistemang ito)
+  // Ang tatanggap: mga miyembro ng Finance Ministry (sila ang "Admin" sa sistemang ito)
   const recipientIds = await getFinanceMinistryRecipientIds(supabase);
   if (recipientIds.length === 0)
-    return NextResponse.json({ ok: false, error: "no active finance ministry members" }, { status: 500 });
+    return NextResponse.json({ ok: false, error: "no finance ministry members" }, { status: 500 });
 
   // Walang tao ang nagpadala; ang unang Admin ang ilalagay na may-akda ng liham
   const authorId = recipientIds[0];
