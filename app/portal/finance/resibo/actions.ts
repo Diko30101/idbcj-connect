@@ -38,22 +38,23 @@ export async function sendResiboToAdmin(fd: FormData) {
   if (summary.submittedCount === 0)
     back(pagePath, "error", "Walang naitalang handog para sa buwang ito sa lokal na ito.");
 
-  // Ang tatanggap: mga miyembro ng Finance Ministry (sila ang "Admin" sa sistemang ito)
-  const recipientIds = await getFinanceMinistryRecipientIds(ctx.supabase);
-  if (recipientIds.length === 0) back(pagePath, "error", "Walang miyembro ng Finance Ministry na mapapadalhan.");
-
-  const subject = `Buwanang Resibo — ${localName} — ${monthLabel(buwan)}`;
-  const body = resiboText(summary);
-
-  // Sistemang operasyon ang paglikha ng liham: service-role client ang gamit
-  // dahil hinaharangan ng RLS ng "letters" ang user client. Ang pahintulot ng
-  // gumagamit ay nasuri na sa itaas (getAbuluyanContext).
+  // Sistemang operasyon ang pagkuha ng recipients at paglikha ng liham:
+  // service-role client ang gamit dahil ang RLS ay nagfi-filter depende sa
+  // naka-login na user. Ang pahintulot ng gumagamit ay nasuri na sa itaas
+  // (getAbuluyanContext).
   let admin;
   try {
     admin = createAdminClient();
   } catch {
     back(pagePath, "error", "Hindi maipadala ang liham: kulang ang server configuration.");
   }
+
+  // Ang tatanggap: mga miyembro ng Finance Ministry (sila ang "Admin" sa sistemang ito)
+  const recipientIds = await getFinanceMinistryRecipientIds(admin);
+  if (recipientIds.length === 0) back(pagePath, "error", "Walang miyembro ng Finance Ministry na mapapadalhan.");
+
+  const subject = `Buwanang Resibo — ${localName} — ${monthLabel(buwan)}`;
+  const body = resiboText(summary);
 
   const { data: letter, error } = await admin
     .from("letters")
