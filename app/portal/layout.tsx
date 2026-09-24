@@ -86,8 +86,10 @@ export default async function PortalLayout({ children }: { children: React.React
       items.push({ href: "/portal/courses", label: "Bible Study" });
     }
     // Isang link; ang pahina ang nagre-redirect ayon sa role (Local Finance, church-wide Finance, o Admin)
-    if (isLocalFinanceMember || isFinanceMinistryMember || profile.role === "admin")
+    if (isLocalFinanceMember || isFinanceMinistryMember || profile.role === "admin") {
       items.push({ href: "/portal/finance/abuluyan", label: "Abuluyan" });
+      items.push({ href: "/portal/finance/resibo", label: "Buwanang Resibo" });
+    }
     // Ambagan (per-member): Local Finance at church-wide Finance lang; ang pahina ang nagsasala
     if (isLocalFinanceMember || isFinanceMinistryMember) {
       items.push({ href: "/portal/finance/ambagan", label: "Ambagan" });
@@ -131,7 +133,7 @@ export default async function PortalLayout({ children }: { children: React.React
     },
     {
       label: "Pangasiwaan",
-      hrefs: ["/portal/roster", "/portal/finance/abuluyan", "/portal/finance/local", "/portal/finance/audit", "/portal/audit"],
+      hrefs: ["/portal/roster", "/portal/finance/abuluyan", "/portal/finance/resibo", "/portal/finance/local", "/portal/finance/audit", "/portal/audit"],
     },
   ];
   const alwaysVisible = items.filter((i) => ALWAYS_VISIBLE_HREFS.has(i.href));

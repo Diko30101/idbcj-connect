@@ -59,6 +59,9 @@ export default async function AbuluyanBuwananPage({
             <Link href={`${ABULUYAN_BUWANAN_PATH}?buwan=${nextMonth(buwan)}`} className={btnGhostCls}>
               Susunod →
             </Link>
+            <Link href={`/portal/finance/resibo?buwan=${buwan}`} className={btnGhostCls}>
+              Buwanang Resibo
+            </Link>
           </div>
         }
       />

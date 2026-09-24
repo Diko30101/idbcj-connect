@@ -1,0 +1,64 @@
+"use server";
+
+import { revalidatePath } from "next/cache";
+import { back, getAbuluyanContext, denyAbuluyan, str } from "@/lib/portal";
+import { isValidMonth } from "@/lib/abuluyan";
+import { monthLabel } from "@/lib/finance";
+import { RESIBO_BASE, resiboText } from "@/lib/resibo";
+import { getResiboSummary } from "./summary";
+
+// Ipinapadala ang Buwanang Resibo bilang liham sa lahat ng aktibong Admin.
+// Ang server ang nagpapasya kung aling lokal ang sakop; ang database (RLS) ang huling harang.
+export async function sendResiboToAdmin(fd: FormData) {
+  const ctx = await getAbuluyanContext();
+  const wide = ctx.isChurch || ctx.isAdmin;
+
+  let localId: string;
+  let localName: string;
+  if (wide) {
+    const id = str(fd, "local");
+    const { data } = await ctx.supabase.from("locals").select("id, name").eq("id", id).maybeSingle();
+    const row = data as { id: string; name: string } | null;
+    if (!row) back(RESIBO_BASE, "error", "Di-wastong lokal.");
+    localId = row.id;
+    localName = row.name;
+  } else {
+    const local = ctx.local;
+    if (!local) denyAbuluyan();
+    localId = local.id;
+    localName = local.name;
+  }
+
+  const buwan = str(fd, "buwan");
+  if (!isValidMonth(buwan)) back(RESIBO_BASE, "error", "Di-wastong buwan.");
+  const pagePath = `${RESIBO_BASE}?buwan=${buwan}&local=${localId}`;
+
+  const summary = await getResiboSummary(ctx.supabase, localId, localName, buwan);
+  if (summary.submittedCount === 0)
+    back(pagePath, "error", "Walang naitalang handog para sa buwang ito sa lokal na ito.");
+
+  const { data: admins } = await ctx.supabase.from("profiles").select("id").eq("role", "admin").eq("status", "active");
+  const recipientIds = ((admins ?? []) as { id: string }[]).map((a) => a.id);
+  if (recipientIds.length === 0) back(pagePath, "error", "Walang aktibong Admin na mapapadalhan.");
+
+  const subject = `Buwanang Resibo — ${localName} — ${monthLabel(buwan)}`;
+  const { data: letter, error } = await ctx.supabase
+    .from("letters")
+    .insert({ subject, created_by: ctx.user.id })
+    .select("id")
+    .single();
+  if (error || !letter) back(pagePath, "error", "Hindi nagawa ang liham: " + (error?.message ?? "hindi alam na dahilan."));
+
+  const { error: e2 } = await ctx.supabase
+    .from("letter_recipients")
+    .insert(recipientIds.map((id) => ({ letter_id: letter.id, profile_id: id })));
+  if (e2) back(pagePath, "error", "Hindi na-set ang mga tatanggap: " + e2.message);
+
+  const { error: e3 } = await ctx.supabase
+    .from("letter_messages")
+    .insert({ letter_id: letter.id, author_id: ctx.user.id, body: resiboText(summary) });
+  if (e3) back(pagePath, "error", "Hindi naipadala ang mensahe: " + e3.message);
+
+  revalidatePath(RESIBO_BASE, "layout");
+  back(pagePath, "ok", "Naipadala ang buwanang resibo sa Admin.");
+}
