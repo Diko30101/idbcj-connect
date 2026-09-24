@@ -404,9 +404,9 @@ export function PortalShell({
 }) {
   const pathname = usePathname();
 
-  // Ang sidebar theme ay para lang sa portal home; lahat ng ibang portal page
-  // ay nananatili sa klasikong header + pill nav shell.
-  if (pathname === "/portal") {
+  // Ang sidebar theme ay para sa portal home at sa roster page; lahat ng ibang
+  // portal page ay nananatili sa klasikong header + pill nav shell.
+  if (pathname === "/portal" || pathname === "/portal/roster") {
     return (
       <SidebarShell navItems={navItems} displayName={displayName} role={role}>
         {children}
