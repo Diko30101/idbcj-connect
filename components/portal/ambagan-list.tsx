@@ -22,9 +22,8 @@ function StatusPill({ status }: { status: GivingStatus }) {
 }
 
 // mode "local": Local Finance; mode "church": church-wide Finance.
-// Ang Ambagan ay walang indibidwal na Ipadala at walang I-void: draft ang
-// pag-iipon, at isang bulk na "Ipadala lahat" ang nagpapadala nang sabay-sabay.
-// (Ang Tulong ay may sarili pa ring indibidwal na Ipadala/I-void sa ngayon.)
+// Walang indibidwal na Ipadala at walang I-void: draft ang pag-iipon,
+// at isang bulk na "Ipadala lahat" ang nagpapadala nang sabay-sabay.
 type ActionFn = (fd: FormData) => void | Promise<void>;
 
 // Ginagamit din ng Tulong sa Klase Ministeryal (parehong hugis ng record): ibinibigay ang sariling mga action at label.
@@ -38,6 +37,7 @@ export function AmbaganList({
   labels,
   bulkSubmitAll,
   bulkLocalId,
+  bulkItemLabel,
 }: {
   records: AmbaganRecord[];
   names: Record<string, string>;
@@ -48,10 +48,12 @@ export function AmbaganList({
   labels?: { monthPhrase: string; empty: string; periodLabel?: string };
   bulkSubmitAll?: { action: ActionFn; label: string };
   bulkLocalId?: string;
+  bulkItemLabel?: string;
 }) {
   const [editingId, setEditingId] = useState<string | null>(null);
   const act = actions ?? { update: updateAmbagan };
   const L = labels ?? { monthPhrase: "Ambag para sa", empty: "Wala pang naitatalang Ambagan." };
+  const itemLabel = bulkItemLabel ?? "Ambagan";
 
   if (records.length === 0) return <p className="text-sm text-gray-500 py-4 text-center">{L.empty}</p>;
 
@@ -66,7 +68,7 @@ export function AmbaganList({
   const confirmBulkSubmit = (e: FormEvent<HTMLFormElement>) => {
     if (
       !window.confirm(
-        `Sigurado ka bang ipapadala ang lahat ng ${draftCount} draft na Ambagan? Hindi na ito puwedeng i-edit ng Local Finance pagkatapos.`,
+        `Sigurado ka bang ipapadala ang lahat ng ${draftCount} draft na ${itemLabel}? Hindi na ito puwedeng i-edit ng Local Finance pagkatapos.`,
       )
     )
       e.preventDefault();
@@ -81,7 +83,7 @@ export function AmbaganList({
           className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-lg border border-emerald-200 bg-emerald-50/70 px-4 py-3"
         >
           <p className="text-sm text-emerald-800">
-            <strong>{draftCount}</strong> draft na Ambagan ang naghihintay. Ipadala ang lahat nang sabay-sabay.
+            <strong>{draftCount}</strong> draft na {itemLabel} ang naghihintay. Ipadala ang lahat nang sabay-sabay.
           </p>
           <input type="hidden" name="path" value={path} />
           {bulkLocalId && <input type="hidden" name="local_id" value={bulkLocalId} />}
