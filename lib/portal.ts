@@ -88,6 +88,9 @@ export const FINANCE_MINISTRY_NAME = "Finance Ministry";
 export const isFinanceMember = (role: Role, ministryNames: string[]) =>
   isFinance(role) || ministryNames.includes(FINANCE_MINISTRY_NAME);
 
+// Mga ministry na nagma-manage ng roster (public.members) ng sariling local (kasama ang Admin, na lahat ng local)
+export const ROSTER_MINISTRY_NAMES = ["Administrative Ministry", "Local Admin Ministry"];
+
 // ---------------------------------------------------------------
 // Petsa (Philippine time)
 // ---------------------------------------------------------------
@@ -174,6 +177,86 @@ export async function requireLocalFinanceAccess() {
         encodeURIComponent("Wala kang naka-set na lokal sa iyong profile. Ipa-set muna sa Secretary o Admin."),
     );
   return { ...ctx, locality: profile.locality as Locality };
+}
+
+export type AbuluyanLocal = { id: string; key: string; name: string; timezone: string };
+
+// Access ng Abuluyan (019). Walang bagong logic ng role dito: ang database (RLS, trigger at void_abuluyan) ang
+// huling harang; ito ay para lang malaman kung anong pahina ang ipapakita.
+//  - isChurch: is_church_wide_finance()  - isAdmin: is_admin()
+//  - local: ang local ng Local Finance (Local Finance Ministry, o Finance Ministry na finance_scope='local')
+export async function getAbuluyanContext() {
+  const ctx = await requirePortalAccess();
+  const { supabase, profile } = ctx;
+  const [{ data: cw }, { data: adm }, { data: mm }] = await Promise.all([
+    supabase.rpc("is_church_wide_finance"),
+    supabase.rpc("is_admin"),
+    supabase
+      .from("ministry_members")
+      .select("local_id, finance_scope, ministries(name), locals(id, key, name, timezone)")
+      .eq("profile_id", profile.id),
+  ]);
+  const row = ((mm ?? []) as any[]).find(
+    (m) =>
+      m.local_id &&
+      m.locals &&
+      (m.ministries?.name === LOCAL_FINANCE_MINISTRY_NAME ||
+        (m.ministries?.name === FINANCE_MINISTRY_NAME && m.finance_scope === "local")),
+  );
+  return {
+    ...ctx,
+    isChurch: cw === true,
+    isAdmin: adm === true,
+    local: (row?.locals ?? null) as AbuluyanLocal | null,
+  };
+}
+
+export type RosterLocal = { id: string; key: string; name: string };
+
+// Access ng roster (013/016). Admin: lahat ng local. Administrative Ministry o Local Admin Ministry: sariling local lang.
+// Ang database (RLS at mga trigger) ang huling harang; ito ay para lang malaman kung anong pahina ang ipapakita.
+export async function getRosterContext() {
+  const ctx = await requirePortalAccess();
+  const { supabase, profile } = ctx;
+  const [{ data: adm }, { data: mm }, { data: locs }] = await Promise.all([
+    supabase.rpc("is_admin"),
+    supabase
+      .from("ministry_members")
+      .select("local_id, ministries(name), locals(id, key, name)")
+      .eq("profile_id", profile.id),
+    supabase.from("locals").select("id, key, name").order("name"),
+  ]);
+  const isAdmin = adm === true;
+  const managed = new Map<string, RosterLocal>();
+  for (const m of (mm ?? []) as any[]) {
+    if (m.local_id && m.locals && ROSTER_MINISTRY_NAMES.includes(m.ministries?.name)) managed.set(m.local_id, m.locals as RosterLocal);
+  }
+  const locals = isAdmin ? ((locs ?? []) as RosterLocal[]) : [...managed.values()];
+  if (locals.length === 0) redirect("/portal?error=" + encodeURIComponent("Wala kang access sa pahinang iyon."));
+  return { ...ctx, isAdmin, locals };
+}
+
+// Access ng mga pahintulot (012): ang lider ng Pastoral Ministry na role ay admin (is_pastoral_leader) ang nagbibigay at bumabawi;
+// ang church-wide Finance ay nakakabasa lang. Ang database (RLS at giving_permissions_rules) ang huling harang.
+export async function getPermissionsContext() {
+  const ctx = await requirePortalAccess();
+  const [{ data: pl }, { data: cw }] = await Promise.all([ctx.supabase.rpc("is_pastoral_leader"), ctx.supabase.rpc("is_church_wide_finance")]);
+  const isPastoral = pl === true;
+  const isChurch = cw === true;
+  if (!isPastoral && !isChurch) redirect("/portal?error=" + encodeURIComponent("Wala kang access sa pahinang iyon."));
+  return { ...ctx, isPastoral, isChurch };
+}
+
+// Audit ng pananalapi (010): church-wide Finance lang (ayon sa spec; mas mahigpit pa kaysa sa RLS na may bahagyang access ang Admin)
+export async function getFinanceAuditContext() {
+  const ctx = await requirePortalAccess();
+  const { data: cw } = await ctx.supabase.rpc("is_church_wide_finance");
+  if (cw !== true) redirect("/portal?error=" + encodeURIComponent("Wala kang access sa pahinang iyon."));
+  return ctx;
+}
+
+export function denyAbuluyan(): never {
+  redirect("/portal?error=" + encodeURIComponent("Wala kang access sa pahinang iyon."));
 }
 
 // Buong Finance section (Financial Management, Audit Report, Expenses):
