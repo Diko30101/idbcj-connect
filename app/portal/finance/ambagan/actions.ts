@@ -99,29 +99,23 @@ export async function updateAmbagan(fd: FormData) {
   back(path, "ok", "Na-update ang Ambagan.");
 }
 
-export async function submitAmbagan(fd: FormData) {
+// Ipadala lahat: lahat ng draft na Ambagan ng napiling local ay nagiging
+// submitted nang sabay-sabay. Walang indibidwal na Ipadala at walang I-void.
+export async function submitAllAmbagan(fd: FormData) {
   const ctx = await requireGiving();
   const path = target(fd);
+  const localId = ctx.isChurch ? strOrNull(fd, "local_id") : ctx.local!.id;
+  if (!localId) back(path, "error", "Pumili ng local.");
   const { error, count } = await ctx.supabase
     .from("ambagan_records")
     .update({ status: "submitted" }, { count: "exact" })
-    .eq("id", str(fd, "id"))
+    .eq("local_id", localId)
     .eq("status", "draft");
-  if (error || !count) back(path, "error", givingErrorMessage(error, "Hindi naipadala. Subukan ulit."));
+  if (error) back(path, "error", givingErrorMessage(error, "Hindi naipadala. Subukan ulit."));
   revalidatePath(GIVING_BASE, "layout");
-  back(path, "ok", "Naipadala ang Ambagan. Church-wide Finance na lang ang makapagbabago nito.");
-}
-
-// Void: pinal (walang un-void). Local Finance: draft lang; church-wide Finance: draft o naipadala (ayon sa 011).
-export async function voidAmbagan(fd: FormData) {
-  const ctx = await requireGiving();
-  const path = target(fd);
-  const { error, count } = await ctx.supabase
-    .from("ambagan_records")
-    .update({ status: "void" }, { count: "exact" })
-    .eq("id", str(fd, "id"))
-    .in("status", ["draft", "submitted"]);
-  if (error || !count) back(path, "error", givingErrorMessage(error, "Hindi na-void. Baka wala kang pahintulot."));
-  revalidatePath(GIVING_BASE, "layout");
-  back(path, "ok", "Na-void ang Ambagan. Pinal na ito.");
+  back(
+    path,
+    "ok",
+    count ? `Naipadala ang ${count} Ambagan. Church-wide Finance na lang ang makapagbabago nito.` : "Walang draft na Ambagan na ipapadala.",
+  );
 }
