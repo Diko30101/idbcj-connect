@@ -1,7 +1,7 @@
-// Mga tipo at helper ng Buwanang Resibo (per-lokal, per-buwan): pinagsasama sa iisang
-// resibo ang Abuluyan (lingguhang pinagsamang handog), Ambagan, Tulong sa Aral, at
-// Pasalamat para sa parehong buwan. Pure at walang server-only na import: ligtas
-// gamitin sa client.
+// Mga tipo at helper ng Buwanang Resibo (per-lokal, per-buwan) at Lingguhang Resibo
+// (church-wide, per-linggo): pinagsasama sa iisang resibo ang Abuluyan (lingguhang
+// pinagsamang handog), Ambagan, Tulong sa Aral, at Pasalamat. Pure at walang
+// server-only na import: ligtas gamitin sa client.
 import { fmtPeso } from "./finance";
 import { PASALAMAT_TYPE_LABEL, type PasalamatType } from "./giving";
 
@@ -42,7 +42,87 @@ export type ResiboSummary = {
   submittedCount: number; // kabuuang bilang ng mga record sa apat na kategorya
 };
 
-// Plain-text na bersyon ng resibo — para sa liham (Inbox) sa Admin
+// Isang lokal sa loob ng Lingguhang Resibo (parehong hugis ng ResiboSummary,
+// walang buwan)
+export type WeeklyLocalResibo = {
+  localId: string;
+  localName: string;
+  abuluyan: ResiboAbuluyanWeek[];
+  abuluyanTotal: number;
+  ambagan: ResiboGivingRow[];
+  ambaganTotal: number;
+  tulong: ResiboGivingRow[];
+  tulongTotal: number;
+  pasalamat: ResiboPasalamatRow[];
+  pasalamatTotal: number;
+  grandTotal: number;
+  submittedCount: number;
+};
+
+// ---------------------------------------------------------------
+// Plain-text na mga bloke (ginagamit ng buwanan at lingguhang resibo)
+// ---------------------------------------------------------------
+function abuluyanBlock(abuluyan: ResiboAbuluyanWeek[], total: number): string[] {
+  const lines = ["ABULUYAN (lingguhang pinagsamang handog)"];
+  if (abuluyan.length === 0) lines.push("  (walang naipadalang Abuluyan)");
+  else {
+    for (const w of abuluyan) lines.push(`  ${w.serviceDate} — ${fmtPeso(w.amount)}`);
+    lines.push(`  Kabuuan ng Abuluyan: ${fmtPeso(total)}`);
+  }
+  return lines;
+}
+
+function givingBlock(
+  title: string,
+  emptyLabel: string,
+  totalLabel: string,
+  rows: ResiboGivingRow[],
+  total: number,
+): string[] {
+  const lines = [title];
+  if (rows.length === 0) lines.push(`  (walang naipadalang ${emptyLabel})`);
+  else {
+    for (const r of rows) lines.push(`  ${r.memberName} · ${r.date} — ${fmtPeso(r.amount)}`);
+    lines.push(`  ${totalLabel}: ${fmtPeso(total)}`);
+  }
+  return lines;
+}
+
+function pasalamatBlock(pasalamat: ResiboPasalamatRow[], total: number): string[] {
+  const lines = ["PASALAMAT"];
+  if (pasalamat.length === 0) lines.push("  (walang naipadalang Pasalamat)");
+  else {
+    for (const r of pasalamat) {
+      const extra = r.notes ? ` · ${r.notes}` : "";
+      lines.push(`  ${r.memberName} · ${PASALAMAT_TYPE_LABEL[r.type]} · ${r.date} — ${fmtPeso(r.amount)}${extra}`);
+    }
+    lines.push(`  Kabuuan ng Pasalamat: ${fmtPeso(total)}`);
+  }
+  return lines;
+}
+
+function localBlocks(s: {
+  abuluyan: ResiboAbuluyanWeek[];
+  abuluyanTotal: number;
+  ambagan: ResiboGivingRow[];
+  ambaganTotal: number;
+  tulong: ResiboGivingRow[];
+  tulongTotal: number;
+  pasalamat: ResiboPasalamatRow[];
+  pasalamatTotal: number;
+}): string[] {
+  return [
+    ...abuluyanBlock(s.abuluyan, s.abuluyanTotal),
+    "",
+    ...givingBlock("AMBAGAN", "Ambagan", "Kabuuan ng Ambagan", s.ambagan, s.ambaganTotal),
+    "",
+    ...givingBlock("TULONG SA ARAL", "Tulong sa Aral", "Kabuuan ng Tulong sa Aral", s.tulong, s.tulongTotal),
+    "",
+    ...pasalamatBlock(s.pasalamat, s.pasalamatTotal),
+  ];
+}
+
+// Plain-text na bersyon ng buwanang resibo — para sa liham (Inbox)
 export function resiboText(s: ResiboSummary): string {
   const lines: string[] = [
     "IDBCJ — Buwanang Resibo",
@@ -50,34 +130,56 @@ export function resiboText(s: ResiboSummary): string {
     `Buwan: ${s.monthLabel}`,
     `Nabuo: ${s.generatedLabel}`,
     "",
-    "ABULUYAN (lingguhang pinagsamang handog)",
+    ...localBlocks(s),
+    "",
+    `PANGKALAHATANG KABUUAN: ${fmtPeso(s.grandTotal)}`,
   ];
-  if (s.abuluyan.length === 0) lines.push("  (walang naipadalang Abuluyan)");
-  else {
-    for (const w of s.abuluyan) lines.push(`  ${w.serviceDate} — ${fmtPeso(w.amount)}`);
-    lines.push(`  Kabuuan ng Abuluyan: ${fmtPeso(s.abuluyanTotal)}`);
+  return lines.join("\n");
+}
+
+// ---------------------------------------------------------------
+// Lingguhang Resibo (church-wide)
+// ---------------------------------------------------------------
+const TAGALOG_MONTHS_SHORT = [
+  "Ene", "Peb", "Mar", "Abr", "May", "Hun",
+  "Hul", "Ago", "Set", "Okt", "Nob", "Dis",
+];
+
+// "Set 21–27, 2026" — start/end ay YYYY-MM-DD
+export function weekLabel(start: string, end: string): string {
+  const [sy, sm, sd] = start.split("-").map(Number);
+  const [ey, em, ed] = end.split("-").map(Number);
+  const sMon = TAGALOG_MONTHS_SHORT[sm - 1] ?? "";
+  const eMon = TAGALOG_MONTHS_SHORT[em - 1] ?? "";
+  if (sy === ey && sm === em) return `${sMon} ${sd}–${ed}, ${sy}`;
+  if (sy === ey) return `${sMon} ${sd} – ${eMon} ${ed}, ${sy}`;
+  return `${sMon} ${sd}, ${sy} – ${eMon} ${ed}, ${ey}`;
+}
+
+// Plain-text na bersyon ng lingguhang resibo — isang liham para sa lahat ng lokal
+export function weeklyResiboText(
+  label: string,
+  generatedLabel: string,
+  locals: WeeklyLocalResibo[],
+): string {
+  const lines: string[] = [
+    "IDBCJ — Lingguhang Resibo",
+    `Linggo: ${label}`,
+    `Nabuo: ${generatedLabel}`,
+    "",
+  ];
+  let grand = 0;
+  for (const loc of locals) {
+    grand += loc.grandTotal;
+    lines.push(
+      `—— ${loc.localName} ——`,
+      "",
+      ...localBlocks(loc),
+      "",
+      `Kabuuan ng lokal: ${fmtPeso(loc.grandTotal)}`,
+      "",
+    );
   }
-  lines.push("", "AMBAGAN");
-  if (s.ambagan.length === 0) lines.push("  (walang naipadalang Ambagan)");
-  else {
-    for (const r of s.ambagan) lines.push(`  ${r.memberName} · ${r.date} — ${fmtPeso(r.amount)}`);
-    lines.push(`  Kabuuan ng Ambagan: ${fmtPeso(s.ambaganTotal)}`);
-  }
-  lines.push("", "TULONG SA ARAL");
-  if (s.tulong.length === 0) lines.push("  (walang naipadalang Tulong sa Aral)");
-  else {
-    for (const r of s.tulong) lines.push(`  ${r.memberName} · ${r.date} — ${fmtPeso(r.amount)}`);
-    lines.push(`  Kabuuan ng Tulong sa Aral: ${fmtPeso(s.tulongTotal)}`);
-  }
-  lines.push("", "PASALAMAT");
-  if (s.pasalamat.length === 0) lines.push("  (walang naipadalang Pasalamat)");
-  else {
-    for (const r of s.pasalamat) {
-      const extra = r.notes ? ` · ${r.notes}` : "";
-      lines.push(`  ${r.memberName} · ${PASALAMAT_TYPE_LABEL[r.type]} · ${r.date} — ${fmtPeso(r.amount)}${extra}`);
-    }
-    lines.push(`  Kabuuan ng Pasalamat: ${fmtPeso(s.pasalamatTotal)}`);
-  }
-  lines.push("", `PANGKALAHATANG KABUUAN: ${fmtPeso(s.grandTotal)}`);
+  lines.push(`PANGKALAHATANG KABUUAN (lahat ng lokal): ${fmtPeso(grand)}`);
   return lines.join("\n");
 }
