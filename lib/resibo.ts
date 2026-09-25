@@ -3,7 +3,7 @@
 // pinagsamang handog), Ambagan, Tulong sa Aral, at Pasalamat. Pure at walang
 // server-only na import: ligtas gamitin sa client.
 import { fmtPeso } from "./finance";
-import { PASALAMAT_TYPE_LABEL, type PasalamatType } from "./giving";
+import { pasalamatTypeLabel, type PasalamatType } from "./giving";
 
 export const RESIBO_BASE = "/portal/finance/resibo";
 
@@ -100,7 +100,7 @@ function pasalamatBlock(pasalamat: ResiboPasalamatRow[], total: number): string[
     lines.push("| Miyembro | Uri | Petsa | Halaga |");
     for (const r of pasalamat) {
       const extra = r.notes ? ` (${r.notes})` : "";
-      lines.push(`| ${r.memberName} | ${PASALAMAT_TYPE_LABEL[r.type]} | ${r.date} | ${fmtPeso(r.amount)}${extra} |`);
+      lines.push(`| ${r.memberName} | ${pasalamatTypeLabel(r.type)} | ${r.date} | ${fmtPeso(r.amount)}${extra} |`);
     }
     lines.push(`Kabuuan ng Pasalamat: ${fmtPeso(total)}`);
   }
