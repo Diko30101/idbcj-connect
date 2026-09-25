@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, type FormEvent } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 import { AmbaganForm } from "./ambagan-form";
 import { btnCls, btnDangerCls, btnGhostCls } from "./form-bits";
 import { updateAmbagan } from "@/app/portal/finance/ambagan/actions";
@@ -22,8 +22,8 @@ function StatusPill({ status }: { status: GivingStatus }) {
 }
 
 // mode "local": Local Finance; mode "church": church-wide Finance.
-// Walang indibidwal na Ipadala at walang I-void: draft ang pag-iipon,
-// at isang bulk na "Ipadala lahat" ang nagpapadala nang sabay-sabay.
+// Gaya ng Abuluyan: checkbox sa bawat draft + "piliin lahat" + "ipadala ang napili",
+// at indibidwal na Edit at Ipadala sa bawat draft. Walang I-void.
 type ActionFn = (fd: FormData) => void | Promise<void>;
 
 // Ginagamit din ng Tulong sa Klase Ministeryal (parehong hugis ng record): ibinibigay ang sariling mga action at label.
@@ -35,8 +35,7 @@ export function AmbaganList({
   mode,
   actions,
   labels,
-  bulkSubmitAll,
-  bulkLocalId,
+  submitMany,
   bulkItemLabel,
 }: {
   records: AmbaganRecord[];
@@ -46,8 +45,7 @@ export function AmbaganList({
   mode: "local" | "church";
   actions?: { update: ActionFn; submit?: ActionFn; void?: ActionFn };
   labels?: { monthPhrase: string; empty: string; periodLabel?: string };
-  bulkSubmitAll?: { action: ActionFn; label: string };
-  bulkLocalId?: string;
+  submitMany?: { action: ActionFn };
   bulkItemLabel?: string;
 }) {
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -55,9 +53,19 @@ export function AmbaganList({
   const L = labels ?? { monthPhrase: "Ambag para sa", empty: "Wala pang naitatalang Ambagan." };
   const itemLabel = bulkItemLabel ?? "Ambagan";
 
-  if (records.length === 0) return <p className="text-sm text-gray-500 py-4 text-center">{L.empty}</p>;
+  // Maramihang pagpapadala: checkbox sa bawat draft + "piliin lahat" (gaya ng Abuluyan).
+  const drafts = records.filter((r) => r.status === "draft");
+  const [selected, setSelected] = useState<string[]>([]);
+  const draftKey = drafts.map((d) => d.id).join(",");
+  useEffect(() => {
+    const valid = new Set(draftKey.split(",").filter(Boolean));
+    setSelected((prev) => prev.filter((id) => valid.has(id)));
+  }, [draftKey]);
+  const allSelected = drafts.length > 0 && selected.length === drafts.length;
+  const toggleAll = () => setSelected(allSelected ? [] : drafts.map((d) => d.id));
+  const toggleOne = (id: string) => setSelected((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
 
-  const draftCount = records.filter((r) => r.status === "draft").length;
+  if (records.length === 0) return <p className="text-sm text-gray-500 py-4 text-center">{L.empty}</p>;
 
   const confirmSubmit = (e: FormEvent<HTMLFormElement>) => {
     if (!window.confirm("Sigurado ka bang ipapadala? Hindi na ito puwedeng i-edit ng Local Finance pagkatapos.")) e.preventDefault();
@@ -65,30 +73,40 @@ export function AmbaganList({
   const confirmVoid = (e: FormEvent<HTMLFormElement>) => {
     if (!window.confirm("Sigurado ka bang i-void ang record na ito? Pinal ito at hindi na maibabalik.")) e.preventDefault();
   };
-  const confirmBulkSubmit = (e: FormEvent<HTMLFormElement>) => {
-    if (
-      !window.confirm(
-        `Sigurado ka bang ipapadala ang lahat ng ${draftCount} draft na ${itemLabel}? Hindi na ito puwedeng i-edit ng Local Finance pagkatapos.`,
-      )
-    )
+  const confirmBulk = (e: FormEvent<HTMLFormElement>) => {
+    if (selected.length === 0) {
+      e.preventDefault();
+      return;
+    }
+    if (!window.confirm(`Ipapadala ang ${selected.length} ${itemLabel}? Hindi na ang mga ito puwedeng i-edit ng Local Finance pagkatapos.`))
       e.preventDefault();
   };
 
   return (
     <>
-      {bulkSubmitAll && draftCount > 0 && (
+      {submitMany && drafts.length > 0 && (
         <form
-          action={bulkSubmitAll.action}
-          onSubmit={confirmBulkSubmit}
-          className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-lg border border-emerald-200 bg-emerald-50/70 px-4 py-3"
+          action={submitMany.action}
+          onSubmit={confirmBulk}
+          className="mb-3 flex flex-wrap items-center gap-x-4 gap-y-2 rounded-lg bg-emerald-50/70 px-3 py-2.5"
         >
-          <p className="text-sm text-emerald-800">
-            <strong>{draftCount}</strong> draft na {itemLabel} ang naghihintay. Ipadala ang lahat nang sabay-sabay.
-          </p>
+          <label className="flex cursor-pointer items-center gap-2 text-sm font-medium text-gray-700">
+            <input
+              type="checkbox"
+              checked={allSelected}
+              onChange={toggleAll}
+              aria-label={`Piliin lahat ng draft na ${itemLabel}`}
+              className="h-4 w-4 accent-emerald-700"
+            />
+            Piliin lahat ({drafts.length})
+          </label>
+          <span className="text-xs text-gray-500">{selected.length} napili</span>
+          {selected.map((id) => (
+            <input key={id} type="hidden" name="ids" value={id} />
+          ))}
           <input type="hidden" name="path" value={path} />
-          {bulkLocalId && <input type="hidden" name="local_id" value={bulkLocalId} />}
-          <button type="submit" className={btnCls}>
-            {bulkSubmitAll.label}
+          <button type="submit" className={btnCls} disabled={selected.length === 0}>
+            Ipadala ang napili{selected.length > 0 ? ` (${selected.length})` : ""}
           </button>
         </form>
       )}
@@ -111,7 +129,16 @@ export function AmbaganList({
               />
             ) : (
               <div className="flex flex-wrap items-center justify-between gap-3">
-                <div>
+                {r.status === "draft" && (
+                  <input
+                    type="checkbox"
+                    checked={selected.includes(r.id)}
+                    onChange={() => toggleOne(r.id)}
+                    aria-label={`Piliin ang ${itemLabel} ni ${name}`}
+                    className="h-4 w-4 shrink-0 accent-emerald-700"
+                  />
+                )}
+                <div className="min-w-0 flex-1">
                   <p className="font-semibold text-gray-800">{name}</p>
                   <p className="text-sm text-gray-500">
                     {fmtPeso(r.amount)} · {L.monthPhrase} {monthLabel(r.period_month.slice(0, 7))} · Natanggap noong {fmtDatePH(r.date_received)}
