@@ -6,6 +6,8 @@ import { todayInTimezone } from "@/lib/finance";
 import {
   GIVING_BASE,
   GIVING_NOTES_MAX,
+  PASALAMAT_CUSTOM_TYPE,
+  PASALAMAT_TYPES,
   givingErrorMessage,
   parseGivingAmount,
   parseIsoDate,
@@ -43,7 +45,14 @@ async function timezoneOf(supabase: Awaited<ReturnType<typeof requireGiving>>["s
 }
 
 function readFields(fd: FormData): { error: string } | { type: string; amount: number; date: string; notes: string | null } {
-  const type = parsePasalamatType(str(fd, "type"));
+  const rawType = str(fd, "type");
+  // Kapag "ako ang maglalagay", ang tina-type na uri ang gagamitin; kapag preset, dapat nasa listahan.
+  const type =
+    rawType === PASALAMAT_CUSTOM_TYPE
+      ? parsePasalamatType(str(fd, "custom_type"))
+      : PASALAMAT_TYPES.includes(rawType)
+        ? rawType
+        : null;
   const amount = parseGivingAmount(str(fd, "amount"));
   const date = parseIsoDate(str(fd, "date"));
   const notes = strOrNull(fd, "notes");
@@ -107,6 +116,23 @@ export async function submitPasalamat(fd: FormData) {
   if (error || !count) back(path, "error", givingErrorMessage(error, "Hindi naipadala. Subukan ulit."));
   revalidatePath(GIVING_BASE, "layout");
   back(path, "ok", "Naipadala ang Pasalamat. Church-wide Finance na lang ang makapagbabago nito.");
+}
+
+// Ipadala lahat ng napili: mga draft lang ang naipapadala; ang database (RLS) pa rin ang huling harang.
+export async function submitManyPasalamat(fd: FormData) {
+  const ctx = await requireGiving();
+  const path = target(fd);
+  const ids = fd.getAll("ids").map((v) => String(v)).filter((v) => v !== "");
+  if (ids.length === 0) back(path, "error", "Walang napiling Pasalamat na ipapadala.");
+  if (ids.length > 500) back(path, "error", "Masyadong marami ang napili (500 lang ang pinakamarami).");
+  const { error, count } = await ctx.supabase
+    .from("pasalamat_records")
+    .update({ status: "submitted" }, { count: "exact" })
+    .in("id", ids)
+    .eq("status", "draft");
+  if (error || !count) back(path, "error", givingErrorMessage(error, "Hindi naipadala. Subukan ulit."));
+  revalidatePath(GIVING_BASE, "layout");
+  back(path, "ok", `Naipadala ang ${count} Pasalamat. Church-wide Finance na lang ang makapagbabago ng mga ito.`);
 }
 
 // Void: pinal. Local Finance: draft lang; church-wide Finance: draft o naipadala (ayon sa 011).
