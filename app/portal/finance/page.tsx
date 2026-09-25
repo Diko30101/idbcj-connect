@@ -1,8 +1,8 @@
 import Link from "next/link";
 import { requireFinanceSectionAccess, LOCALITIES, LOCALITY_LABEL, FINANCE_CATEGORIES, FINANCE_CATEGORY_LABEL, type FinanceCategory, type Locality } from "@/lib/portal";
 import { monthLabel, fmtPeso } from "@/lib/finance";
+import { getYearlyCollections, summarizeCollections } from "@/lib/finance-collections";
 import { Empty, Notice, PageHeader, Panel, btnCls, btnGhostCls, inputCls } from "@/components/portal/ui";
-import { YearlyLocalityGrid } from "@/components/portal/yearly-locality-grid";
 import { FinanceChart } from "@/components/portal/finance-chart";
 
 export default async function FinancePage({
@@ -17,20 +17,14 @@ export default async function FinancePage({
   const localityFilter =
     localityParam && LOCALITIES.includes(localityParam as Locality) ? (localityParam as Locality) : "";
 
-  const { data: yearRows } = await supabase
-    .from("financial_records")
-    .select("record_month, locality, category, amount")
-    .gte("record_month", `${year}-01-01`)
-    .lt("record_month", `${Number(year) + 1}-01-01`);
+  // Ang data ay galing LAMANG sa apat na pinagmumulan na in-encode ng
+  // Local Finance Ministry: Abuluyan, Ambagan, Tulong sa Aral, Pasalamat
+  // (mga naipadala na; hindi kasama ang draft at void). Walang manu-manong
+  // pag-encode dito — read-only ang ulat.
+  const collections = await getYearlyCollections(supabase, year);
 
   // Taunang buod: buwan x kategorya (kinukuha ang lahat ng lokal maliban kung may locality filter)
-  const yearGrid = new Map<string, number>(); // key = `${MM}_${category}`
-  for (const r of (yearRows ?? []) as any[]) {
-    if (localityFilter && r.locality !== localityFilter) continue;
-    const mm = (r.record_month as string).slice(5, 7);
-    const key = `${mm}_${r.category}`;
-    yearGrid.set(key, (yearGrid.get(key) ?? 0) + Number(r.amount));
-  }
+  const yearGrid = summarizeCollections(collections, localityFilter); // key = `${MM}_${category}`
   const yearInitialValues: Record<string, number> = Object.fromEntries(yearGrid);
   const months12 = Array.from({ length: 12 }, (_, i) => String(i + 1).padStart(2, "0"));
   const yearCatTotal = (category: FinanceCategory) =>
@@ -52,7 +46,7 @@ export default async function FinancePage({
           title={
             localityFilter
               ? `Taunang Buod · ${LOCALITY_LABEL[localityFilter]} · ${year}`
-              : `Taunang Buod (Spreadsheet View) · Lahat ng Lokal · ${year}`
+              : `Taunang Buod · Lahat ng Lokal · ${year}`
           }
         >
           <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
@@ -89,16 +83,7 @@ export default async function FinancePage({
             />
           </div>
 
-          {localityFilter ? (
-            <YearlyLocalityGrid
-              year={year}
-              locality={localityFilter}
-              localityLabel={LOCALITY_LABEL[localityFilter]}
-              categories={FINANCE_CATEGORIES}
-              categoryLabel={FINANCE_CATEGORY_LABEL}
-              initial={yearInitialValues}
-            />
-          ) : yearGrid.size === 0 ? (
+          {yearGrid.size === 0 ? (
             <Empty>Wala pang naitatalang koleksyon para sa {year}.</Empty>
           ) : (
             <div className="overflow-x-auto">
