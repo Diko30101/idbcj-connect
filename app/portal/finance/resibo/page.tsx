@@ -131,7 +131,32 @@ export default async function ResiboPage({
                 {summary.ambagan.length === 0 ? (
                   <p className="mt-2 text-sm text-gray-500">(walang naipadalang Ambagan)</p>
                 ) : (
-                  <table className="mt-2 w-full border-collapse text-sm">              <section>
+                  <table className="mt-2 w-full border-collapse text-sm">
+                    <thead>
+                      <tr>
+                        <th className={th}>Kaanib</th>
+                        <th className={th}>Petsa</th>
+                        <th className={thRight}>Halaga</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {summary.ambagan.map((r, i) => (
+                        <tr key={`${r.memberId}-${i}`}>
+                          <td className={td}>{r.memberName}</td>
+                          <td className={td}>{r.date}</td>
+                          <td className={tdRight}>{fmtPeso(r.amount)}</td>
+                        </tr>
+                      ))}
+                      <tr>
+                        <td className={totalTd} colSpan={2}>Kabuuan ng Ambagan</td>
+                        <td className={totalTdRight}>{fmtPeso(summary.ambaganTotal)}</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                )}
+              </section>
+
+              <section>
                 <h3 className="font-semibold text-gray-900">Tulong sa Aral</h3>
                 {summary.tulong.length === 0 ? (
                   <p className="mt-2 text-sm text-gray-500">(walang naipadalang Tulong sa Aral)</p>
@@ -222,27 +247,3 @@ export default async function ResiboPage({
     </>
   );
 }
-
-                    <thead>
-                      <tr>
-                        <th className={th}>Kaanib</th>
-                        <th className={th}>Petsa</th>
-                        <th className={thRight}>Halaga</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {summary.ambagan.map((r, i) => (
-                        <tr key={`${r.memberId}-${i}`}>
-                          <td className={td}>{r.memberName}</td>
-                          <td className={td}>{r.date}</td>
-                          <td className={tdRight}>{fmtPeso(r.amount)}</td>
-                        </tr>
-                      ))}
-                      <tr>
-                        <td className={totalTd} colSpan={2}>Kabuuan ng Ambagan</td>
-                        <td className={totalTdRight}>{fmtPeso(summary.ambaganTotal)}</td>
-                      </tr>
-                    </tbody>
-                  </table>
-                )}
-              </section>
