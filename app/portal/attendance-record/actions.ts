@@ -2,17 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { back, fmtDate, getRosterContext, str } from "@/lib/portal";
-
-export const ATTENDANCE_RECORD_BASE = "/portal/attendance-record";
-
-// Kapareho ng finance_service_type enum sa database
-export const SERVICE_TYPES = [
-  "Linggo",
-  "New Year Thanksgiving",
-  "Anniversary Thanksgiving",
-  "Extra Thanksgiving",
-  "Private Thanksgiving",
-] as const;
+import { ATTENDANCE_RECORD_BASE, SERVICE_TYPES } from "./constants";
 
 // I-save ang pagdalo ng isang pagkakatipon (local + petsa + uri).
 // Strategy: burahin ang dating tala ng pagtitipong ito, tapos ipasok
