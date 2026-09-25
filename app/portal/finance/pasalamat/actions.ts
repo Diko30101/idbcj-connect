@@ -134,17 +134,3 @@ export async function submitManyPasalamat(fd: FormData) {
   revalidatePath(GIVING_BASE, "layout");
   back(path, "ok", `Naipadala ang ${count} Pasalamat. Church-wide Finance na lang ang makapagbabago ng mga ito.`);
 }
-
-// Void: pinal. Local Finance: draft lang; church-wide Finance: draft o naipadala (ayon sa 011).
-export async function voidPasalamat(fd: FormData) {
-  const ctx = await requireGiving();
-  const path = target(fd);
-  const { error, count } = await ctx.supabase
-    .from("pasalamat_records")
-    .update({ status: "void" }, { count: "exact" })
-    .eq("id", str(fd, "id"))
-    .in("status", ["draft", "submitted"]);
-  if (error || !count) back(path, "error", givingErrorMessage(error, "Hindi na-void. Baka wala kang pahintulot."));
-  revalidatePath(GIVING_BASE, "layout");
-  back(path, "ok", "Na-void ang Pasalamat. Pinal na ito.");
-}
