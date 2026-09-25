@@ -105,18 +105,26 @@ function SidebarLink({
 
 // Expandable na subgroup (hal. Finance → Financial Management, Audit Report, Expenses).
 // Ang label mismo ay link sa parent href; ang chevron ang nagbubukas ng mga anak.
+// Recursive na active check -- kasama ang mga nested na submenu (hal. Finance Record
+// sa loob ng Local Ministry).
+function hasActiveDescendant(pathname: string, items: NavItem[]): boolean {
+  return items.some((c) => pathname === c.href || hasActiveDescendant(pathname, c.children ?? []));
+}
+
 function SidebarGroup({
   item,
   pathname,
   onNavigate,
+  depth = 0,
 }: {
   item: NavItem;
   pathname: string;
   onNavigate: () => void;
+  depth?: number;
 }) {
   const Icon = ICONS[item.href] ?? LayoutDashboard;
   const children = item.children ?? [];
-  const childActive = children.some((c) => pathname === c.href);
+  const childActive = hasActiveDescendant(pathname, children);
   const sectionActive = isActive(pathname, item.href) || childActive;
   const [open, setOpen] = useState(sectionActive);
 
@@ -157,8 +165,15 @@ function SidebarGroup({
         </button>
       </div>
       {open && (
-        <ul className="mb-1 ml-5 mt-1 space-y-0.5 border-l border-white/15 pl-3">
+        <ul className={`mb-1 mt-1 space-y-0.5 border-l border-white/15 pl-3 ${depth === 0 ? "ml-5" : "ml-2"}`}>
           {children.map((child) => {
+            if (child.children && child.children.length > 0) {
+              return (
+                <li key={`${child.label}-${child.href}`}>
+                  <SidebarGroup item={child} pathname={pathname} onNavigate={onNavigate} depth={depth + 1} />
+                </li>
+              );
+            }
             const active = pathname === child.href;
             return (
               <li key={child.href}>
