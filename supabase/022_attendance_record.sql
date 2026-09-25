@@ -101,6 +101,14 @@ create policy attendance_records_insert_roster on public.attendance_records for 
 
 -- Re-save ng isang pagkakatipon = delete + insert ng parehong
 -- local/petsa/uri. Draft lang ang pwedeng burahin.
+--
+-- Linisin din ang mga lumang policy names mula sa unang version ng 022:
+-- ang mga iyon ay walang draft-only na limitasyon (pwedeng mag-delete
+-- kahit submitted), kaya pinalitan ng mas mahigpit na nasa ibaba.
+drop policy if exists attendance_records_insert on public.attendance_records;
+drop policy if exists attendance_records_update_draft_only on public.attendance_records;
+drop policy if exists attendance_records_delete on public.attendance_records;
+
 drop policy if exists attendance_records_delete_draft on public.attendance_records;
 create policy attendance_records_delete_draft on public.attendance_records for delete to authenticated
   using (
