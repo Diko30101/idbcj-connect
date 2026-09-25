@@ -4,7 +4,7 @@ import { sendResiboToAdmin } from "./actions";
 import { Empty, Notice, PageHeader, Panel, btnCls, btnGhostCls } from "@/components/portal/ui";
 import { isValidMonth, nextMonth, prevMonth } from "@/lib/abuluyan";
 import { currentMonthPH, fmtPeso } from "@/lib/finance";
-import { PASALAMAT_TYPE_LABEL } from "@/lib/giving";
+import { pasalamatTypeLabel } from "@/lib/giving";
 import { RESIBO_BASE } from "@/lib/resibo";
 import { getResiboSummary } from "./summary";
 import { PrintButton } from "./print-button";
@@ -206,7 +206,7 @@ export default async function ResiboPage({
                             {r.memberName}
                             {r.notes && <span className="block text-xs text-gray-500">{r.notes}</span>}
                           </td>
-                          <td className={td}>{PASALAMAT_TYPE_LABEL[r.type]}</td>
+                          <td className={td}>{pasalamatTypeLabel(r.type)}</td>
                           <td className={td}>{r.date}</td>
                           <td className={tdRight}>{fmtPeso(r.amount)}</td>
                         </tr>
