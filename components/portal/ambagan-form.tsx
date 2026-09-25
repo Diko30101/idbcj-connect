@@ -41,7 +41,7 @@ export function AmbaganForm({
         {edit ? (
           <p className="text-sm text-gray-700">
             Kaanib: <span className="font-semibold">{edit.memberName}</span>{" "}
-            <span className="text-xs text-gray-500">(para magpalit ng kaanib, i-void ang record at gumawa ng bago)</span>
+            <span className="text-xs text-gray-500">(para magpalit ng kaanib, gumawa ng bagong record)</span>
           </p>
         ) : (
           search && <MemberPicker search={search} />

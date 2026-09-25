@@ -2,7 +2,7 @@
 
 import { useEffect, useState, type FormEvent } from "react";
 import { AmbaganForm } from "./ambagan-form";
-import { btnCls, btnDangerCls, btnGhostCls } from "./form-bits";
+import { btnCls, btnGhostCls } from "./form-bits";
 import { updateAmbagan } from "@/app/portal/finance/ambagan/actions";
 import { fmtPeso, monthLabel } from "@/lib/finance";
 import { GIVING_STATUS_LABEL, type AmbaganRecord, type GivingStatus } from "@/lib/giving";
@@ -43,7 +43,7 @@ export function AmbaganList({
   timezone: string;
   path: string;
   mode: "local" | "church";
-  actions?: { update: ActionFn; submit?: ActionFn; void?: ActionFn };
+  actions?: { update: ActionFn; submit?: ActionFn };
   labels?: { monthPhrase: string; empty: string; periodLabel?: string };
   submitMany?: { action: ActionFn };
   bulkItemLabel?: string;
@@ -69,9 +69,6 @@ export function AmbaganList({
 
   const confirmSubmit = (e: FormEvent<HTMLFormElement>) => {
     if (!window.confirm("Sigurado ka bang ipapadala? Hindi na ito puwedeng i-edit ng Local Finance pagkatapos.")) e.preventDefault();
-  };
-  const confirmVoid = (e: FormEvent<HTMLFormElement>) => {
-    if (!window.confirm("Sigurado ka bang i-void ang record na ito? Pinal ito at hindi na maibabalik.")) e.preventDefault();
   };
   const confirmBulk = (e: FormEvent<HTMLFormElement>) => {
     if (selected.length === 0) {
@@ -115,7 +112,6 @@ export function AmbaganList({
         const name = names[r.member_id] ?? "(hindi mabasa ang pangalan)";
         const canEdit = r.status === "draft" || (r.status === "submitted" && mode === "church");
         const canSubmit = r.status === "draft" && !!act.submit;
-        const canVoid = (r.status === "draft" || (r.status === "submitted" && mode === "church")) && !!act.void;
         return (
           <div key={r.id} className="py-4">
             {editingId === r.id ? (
@@ -158,15 +154,6 @@ export function AmbaganList({
                       <input type="hidden" name="id" value={r.id} />
                       <button type="submit" className={btnCls}>
                         Ipadala
-                      </button>
-                    </form>
-                  )}
-                  {canVoid && act.void && (
-                    <form action={act.void} onSubmit={confirmVoid}>
-                      <input type="hidden" name="path" value={path} />
-                      <input type="hidden" name="id" value={r.id} />
-                      <button type="submit" className={btnDangerCls}>
-                        I-void
                       </button>
                     </form>
                   )}

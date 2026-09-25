@@ -2,7 +2,6 @@
 
 import { useEffect, useState, type FormEvent } from "react";
 import { AbuluyanForm } from "./abuluyan-form";
-import { AbuluyanVoidForm } from "./abuluyan-void-form";
 import { updateAbuluyanDraft, submitAbuluyan, submitManyAbuluyan, deleteAbuluyanDraft, createAbuluyan } from "@/app/portal/finance/abuluyan/actions";
 import { btnCls, btnDangerCls, btnGhostCls } from "./form-bits";
 import { fmtPeso } from "@/lib/finance";
@@ -33,7 +32,7 @@ function StatusPill({ status }: { status: AbuluyanStatus }) {
 }
 
 // mode "local": Local Finance (draft nila lang ang mae-edit/mabubura; ang kapalit na draft ay read-only).
-// mode "church": church-wide Finance (edit/submit/bura ng draft, i-void ang naipadala, gumawa ng kapalit sa void).
+// mode "church": church-wide Finance (edit/submit/bura ng draft).
 export function AbuluyanList({
   records,
   timezone,
@@ -186,9 +185,6 @@ export function AbuluyanList({
                 </div>
                 {r.status === "draft" && isReplacement && mode === "local" && (
                   <p className="text-sm text-gray-500">Church-wide Finance ang nag-e-edit at nagpapadala ng kapalit na record.</p>
-                )}
-                {mode === "church" && r.status === "submitted" && (
-                  <AbuluyanVoidForm path={path} localId={r.local_id} serviceDate={r.service_date} />
                 )}
                 {r.status === "void" && !activeAt(r) && (
                   <div>
