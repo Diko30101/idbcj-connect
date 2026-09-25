@@ -43,8 +43,8 @@ export default async function ResiboPage({
   const thRight = "border border-gray-400 bg-emerald-700 px-2 py-1.5 text-right font-semibold text-white";
   const td = "border border-gray-400 px-2 py-1.5 text-gray-800";
   const tdRight = "border border-gray-400 px-2 py-1.5 text-right tabular-nums text-gray-800";
-  const totalTd = "border border-gray-400 bg-emerald-50 px-2 py-1.5 font-semibold text-gray-900";
-  const totalTdRight = "border border-gray-400 bg-emerald-50 px-2 py-1.5 text-right font-semibold tabular-nums text-gray-900";
+  const totalTd = "border border-gray-400 bg-emerald-700 px-2 py-1.5 font-bold text-white [print-color-adjust:exact]";
+  const totalTdRight = "border border-gray-400 bg-emerald-700 px-2 py-1.5 text-right font-bold tabular-nums text-white [print-color-adjust:exact]";
 
   return (
     <>
@@ -221,7 +221,7 @@ export default async function ResiboPage({
                 )}
               </section>
 
-              <div className="flex items-center justify-between border-t-2 border-gray-300 pt-3 text-base font-bold text-gray-900">
+              <div className="flex items-center justify-between rounded bg-emerald-800 px-3 py-2.5 text-base font-bold text-white [print-color-adjust:exact]">
                 <span>Pangkalahatang kabuuan</span>
                 <span className="tabular-nums">{fmtPeso(summary.grandTotal)}</span>
               </div>
