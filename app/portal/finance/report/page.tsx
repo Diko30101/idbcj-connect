@@ -1,5 +1,6 @@
 import { requireFinanceSectionAccess } from "@/lib/portal";
 import { monthLabel, fmtPeso } from "@/lib/finance";
+import { getYearlyCollections } from "@/lib/finance-collections";
 import { Empty, Notice, PageHeader, Panel, btnGhostCls, inputCls } from "@/components/portal/ui";
 import { FinanceChart } from "@/components/portal/finance-chart";
 
@@ -19,12 +20,11 @@ export default async function FinanceAuditReportPage({
 
   const year = yearParam && /^\d{4}$/.test(yearParam) ? yearParam : String(new Date().getFullYear());
 
-  const [incomeRes, expenseRes] = await Promise.all([
-    supabase
-      .from("financial_records")
-      .select("record_month, amount")
-      .gte("record_month", `${year}-01-01`)
-      .lt("record_month", `${Number(year) + 1}-01-01`),
+  // Ang "pumasok" ay galing LAMANG sa apat na pinagmumulan na in-encode ng
+  // Local Finance Ministry: Abuluyan, Ambagan, Tulong sa Aral, Pasalamat
+  // (mga naipadala na; hindi kasama ang draft at void).
+  const [collections, expenseRes] = await Promise.all([
+    getYearlyCollections(supabase, year),
     supabase
       .from("expense_records")
       .select("expense_month, amount")
@@ -35,9 +35,8 @@ export default async function FinanceAuditReportPage({
   const months12 = Array.from({ length: 12 }, (_, i) => String(i + 1).padStart(2, "0"));
 
   const incomeByMonth = new Map<string, number>();
-  for (const r of (incomeRes.data ?? []) as any[]) {
-    const mm = (r.record_month as string).slice(5, 7);
-    incomeByMonth.set(mm, (incomeByMonth.get(mm) ?? 0) + Number(r.amount));
+  for (const r of collections) {
+    incomeByMonth.set(r.month, (incomeByMonth.get(r.month) ?? 0) + r.amount);
   }
   const expenseByMonth = new Map<string, number>();
   for (const r of (expenseRes.data ?? []) as any[]) {
@@ -69,7 +68,7 @@ export default async function FinanceAuditReportPage({
     <>
       <PageHeader
         title="Audit Report"
-        subtitle="Buwanang ulat ng kabuuang pumasok (koleksyon, lahat ng lokal) laban sa kabuuang lumabas (expenses) para sa buong simbahan."
+        subtitle="Buwanang ulat ng kabuuang pumasok (Abuluyan, Ambagan, Tulong sa Aral, Pasalamat — lahat ng lokal, mga naipadala na) laban sa kabuuang lumabas (expenses) para sa buong simbahan."
       />
       <Notice ok={ok} error={error} />
 
