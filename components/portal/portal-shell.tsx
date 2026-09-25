@@ -71,6 +71,7 @@ const ICONS: Record<string, LucideIcon> = {
   "/portal/finance/tulong": HandHelping,
   "/portal/finance/pasalamat": Gift,
   "/portal/roster": ClipboardList,
+  "/portal/attendance-record": ClipboardCheck,
   "/portal/audit": ScrollText,
 };
 
