@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { getAbuluyanContext, denyAbuluyan } from "@/lib/portal";
-import { createTulong, updateTulong, submitAllTulong, searchMembers } from "./actions";
+import { createTulong, updateTulong, submitTulong, submitManyTulong, searchMembers } from "./actions";
 import { Notice, PageHeader, Panel } from "@/components/portal/ui";
 import { AmbaganForm } from "@/components/portal/ambagan-form";
 import { AmbaganList } from "@/components/portal/ambagan-list";
@@ -99,8 +99,8 @@ export default async function TulongPage({
                 mode={ctx.isChurch ? "church" : "local"}
                 actions={{ update: updateTulong }}
                 labels={{ monthPhrase: "Tulong para sa", empty: "Wala pang naitatalang Tulong sa Klase Ministeryal.", periodLabel: "Buwan ng tulong" }}
-                bulkSubmitAll={{ action: submitAllTulong, label: "Ipadala lahat" }}
-                bulkLocalId={ctx.isChurch ? selected.id : undefined}
+                actions={{ update: updateTulong, submit: submitTulong }}
+                submitMany={{ action: submitManyTulong }}
                 bulkItemLabel="Tulong sa Klase Ministeryal"
               />
             </Panel>
