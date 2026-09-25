@@ -44,7 +44,7 @@ export function PasalamatForm({
         {edit ? (
           <p className="text-sm text-gray-700">
             Kaanib: <span className="font-semibold">{edit.memberName}</span>{" "}
-            <span className="text-xs text-gray-500">(para magpalit ng kaanib, i-void ang record at gumawa ng bago)</span>
+            <span className="text-xs text-gray-500">(hindi na puwedeng palitan ang kaanib pagkatapos ma-save)</span>
           </p>
         ) : (
           search && <MemberPicker search={search} />
