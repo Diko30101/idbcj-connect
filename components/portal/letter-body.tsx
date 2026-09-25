@@ -3,7 +3,14 @@
 // Lingguhang Resibo. Ang ibang linya ay plain text pa rin.
 const TABLE_LINE = /^\|.*\|$/;
 
-type Block = { kind: "text"; lines: string[] } | { kind: "table"; rows: string[][] };
+type Block =
+  | { kind: "text"; lines: string[] }
+  | { kind: "table"; rows: string[][] }
+  | { kind: "total"; line: string; grand: boolean };
+
+// Mga linya ng kabuuan sa resibo (hal. "Kabuuan ng Ambagan: ₱...",
+// "PANGKALAHATANG KABUUAN: ₱...").
+const TOTAL_LINE = /^(Kabuuan ng|PANGKALAHATANG KABUUAN)/;
 
 function parseBlocks(body: string): Block[] {
   const blocks: Block[] = [];
@@ -26,6 +33,10 @@ function parseBlocks(body: string): Block[] {
     if (TABLE_LINE.test(line)) {
       flushText();
       rows.push(line.split("|").slice(1, -1).map((c) => c.trim()));
+    } else if (TOTAL_LINE.test(line)) {
+      flushText();
+      flushTable();
+      blocks.push({ kind: "total", line, grand: line.startsWith("PANGKALAHATANG") });
     } else {
       flushTable();
       text.push(rawLine);
@@ -78,15 +89,27 @@ export function LetterBody({ body }: { body: string }) {
   const blocks = parseBlocks(body);
   return (
     <div className="text-sm text-gray-700">
-      {blocks.map((b, i) =>
-        b.kind === "table" ? (
-          <ResiboTable key={i} rows={b.rows} />
-        ) : (
+      {blocks.map((b, i) => {
+        if (b.kind === "table") return <ResiboTable key={i} rows={b.rows} />;
+        if (b.kind === "total")
+          return (
+            <p
+              key={i}
+              className={
+                b.grand
+                  ? "my-2 rounded bg-emerald-800 px-3 py-2 text-base font-bold text-white [print-color-adjust:exact]"
+                  : "my-1 rounded bg-emerald-700 px-2 py-1.5 font-bold text-white [print-color-adjust:exact]"
+              }
+            >
+              {b.line}
+            </p>
+          );
+        return (
           <p key={i} className="whitespace-pre-line">
             {b.lines.join("\n")}
           </p>
-        ),
-      )}
+        );
+      })}
     </div>
   );
 }
