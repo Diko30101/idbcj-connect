@@ -2,8 +2,8 @@
 
 import { useEffect, useState, type FormEvent } from "react";
 import { PasalamatForm } from "./pasalamat-form";
-import { btnCls, btnDangerCls, btnGhostCls } from "./form-bits";
-import { updatePasalamat, submitPasalamat, submitManyPasalamat, voidPasalamat } from "@/app/portal/finance/pasalamat/actions";
+import { btnCls, btnGhostCls } from "./form-bits";
+import { updatePasalamat, submitPasalamat, submitManyPasalamat } from "@/app/portal/finance/pasalamat/actions";
 import { fmtPeso } from "@/lib/finance";
 import { GIVING_STATUS_LABEL, pasalamatTypeLabel, type GivingStatus, type PasalamatRecord } from "@/lib/giving";
 
@@ -21,8 +21,8 @@ function StatusPill({ status }: { status: GivingStatus }) {
   return <span className={`inline-block rounded-full border px-2.5 py-0.5 text-xs font-semibold ${cls}`}>{GIVING_STATUS_LABEL[status]}</span>;
 }
 
-// mode "local": Local Finance (draft lang ang mae-edit/mapapadala/mave-void nila).
-// mode "church": church-wide Finance (maaari ring mag-edit ng naipadala at mag-void nito; ayon sa 011).
+// mode "local": Local Finance (draft lang ang mae-edit/mapapadala nila).
+// mode "church": church-wide Finance (maaari ring mag-edit ng naipadala).
 export function PasalamatList({
   records,
   names,
@@ -62,10 +62,8 @@ export function PasalamatList({
     }
     if (!window.confirm(`Ipapadala ang ${selected.length} Pasalamat? Hindi na ang mga ito puwedeng i-edit ng Local Finance pagkatapos.`))
       e.preventDefault();
-  };
-  const confirmVoid = (e: FormEvent<HTMLFormElement>) => {
-    if (!window.confirm("Sigurado ka bang i-void ang record na ito? Pinal ito at hindi na maibabalik.")) e.preventDefault();
-  };
+  
+};
 
   return (
     <>
@@ -100,7 +98,7 @@ export function PasalamatList({
         const name = names[r.member_id] ?? "(hindi mabasa ang pangalan)";
         const canEdit = r.status === "draft" || (r.status === "submitted" && mode === "church");
         const canSubmit = r.status === "draft";
-        const canVoid = r.status === "draft" || (r.status === "submitted" && mode === "church");
+      
         return (
           <div key={r.id} className="py-4">
             {editingId === r.id ? (
@@ -144,16 +142,8 @@ export function PasalamatList({
                         Ipadala
                       </button>
                     </form>
-                  )}
-                  {canVoid && (
-                    <form action={voidPasalamat} onSubmit={confirmVoid}>
-                      <input type="hidden" name="path" value={path} />
-                      <input type="hidden" name="id" value={r.id} />
-                      <button type="submit" className={btnDangerCls}>
-                        I-void
-                      </button>
-                    </form>
-                  )}
+                })
+              
                 </div>
               </div>
             )}
