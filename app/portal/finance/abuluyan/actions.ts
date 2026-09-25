@@ -90,6 +90,39 @@ export async function submitAbuluyan(fd: FormData) {
   back(path, "ok", "Naipadala ang Abuluyan record. Naka-lock na ito.");
 }
 
+// Burahin ang draft. Local Finance: sarili nilang local lang at hindi ang kapalit na record;
+// church-wide Finance: anumang draft. Ang naipadala at na-void ay hindi puwedeng burahin;
+// ang database (RLS, 021) ang huling harang.
+export async function deleteAbuluyanDraft(fd: FormData) {
+  const ctx = await getAbuluyanContext();
+  if (!ctx.isChurch && !ctx.local) denyAbuluyan();
+  const path = target(fd);
+  const id = str(fd, "id");
+  if (id === "") back(path, "error", "Hindi nabura. Subukan ulit.");
+
+  const { data: rec } = await ctx.supabase
+    .from("abuluyan_totals")
+    .select("id, local_id, status, replaces_id")
+    .eq("id", id)
+    .maybeSingle();
+  const row = rec as { id: string; local_id: string; status: string; replaces_id: string | null } | null;
+  if (!row || row.status !== "draft") back(path, "error", "Hindi nabura. Baka naipadala na ito o wala kang pahintulot.");
+  if (!ctx.isChurch) {
+    if (row.local_id !== ctx.local!.id) back(path, "error", "Hindi nabura. Wala kang pahintulot.");
+    if (row.replaces_id !== null)
+      back(path, "error", "Hindi puwedeng burahin ng Local Finance ang kapalit na record.");
+  }
+
+  const { error, count } = await ctx.supabase
+    .from("abuluyan_totals")
+    .delete({ count: "exact" })
+    .eq("id", id)
+    .eq("status", "draft");
+  if (error || !count) back(path, "error", abuluyanErrorMessage(error, "Hindi nabura. Subukan ulit."));
+  revalidatePath(ABULUYAN_BASE, "layout");
+  back(path, "ok", "Nabura ang draft na Abuluyan record.");
+}
+
 // Ang TANGING paraan ng pag-void: void_abuluyan(local_id, service_date, reason). Admin o church-wide Finance lang (sinusuri rin ng database).
 export async function voidAbuluyan(fd: FormData) {
   const ctx = await getAbuluyanContext();
