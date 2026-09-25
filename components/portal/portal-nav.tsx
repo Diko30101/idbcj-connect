@@ -11,6 +11,126 @@ function isActive(pathname: string, href: string) {
   return href === "/portal" ? pathname === "/portal" : pathname.startsWith(href);
 }
 
+// Recursive na active check -- kasama ang mga nested na submenu (hal. Finance Record
+// sa loob ng Local Ministry), para umilaw ang parent pill kapag nasa loob ang user.
+function isActiveDeep(pathname: string, item: NavItem): boolean {
+  if (isActive(pathname, item.href)) return true;
+  return (item.children ?? []).some((c) => isActiveDeep(pathname, c));
+}
+
+// Nested na submenu sa loob ng dropdown (hal. Finance Record): bumubukas
+// pakanan bilang flyout. Hover sa desktop, tap sa touch devices.
+function NavSubmenuRow({ item, onNavigate }: { item: NavItem; onNavigate: () => void }) {
+  const pathname = usePathname();
+  const [open, setOpen] = useState(false);
+  const [pos, setPos] = useState({ top: 0, left: 0 });
+  const rowRef = useRef<HTMLLIElement>(null);
+  const closeTimer = useRef<number | null>(null);
+
+  const subActive = (item.children ?? []).some((c) => isActiveDeep(pathname, c));
+
+  function place() {
+    const rect = rowRef.current?.getBoundingClientRect();
+    if (!rect) return;
+    const width = 200;
+    // Iwasang lumampas sa kanan ng viewport: buksan pakaliwa kung kinakailangan.
+    const left = rect.right + 4 + width > window.innerWidth ? Math.max(8, rect.left - width - 4) : rect.right + 4;
+    setPos({ top: Math.max(8, rect.top - 4), left });
+  }
+  function openMenu() {
+    place();
+    setOpen(true);
+  }
+  function cancelClose() {
+    if (closeTimer.current !== null) {
+      window.clearTimeout(closeTimer.current);
+      closeTimer.current = null;
+    }
+  }
+  function scheduleClose() {
+    cancelClose();
+    closeTimer.current = window.setTimeout(() => setOpen(false), 150);
+  }
+  function toggle() {
+    if (open) {
+      cancelClose();
+      setOpen(false);
+    } else {
+      openMenu();
+    }
+  }
+
+  useEffect(() => cancelClose, []);
+  useEffect(() => {
+    if (!open) return;
+    function onEscape(e: KeyboardEvent) {
+      if (e.key === "Escape") setOpen(false);
+    }
+    document.addEventListener("keydown", onEscape);
+    return () => document.removeEventListener("keydown", onEscape);
+  }, [open ]);
+
+  return (
+    <li ref={rowRef} onMouseEnter={() => { cancelClose(); openMenu(); }} onMouseLeave={scheduleClose}>
+      <button
+        type="button"
+        onClick={toggle}
+        aria-expanded={open}
+        aria-haspopup="true"
+        className={`flex w-full items-center justify-between gap-2 px-4 py-2 text-sm transition ${
+          subActive || open
+            ? "bg-emerald-50 font-medium text-emerald-800"
+            : "text-gray-600 hover:bg-emerald-50 hover:text-emerald-800"
+        }`}
+      >
+        <span>{item.label}</span>
+        <svg
+          className="h-3.5 w-3.5 shrink-0"
+          viewBox="0 0 20 20"
+          fill="currentColor"
+          aria-hidden="true"
+        >
+          <path
+            fillRule="evenodd"
+            d="M7.21 14.77a.75.75 0 01.02-1.06L11.17 10 7.23 6.29a.75.75 0 111.04-1.08l4.5 4.25a.75.75 0 010 1.08l-4.5 4.25a.75.75 0 01-1.06-.02z"
+            clipRule="evenodd"
+          />
+        </svg>
+      </button>
+      {open
+        ? createPortal(
+            <ul
+              onMouseEnter={cancelClose}
+              onMouseLeave={scheduleClose}
+              style={{ position: "fixed", top: pos.top, left: pos.left }}
+              className="z-50 min-w-[190px] rounded-lg border border-gray-200 bg-white py-1 shadow-lg"
+            >
+              {(item.children ?? []).map((child) => {
+                const childActive = isActive(pathname, child.href);
+                return (
+                  <li key={child.href}>
+                    <Link
+                      href={child.href}
+                      onClick={onNavigate}
+                      className={`block px-4 py-2 text-sm ${
+                        childActive
+                          ? "bg-emerald-50 font-medium text-emerald-800"
+                          : "text-gray-600 hover:bg-emerald-50 hover:text-emerald-800"
+                      }`}
+                    >
+                      {child.label}
+                    </Link>
+                  </li>
+                );
+              })}
+            </ul>,
+            document.body,
+          )
+        : null}
+    </li>
+  );
+}
+
 function NavDropdown({ item, active }: { item: NavItem; active: boolean }) {
   const [open, setOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
@@ -96,6 +216,15 @@ function NavDropdown({ item, active }: { item: NavItem; active: boolean }) {
               className="z-50 min-w-[200px] rounded-lg border border-gray-200 bg-white py-1 shadow-lg"
             >
               {item.children!.map((child) => {
+                if (child.children && child.children.length > 0) {
+                  return (
+                    <NavSubmenuRow
+                      key={`${child.label}-${child.href}`}
+                      item={child}
+                      onNavigate={() => setOpen(false)}
+                    />
+                  );
+                }
                 const childActive = pathname === child.href;
                 return (
                   <li key={child.href}>
@@ -133,7 +262,7 @@ export function PortalNav({ items }: { items: NavItem[] }) {
             // ay may iisang shared na URL prefix gaya ng Finance.
             const active =
               item.children && item.children.length > 0
-                ? item.children.some((c) => isActive(pathname, c.href))
+                ? item.children.some((c) => isActiveDeep(pathname, c))
                 : isActive(pathname, item.href);
             if (item.children && item.children.length > 0) {
               return <NavDropdown key={item.href} item={item} active={active} />;
