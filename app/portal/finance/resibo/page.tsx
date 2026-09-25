@@ -39,11 +39,12 @@ export default async function ResiboPage({
   const pagePath = (b: string, localId: string) => `${RESIBO_BASE}?buwan=${b}&local=${localId}`;
   const summary = await getResiboSummary(ctx.supabase, selected.id, selected.name, buwan);
 
-  const th = "py-1 pr-4 font-medium";
-  const thRight = "py-1 text-right font-medium";
-  const td = "py-1.5 pr-4 text-gray-700";
-  const tdRight = "py-1.5 text-right tabular-nums text-gray-700";
-  const totalRow = "border-t-2 border-gray-200 font-semibold text-gray-900";
+  const th = "border border-gray-400 bg-emerald-700 px-2 py-1.5 text-left font-semibold text-white";
+  const thRight = "border border-gray-400 bg-emerald-700 px-2 py-1.5 text-right font-semibold text-white";
+  const td = "border border-gray-400 px-2 py-1.5 text-gray-800";
+  const tdRight = "border border-gray-400 px-2 py-1.5 text-right tabular-nums text-gray-800";
+  const totalTd = "border border-gray-400 bg-emerald-50 px-2 py-1.5 font-semibold text-gray-900";
+  const totalTdRight = "border border-gray-400 bg-emerald-50 px-2 py-1.5 text-right font-semibold tabular-nums text-gray-900";
 
   return (
     <>
@@ -102,23 +103,23 @@ export default async function ResiboPage({
                 {summary.abuluyan.length === 0 ? (
                   <p className="mt-2 text-sm text-gray-500">(walang naipadalang Abuluyan)</p>
                 ) : (
-                  <table className="mt-2 w-full text-sm">
+                  <table className="mt-2 w-full border-collapse text-sm">
                     <thead>
-                      <tr className="text-left text-xs uppercase tracking-wide text-gray-500">
+                      <tr>
                         <th className={th}>Linggo</th>
                         <th className={thRight}>Halaga</th>
                       </tr>
                     </thead>
                     <tbody>
                       {summary.abuluyan.map((w) => (
-                        <tr key={w.serviceDate} className="border-t border-gray-100">
+                        <tr key={w.serviceDate}>
                           <td className={td}>{w.serviceDate}</td>
                           <td className={tdRight}>{fmtPeso(w.amount)}</td>
                         </tr>
                       ))}
-                      <tr className={totalRow}>
-                        <td className="py-1.5 pr-4">Kabuuan ng Abuluyan</td>
-                        <td className="py-1.5 text-right tabular-nums">{fmtPeso(summary.abuluyanTotal)}</td>
+                      <tr>
+                        <td className={totalTd}>Kabuuan ng Abuluyan</td>
+                        <td className={totalTdRight}>{fmtPeso(summary.abuluyanTotal)}</td>
                       </tr>
                     </tbody>
                   </table>
@@ -130,39 +131,14 @@ export default async function ResiboPage({
                 {summary.ambagan.length === 0 ? (
                   <p className="mt-2 text-sm text-gray-500">(walang naipadalang Ambagan)</p>
                 ) : (
-                  <table className="mt-2 w-full text-sm">
-                    <thead>
-                      <tr className="text-left text-xs uppercase tracking-wide text-gray-500">
-                        <th className={th}>Kaanib</th>
-                        <th className={th}>Petsa</th>
-                        <th className={thRight}>Halaga</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {summary.ambagan.map((r, i) => (
-                        <tr key={`${r.memberId}-${i}`} className="border-t border-gray-100">
-                          <td className={td}>{r.memberName}</td>
-                          <td className={td}>{r.date}</td>
-                          <td className={tdRight}>{fmtPeso(r.amount)}</td>
-                        </tr>
-                      ))}
-                      <tr className={totalRow}>
-                        <td className="py-1.5 pr-4" colSpan={2}>Kabuuan ng Ambagan</td>
-                        <td className="py-1.5 text-right tabular-nums">{fmtPeso(summary.ambaganTotal)}</td>
-                      </tr>
-                    </tbody>
-                  </table>
-                )}
-              </section>
-
-              <section>
+                  <table className="mt-2 w-full border-collapse text-sm">              <section>
                 <h3 className="font-semibold text-gray-900">Tulong sa Aral</h3>
                 {summary.tulong.length === 0 ? (
                   <p className="mt-2 text-sm text-gray-500">(walang naipadalang Tulong sa Aral)</p>
                 ) : (
-                  <table className="mt-2 w-full text-sm">
+                  <table className="mt-2 w-full border-collapse text-sm">
                     <thead>
-                      <tr className="text-left text-xs uppercase tracking-wide text-gray-500">
+                      <tr>
                         <th className={th}>Kaanib</th>
                         <th className={th}>Petsa</th>
                         <th className={thRight}>Halaga</th>
@@ -170,15 +146,15 @@ export default async function ResiboPage({
                     </thead>
                     <tbody>
                       {summary.tulong.map((r, i) => (
-                        <tr key={`${r.memberId}-${i}`} className="border-t border-gray-100">
+                        <tr key={`${r.memberId}-${i}`}>
                           <td className={td}>{r.memberName}</td>
                           <td className={td}>{r.date}</td>
                           <td className={tdRight}>{fmtPeso(r.amount)}</td>
                         </tr>
                       ))}
-                      <tr className={totalRow}>
-                        <td className="py-1.5 pr-4" colSpan={2}>Kabuuan ng Tulong sa Aral</td>
-                        <td className="py-1.5 text-right tabular-nums">{fmtPeso(summary.tulongTotal)}</td>
+                      <tr>
+                        <td className={totalTd} colSpan={2}>Kabuuan ng Tulong sa Aral</td>
+                        <td className={totalTdRight}>{fmtPeso(summary.tulongTotal)}</td>
                       </tr>
                     </tbody>
                   </table>
@@ -190,9 +166,9 @@ export default async function ResiboPage({
                 {summary.pasalamat.length === 0 ? (
                   <p className="mt-2 text-sm text-gray-500">(walang naipadalang Pasalamat)</p>
                 ) : (
-                  <table className="mt-2 w-full text-sm">
+                  <table className="mt-2 w-full border-collapse text-sm">
                     <thead>
-                      <tr className="text-left text-xs uppercase tracking-wide text-gray-500">
+                      <tr>
                         <th className={th}>Kaanib</th>
                         <th className={th}>Uri</th>
                         <th className={th}>Petsa</th>
@@ -201,7 +177,7 @@ export default async function ResiboPage({
                     </thead>
                     <tbody>
                       {summary.pasalamat.map((r, i) => (
-                        <tr key={`${r.memberId}-${i}`} className="border-t border-gray-100">
+                        <tr key={`${r.memberId}-${i}`}>
                           <td className={td}>
                             {r.memberName}
                             {r.notes && <span className="block text-xs text-gray-500">{r.notes}</span>}
@@ -211,9 +187,9 @@ export default async function ResiboPage({
                           <td className={tdRight}>{fmtPeso(r.amount)}</td>
                         </tr>
                       ))}
-                      <tr className={totalRow}>
-                        <td className="py-1.5 pr-4" colSpan={3}>Kabuuan ng Pasalamat</td>
-                        <td className="py-1.5 text-right tabular-nums">{fmtPeso(summary.pasalamatTotal)}</td>
+                      <tr>
+                        <td className={totalTd} colSpan={3}>Kabuuan ng Pasalamat</td>
+                        <td className={totalTdRight}>{fmtPeso(summary.pasalamatTotal)}</td>
                       </tr>
                     </tbody>
                   </table>
@@ -246,3 +222,27 @@ export default async function ResiboPage({
     </>
   );
 }
+
+                    <thead>
+                      <tr>
+                        <th className={th}>Kaanib</th>
+                        <th className={th}>Petsa</th>
+                        <th className={thRight}>Halaga</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {summary.ambagan.map((r, i) => (
+                        <tr key={`${r.memberId}-${i}`}>
+                          <td className={td}>{r.memberName}</td>
+                          <td className={td}>{r.date}</td>
+                          <td className={tdRight}>{fmtPeso(r.amount)}</td>
+                        </tr>
+                      ))}
+                      <tr>
+                        <td className={totalTd} colSpan={2}>Kabuuan ng Ambagan</td>
+                        <td className={totalTdRight}>{fmtPeso(summary.ambaganTotal)}</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                )}
+              </section>
