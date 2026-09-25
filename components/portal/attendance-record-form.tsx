@@ -1,12 +1,17 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState, type ChangeEvent } from "react";
 import { Search, X } from "lucide-react";
 import { Field, btnCls, btnGhostCls, inputCls } from "./form-bits";
-import { saveAttendanceRecord } from "@/app/portal/attendance-record/actions";
+import {
+  saveAttendanceRecord,
+  exportAttendanceCsv,
+  importAttendanceCsv,
+  searchOtherLocalMembers,
+} from "@/app/portal/attendance-record/actions";
 
 type RosterMember = { id: string; full_name: string | null };
-type Guest = { name: string; kind: "visitor" | "other_local"; homeLocalId?: string; homeLocalName?: string };
+type Guest = { name: string; kind: "visitor" | "other_local"; memberId?: string; homeLocalId?: string; homeLocalName?: string };
 type LocalOpt = { id: string; name: string };
 
 // Tanggalin ang accent at gawing maliit ang letra para madaling mahanap ("Peña" = "pena")
@@ -17,8 +22,7 @@ const norm = (s: string) =>
     .toLowerCase()
     .trim();
 
-export function AttendanceRecordForm({
-  localId,
+export function AttendanceRecordForm({  localId,
   localName,
   serviceDate,
   serviceType,
@@ -35,7 +39,7 @@ export function AttendanceRecordForm({
   members: RosterMember[];
   presentIds: string[];
   visitorsDefault: string[];
-  otherLocalsDefault: { name: string; homeLocalId: string; homeLocalName: string }[];
+  otherLocalsDefault: { name: string; memberId: string; homeLocalId: string; homeLocalName: string }[];
   allLocals: LocalOpt[];
 }) {
   const [query, setQuery] = useState("");
@@ -43,10 +47,32 @@ export function AttendanceRecordForm({
   const [visitors, setVisitors] = useState<string[]>(() => visitorsDefault);
   const [visitorInput, setVisitorInput] = useState("");
   const [otherLocals, setOtherLocals] = useState<Guest[]>(
-    () => otherLocalsDefault.map((o) => ({ name: o.name, kind: "other_local" as const, homeLocalId: o.homeLocalId, homeLocalName: o.homeLocalName })),
+    () => otherLocalsDefault.map((o) => ({ name: o.name, kind: "other_local" as const, memberId: o.memberId, homeLocalId: o.homeLocalId, homeLocalName: o.homeLocalName })),
   );
   const [otherName, setOtherName] = useState("");
   const [otherLocalId, setOtherLocalId] = useState("");
+  const [otherResults, setOtherResults] = useState<{ id: string; full_name: string }[]>([]);
+  const [otherSearching, setOtherSearching] = useState(false);
+
+  // Paghahanap ng pangalan sa roster ng ibang local (autocomplete) --
+  // tinitiyak na nakatala talaga ang kaanib sa local na iyon.
+  useEffect(() => {
+    const q = otherName.trim();
+    if (!otherLocalId || q.length < 2) {
+      setOtherResults([]);
+      setOtherSearching(false);
+      return;
+    }
+    setOtherSearching(true);
+    const t = setTimeout(async () => {
+      try {
+        setOtherResults(await searchOtherLocalMembers(otherLocalId, q));
+      } finally {
+        setOtherSearching(false);
+      }
+    }, 300);
+    return () => clearTimeout(t);
+  }, [otherName, otherLocalId]);
 
   const words = norm(query).split(/\s+/).filter(Boolean);
   const shown = useMemo(
@@ -86,13 +112,13 @@ export function AttendanceRecordForm({
     setVisitorInput("");
   }
 
-  function addOtherLocal() {
-    const name = otherName.trim();
-    if (!name || !otherLocalId) return;
+  function pickOtherLocal(member: { id: string; full_name: string }) {
+    if (!otherLocalId) return;
     const home = allLocals.find((l) => l.id === otherLocalId);
-    if (otherLocals.some((o) => o.name === name && o.homeLocalId === otherLocalId)) return;
-    setOtherLocals((v) => [...v, { name, kind: "other_local", homeLocalId: otherLocalId, homeLocalName: home?.name ?? "" }]);
+    if (otherLocals.some((o) => o.memberId === member.id && o.homeLocalId === otherLocalId)) return;
+    setOtherLocals((v) => [...v, { name: member.full_name, kind: "other_local", memberId: member.id, homeLocalId: otherLocalId, homeLocalName: home?.name ?? "" }]);
     setOtherName("");
+    setOtherResults([]);
   }
 
   const searching = words.length > 0;
@@ -103,6 +129,10 @@ export function AttendanceRecordForm({
       <input type="hidden" name="local_id" value={localId} />
       <input type="hidden" name="service_date" value={serviceDate} />
       <input type="hidden" name="service_type" value={serviceType} />
+
+      <div className="mb-4">
+        <AttendanceCsvButtons localId={localId} serviceDate={serviceDate} serviceType={serviceType} />
+      </div>
 
       {/* Roster checklist */}
       <div className="mb-4 flex flex-wrap items-end justify-between gap-3">
@@ -224,11 +254,20 @@ export function AttendanceRecordForm({
         )}
       </div>
 
-      {/* Galing ibang local */}
+      {/* Galing ibang local -- hinahanap ang pangalan sa roster ng ibang
+          local upang matiyak na nakatala talaga ang kaanib doon */}
       <div className="mb-6">
         <Field label="Dumalo mula sa ibang local">
           <div className="flex flex-wrap gap-2">
-            <select value={otherLocalId} onChange={(e) => setOtherLocalId(e.target.value)} className={`${inputCls} w-auto`} aria-label="Local na pinanggalingan">
+            <select
+              value={otherLocalId}
+              onChange={(e) => {
+                setOtherLocalId(e.target.value);
+                setOtherResults([]);
+              }}
+              className={`${inputCls} w-auto`}
+              aria-label="Local na pinanggalingan"
+            >
               <option value="">Piliin ang local…</option>
               {allLocals
                 .filter((l) => l.id !== localId)
@@ -238,36 +277,56 @@ export function AttendanceRecordForm({
                   </option>
                 ))}
             </select>
-            <input
-              value={otherName}
-              onChange={(e) => setOtherName(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === "Enter") {
-                  e.preventDefault();
-                  addOtherLocal();
-                }
-              }}
-              placeholder="Pangalan ng kaanib…"
-              autoComplete="off"
-              className={`${inputCls} min-w-40 flex-1`}
-            />
-            <button type="button" onClick={addOtherLocal} className={btnGhostCls}>
-              Idagdag
-            </button>
+            <div className="relative min-w-40 flex-1">
+              <input
+                value={otherName}
+                onChange={(e) => setOtherName(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") e.preventDefault();
+                  if (e.key === "Escape") setOtherResults([]);
+                }}
+                placeholder={otherLocalId ? "I-type ang pangalan sa roster…" : "Piliin muna ang local…"}
+                autoComplete="off"
+                disabled={!otherLocalId}
+                className={`${inputCls} w-full disabled:opacity-50`}
+                aria-label="Hanapin ang pangalan sa roster"
+              />
+              {(otherSearching || otherResults.length > 0) && (
+                <div className="absolute z-10 mt-1 max-h-48 w-full overflow-y-auto rounded-lg border border-gray-200 bg-white shadow-lg">
+                  {otherSearching && <div className="px-3 py-2 text-sm text-gray-400">Hinahanap…</div>}
+                  {!otherSearching && otherResults.length === 0 && (
+                    <div className="px-3 py-2 text-sm text-gray-400">Walang nahanap sa roster ng local na ito.</div>
+                  )}
+                  {otherResults.map((r) => (
+                    <button
+                      key={r.id}
+                      type="button"
+                      onClick={() => pickOtherLocal(r)}
+                      className="block w-full px-3 py-2 text-left text-sm text-gray-800 hover:bg-emerald-50"
+                    >
+                      {r.full_name}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
+          <p className="mt-1.5 text-xs text-gray-400">
+            Ang pangalan ay dapat mahanap sa roster ng napiling local — tinitiyak nito na nakatala talaga ang dadalong kaanib.
+          </p>
         </Field>
         {otherLocals.length > 0 && (
           <div className="mt-2 flex flex-wrap gap-2">
             {otherLocals.map((o) => (
               <span
-                key={`${o.homeLocalId}-${o.name}`}
+                key={`${o.homeLocalId}-${o.memberId ?? o.name}`}
                 className="inline-flex items-center gap-1.5 rounded-full border border-blue-200 bg-blue-50 py-1 pl-3 pr-1.5 text-sm font-medium text-blue-800"
               >
-                <input type="hidden" name="other_local" value={`${o.homeLocalId}|${o.name}`} />
+                <input type="hidden" name="other_local" value={`${o.homeLocalId}|${o.memberId ?? ""}`} />
                 {o.name} <span className="font-normal text-blue-500">({o.homeLocalName})</span>
                 <button
                   type="button"
-                  onClick={() => setOtherLocals((list) => list.filter((x) => !(x.name === o.name && x.homeLocalId === o.homeLocalId)))}
+                  onClick={() => setOtherLocals((list) => list.filter((x) => !(x.memberId === o.memberId && x.homeLocalId === o.homeLocalId)))}
                   aria-label={`Alisin si ${o.name}`}
                   className="rounded-full p-0.5 text-blue-500 hover:bg-blue-100 hover:text-blue-800"
                 >
@@ -281,9 +340,93 @@ export function AttendanceRecordForm({
 
       <div className="sticky bottom-0 -mx-5 -mb-5 mt-4 border-t border-gray-100 bg-white/95 px-5 py-3">
         <button type="submit" className={btnCls}>
-          I-save ang pagdalo ({checked.size + totalGuests})
+          I-save bilang draft ({checked.size + totalGuests})
         </button>
       </div>
     </form>
+  );
+}
+
+// Mga pindutan para sa CSV export at import ng pagdalo sa isang pagkakatipon.
+// Ginagamit sa form at sa talaan (review bago i-submit).
+export function AttendanceCsvButtons({
+  localId,
+  serviceDate,
+  serviceType,
+}: {
+  localId: string;
+  serviceDate: string;
+  serviceType: string;
+}) {
+  const [exporting, setExporting] = useState(false);
+  const [importing, setImporting] = useState(false);
+
+  async function handleExport() {
+    setExporting(true);
+    try {
+      const res = await exportAttendanceCsv(localId, serviceDate, serviceType);
+      if (!res.ok) {
+        alert(res.message);
+        return;
+      }
+      const blob = new Blob(["\uFEFF" + res.csv], { type: "text/csv;charset=utf-8" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = res.filename;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+    } finally {
+      setExporting(false);
+    }
+  }
+
+  async function handleFile(e: ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    if (!file) return;
+    if (!confirm(`I-import ang "${file.name}"? Papalitan nito ang kasalukuyang tala ng pagtitipong ito.`)) return;
+    setImporting(true);
+    try {
+      const text = await file.text();
+      const fd = new FormData();
+      fd.set("local_id", localId);
+      fd.set("service_date", serviceDate);
+      fd.set("service_type", serviceType);
+      fd.set("csv", text);
+      await importAttendanceCsv(fd);
+    } finally {
+      setImporting(false);
+    }
+  }
+
+  return (
+    <div>
+      <div className="flex flex-wrap gap-2">
+        <button
+          type="button"
+          onClick={handleExport}
+          disabled={exporting || importing}
+          className={`${btnGhostCls} disabled:opacity-50`}
+        >
+          {exporting ? "Inihahanda…" : "I-export ang CSV"}
+        </button>
+        <label className={`${btnGhostCls} cursor-pointer ${(exporting || importing) ? "opacity-50" : ""}`}>
+          {importing ? "Ini-import…" : "Mag-import ng CSV"}
+          <input
+            type="file"
+            accept=".csv,text/csv"
+            className="hidden"
+            onChange={handleFile}
+            disabled={exporting || importing}
+          />
+        </label>
+      </div>
+      <p className="mt-1.5 text-xs text-gray-400">
+        Format ng CSV: pangalan, kategorya (kaanib / bisita / ibang_local), home_local — ang ibang_local ay bineberipika sa roster ng kanilang local
+      </p>
+    </div>
   );
 }
