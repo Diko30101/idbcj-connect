@@ -9,6 +9,7 @@ import {
   importAttendanceCsv,
   searchOtherLocalMembers,
 } from "@/app/portal/attendance-record/actions";
+import { isCustomType } from "@/app/portal/attendance-record/constants";
 
 type RosterMember = { id: string; full_name: string | null };
 type Guest = { name: string; kind: "visitor" | "other_local"; memberId?: string; homeLocalId?: string; homeLocalName?: string };
@@ -26,6 +27,7 @@ export function AttendanceRecordForm({  localId,
   localName,
   serviceDate,
   serviceType,
+  customReasonDefault,
   members,
   presentIds,
   visitorsDefault,
@@ -36,6 +38,7 @@ export function AttendanceRecordForm({  localId,
   localName: string;
   serviceDate: string;
   serviceType: string;
+  customReasonDefault: string;
   members: RosterMember[];
   presentIds: string[];
   visitorsDefault: string[];
@@ -53,6 +56,7 @@ export function AttendanceRecordForm({  localId,
   const [otherLocalId, setOtherLocalId] = useState("");
   const [otherResults, setOtherResults] = useState<{ id: string; full_name: string }[]>([]);
   const [otherSearching, setOtherSearching] = useState(false);
+  const [customReason, setCustomReason] = useState(customReasonDefault);
 
   // Paghahanap ng pangalan sa roster ng ibang local (autocomplete) --
   // tinitiyak na nakatala talaga ang kaanib sa local na iyon.
@@ -130,8 +134,25 @@ export function AttendanceRecordForm({  localId,
       <input type="hidden" name="service_date" value={serviceDate} />
       <input type="hidden" name="service_type" value={serviceType} />
 
+      {isCustomType(serviceType) && (
+        <div className="mb-4">
+          <Field label="Dahilan ng pagkakatipon">
+            <input
+              type="text"
+              name="custom_reason"
+              value={customReason}
+              onChange={(e) => setCustomReason(e.target.value)}
+              maxLength={120}
+              required
+              placeholder="I-type ang dahilan, hal. Paggunita sa mga yumao"
+              className={inputCls}
+            />
+          </Field>
+        </div>
+      )}
+
       <div className="mb-4">
-        <AttendanceCsvButtons localId={localId} serviceDate={serviceDate} serviceType={serviceType} />
+        <AttendanceCsvButtons localId={localId} serviceDate={serviceDate} serviceType={serviceType} customReasonDefault={customReasonDefault} />
       </div>
 
       {/* Roster checklist */}
@@ -353,13 +374,16 @@ export function AttendanceCsvButtons({
   localId,
   serviceDate,
   serviceType,
+  customReasonDefault,
 }: {
   localId: string;
   serviceDate: string;
   serviceType: string;
+  customReasonDefault: string;
 }) {
   const [exporting, setExporting] = useState(false);
   const [importing, setImporting] = useState(false);
+  const [customReason, setCustomReason] = useState(customReasonDefault);
 
   async function handleExport() {
     setExporting(true);
@@ -395,6 +419,14 @@ export function AttendanceCsvButtons({
       fd.set("local_id", localId);
       fd.set("service_date", serviceDate);
       fd.set("service_type", serviceType);
+      if (isCustomType(serviceType)) {
+        if (!customReason.trim()) {
+          alert("I-type muna ang dahilan ng pagkakatipon bago mag-import.");
+          setImporting(false);
+          return;
+        }
+        fd.set("custom_reason", customReason.trim().slice(0, 120));
+      }
       fd.set("csv", text);
       await importAttendanceCsv(fd);
     } finally {
@@ -404,6 +436,18 @@ export function AttendanceCsvButtons({
 
   return (
     <div>
+      {isCustomType(serviceType) && (
+        <div className="mb-2">
+          <input
+            type="text"
+            value={customReason}
+            onChange={(e) => setCustomReason(e.target.value)}
+            maxLength={120}
+            placeholder="I-type ang dahilan, hal. Paggunita sa mga yumao"
+            className={inputCls}
+          />
+        </div>
+      )}
       <div className="flex flex-wrap gap-2">
         <button
           type="button"
