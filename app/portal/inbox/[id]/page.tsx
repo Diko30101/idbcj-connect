@@ -1,8 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { requirePortalAccess, isStaff, fmtDate } from "@/lib/portal";
-import { replyToLetter } from "../../actions";
-import { Empty, Field, Notice, PageHeader, Panel, btnCls, btnGhostCls, inputCls } from "@/components/portal/ui";
+import { Empty, Notice, PageHeader, Panel, btnGhostCls } from "@/components/portal/ui";
 
 export default async function LetterThreadPage({
   params,
@@ -74,18 +73,6 @@ export default async function LetterThreadPage({
                 ))}
               </ul>
             )}
-          </Panel>
-
-          <Panel title="Sumagot">
-            <form action={replyToLetter} className="grid gap-3">
-              <input type="hidden" name="letter_id" value={id} />
-              <Field label="Mensahe">
-                <textarea name="body" required rows={4} className={inputCls} />
-              </Field>
-              <div>
-                <button className={btnCls}>Ipadala</button>
-              </div>
-            </form>
           </Panel>
         </div>
 
