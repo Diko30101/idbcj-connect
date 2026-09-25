@@ -5,9 +5,87 @@ import {
   FINANCE_CATEGORY_LABEL,
 } from "@/lib/portal";
 import { currentMonthPH, monthLabel, fmtPeso } from "@/lib/finance";
+import { pasalamatTypeLabel } from "@/lib/giving";
 import { getYearlyCollections, LOCALITY_TO_LOCAL_KEY } from "@/lib/finance-collections";
 import { Notice, PageHeader, Panel, btnGhostCls, inputCls } from "@/components/portal/ui";
 import { FinanceChart } from "@/components/portal/finance-chart";
+
+function fmtDate(d: string): string {
+  return new Date(`${d}T00:00:00Z`).toLocaleDateString("en-PH", {
+    timeZone: "UTC",
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+  });
+}
+
+type GiverRow = { memberId: string; extra: string; date: string; amount: number };
+
+// Hilaw na row mula sa tatlong giving table (pare-pareho ang hugis na kailangan).
+type GiverDbRow = {
+  member_id?: string | null;
+  amount?: number | string | null;
+  date?: string | null;
+  date_received?: string | null;
+  type?: string | null;
+  period_month?: string | null;
+};
+
+// Table sheet ng mga nagkaloob (naipadala na) sa isang kategorya.
+function GiverTable({
+  title,
+  extraHeader,
+  rows,
+  names,
+  emptyText,
+}: {
+  title: string;
+  extraHeader: string;
+  rows: GiverRow[];
+  names: Record<string, string>;
+  emptyText: string;
+}) {
+  const total = rows.reduce((s, r) => s + r.amount, 0);
+  return (
+    <section className="mb-8 last:mb-0">
+      <h3 className="mb-2 text-base font-semibold text-gray-800">{title}</h3>
+      {rows.length === 0 ? (
+        <p className="py-3 text-center text-sm text-gray-500">{emptyText}</p>
+      ) : (
+        <div className="overflow-x-auto">
+          <table className="w-full min-w-[640px] border-collapse text-sm">
+            <thead>
+              <tr className="border-b border-gray-200 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">
+                <th className="py-2 pr-3">Kaanib</th>
+                <th className="py-2 pr-3">{extraHeader}</th>
+                <th className="py-2 pr-3">Petsa</th>
+                <th className="py-2 text-right">Halaga</th>
+              </tr>
+            </thead>
+            <tbody>
+              {rows.map((r, i) => (
+                <tr key={`${r.memberId}-${r.date}-${i}`} className="border-b border-gray-100">
+                  <td className="py-2 pr-3 font-medium text-gray-800">
+                    {names[r.memberId] ?? "(hindi mabasa ang pangalan)"}
+                  </td>
+                  <td className="py-2 pr-3 text-gray-700">{r.extra}</td>
+                  <td className="py-2 pr-3 text-gray-700">{fmtDate(r.date)}</td>
+                  <td className="py-2 text-right text-gray-700">{fmtPeso(r.amount)}</td>
+                </tr>
+              ))}
+              <tr className="border-t-2 border-gray-300 font-semibold text-gray-900">
+                <td className="py-2 pr-3" colSpan={3}>
+                  Kabuuan
+                </td>
+                <td className="py-2 text-right">{fmtPeso(total)}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      )}
+    </section>
+  );
+}
 
 // Local Finance: read-only na buod ng koleksyon ng sariling lokal.
 // Ang data ay galing LAMANG sa apat na pinagmumulan na in-encode ng
@@ -49,6 +127,64 @@ export default async function LocalFinancePage({
   const yearCatTotal = (c: string) => months12.reduce((s, m) => s + (yearGrid.get(`${m}_${c}`) ?? 0), 0);
   const yearMonthTotal = (m: string) => FINANCE_CATEGORIES.reduce((s, c) => s + (yearGrid.get(`${m}_${c}`) ?? 0), 0);
   const yearGrandTotal = FINANCE_CATEGORIES.reduce((s, c) => s + yearCatTotal(c), 0);
+
+  // Mga nagkaloob (naipadala na; hindi kasama ang draft at void) sa napiling taon,
+  // ayon sa local ng gumagamit — table sheet sa ibaba ng taunang buod.
+  const { data: localsList } = await supabase.from("locals").select("id, key");
+  const localId =
+    ((localsList ?? []) as { id: string; key: string }[]).find((l) => l.key === localKey)?.id ?? null;
+
+  async function fetchGivers(
+    table: "pasalamat_records" | "tulong_klase_records" | "ambagan_records",
+  ): Promise<GiverRow[]> {
+    const out: GiverRow[] = [];
+    if (!localId) return out;
+    const dateCol = table === "pasalamat_records" ? "date" : "date_received";
+    const extraCol = table === "pasalamat_records" ? "type" : "period_month";
+    const PAGE = 1000;
+    for (let page = 0; ; page++) {
+      const { data } = await supabase
+        .from(table)
+        .select(`member_id, ${dateCol}, amount, ${extraCol}`)
+        .eq("local_id", localId)
+        .eq("status", "submitted")
+        .gte(dateCol, `${year}-01-01`)
+        .lt(dateCol, `${Number(year) + 1}-01-01`)
+        .order(dateCol, { ascending: false })
+        .range(page * PAGE, page * PAGE + PAGE - 1);
+      const rows = (data ?? []) as unknown as GiverDbRow[];
+      for (const r of rows) {
+        out.push({
+          memberId: String(r.member_id ?? ""),
+          extra: String(r[extraCol] ?? ""),
+          date: String(r[dateCol] ?? "").slice(0, 10),
+          amount: Number(r.amount) || 0,
+        });
+      }
+      if (rows.length < PAGE) break;
+    }
+    return out;
+  }
+
+  const [pasalamatRaw, tulongRaw, ambaganRaw] = await Promise.all([
+    fetchGivers("pasalamat_records"),
+    fetchGivers("tulong_klase_records"),
+    fetchGivers("ambagan_records"),
+  ]);
+  const pasalamatGivers = pasalamatRaw.map((r) => ({ ...r, extra: pasalamatTypeLabel(r.extra) }));
+  const tulongGivers = tulongRaw.map((r) => ({ ...r, extra: monthLabel(r.extra.slice(0, 7)) }));
+  const ambaganGivers = ambaganRaw.map((r) => ({ ...r, extra: monthLabel(r.extra.slice(0, 7)) }));
+
+  const giverIds = [
+    ...new Set(
+      [...pasalamatGivers, ...tulongGivers, ...ambaganGivers].map((r) => r.memberId).filter(Boolean),
+    ),
+  ];
+  const giverNames: Record<string, string> = {};
+  if (giverIds.length > 0) {
+    const { data: nm } = await supabase.rpc("member_display_names", { p_ids: giverIds });
+    for (const n of (nm ?? []) as { member_id: string; full_name: string }[]) giverNames[n.member_id] = n.full_name;
+  }
 
   return (
     <>
@@ -146,6 +282,32 @@ export default async function LocalFinancePage({
               </tbody>
             </table>
           </div>
+        </Panel>
+      </div>
+
+      <div className="mt-6">
+        <Panel title={`Mga Nagkaloob · ${LOCALITY_LABEL[locality]} · ${year}`}>
+          <GiverTable
+            title="Pasalamat"
+            extraHeader="Uri"
+            rows={pasalamatGivers}
+            names={giverNames}
+            emptyText="Wala pang naipadalang Pasalamat sa taong ito."
+          />
+          <GiverTable
+            title="Tulong sa Aral"
+            extraHeader="Buwan"
+            rows={tulongGivers}
+            names={giverNames}
+            emptyText="Wala pang naipadalang Tulong sa Aral sa taong ito."
+          />
+          <GiverTable
+            title="Ambagan"
+            extraHeader="Buwan"
+            rows={ambaganGivers}
+            names={giverNames}
+            emptyText="Wala pang naipadalang Ambagan sa taong ito."
+          />
         </Panel>
       </div>
     </>
