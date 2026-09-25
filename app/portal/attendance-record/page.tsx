@@ -4,7 +4,7 @@ import { Empty, Notice, Panel } from "@/components/portal/ui";
 import { inputCls, btnGhostCls } from "@/components/portal/form-bits";
 import { AttendanceRecordForm, AttendanceCsvButtons } from "@/components/portal/attendance-record-form";
 import { AttendanceSubmitForm } from "@/components/portal/attendance-submit-form";
-import { SERVICE_TYPES, ATTENDANCE_RECORD_BASE, GATHERING_TYPES, gatheringTypeLabel, isSunday, isSundayOnlyType, isValidDate, listSundays, lastSunday, fmtSundayLabel } from "./constants";
+import { SERVICE_TYPES, ATTENDANCE_RECORD_BASE, GATHERING_TYPES, gatheringTypeDisplay, isSunday, isSundayOnlyType, isValidDate, listSundays, lastSunday, fmtSundayLabel } from "./constants";
 
 // Attendance Record (Pangasiwaan): itinatala ng local secretary ang
 // pagdalo ng bawat local sa bawat pagkakatipon, galing sa ROSTER
@@ -29,6 +29,7 @@ type Gathering = {
   date: string;
   type: string;
   status: "draft" | "submitted";
+  customReason: string | null;
   memberIds: Set<string>;
   guests: { name: string; kind: string; homeLocalId: string | null; memberId: string | null }[];
 };
@@ -127,13 +128,13 @@ export default async function AttendanceRecordPage({
       .limit(2000),
     supabase
       .from("attendance_records")
-      .select("member_id, service_date, service_type, status")
+      .select("member_id, service_date, service_type, status, custom_reason")
       .eq("local_id", activeLocal.id)
       .order("service_date", { ascending: false })
       .limit(5000),
     supabase
       .from("attendance_guests")
-      .select("name, kind, home_local_id, member_id, service_date, service_type, status")
+      .select("name, kind, home_local_id, member_id, service_date, service_type, status, custom_reason")
       .eq("local_id", activeLocal.id)
       .order("service_date", { ascending: false })
       .limit(5000),
@@ -150,30 +151,31 @@ export default async function AttendanceRecordPage({
     const key = `${r.service_date}|${r.service_type}`;
     let g = gatherings.get(key);
     if (!g) {
-      g = { date: r.service_date, type: r.service_type, status: "draft", memberIds: new Set(), guests: [] };
+      g = { date: r.service_date, type: r.service_type, status: "draft", customReason: null, memberIds: new Set(), guests: [] };
       gatherings.set(key, g);
     }
     markStatus(g, r.status);
+    if (!g.customReason && r.custom_reason) g.customReason = String(r.custom_reason);
     g.memberIds.add(String(r.member_id));
   }
   for (const gu of ((guests ?? []) as any[])) {
     const key = `${gu.service_date}|${gu.service_type}`;
     let g = gatherings.get(key);
     if (!g) {
-      g = { date: gu.service_date, type: gu.service_type, status: "draft", memberIds: new Set(), guests: [] };
+      g = { date: gu.service_date, type: gu.service_type, status: "draft", customReason: null, memberIds: new Set(), guests: [] };
       gatherings.set(key, g);
     }
     markStatus(g, gu.status);
+    if (!g.customReason && gu.custom_reason) g.customReason = String(gu.custom_reason);
     g.guests.push({ name: gu.name, kind: gu.kind, homeLocalId: gu.home_local_id ? String(gu.home_local_id) : null, memberId: gu.member_id ? String(gu.member_id) : null });
   }
   const gatheringList = [...gatherings.values()].sort((a, b) => (a.date < b.date ? 1 : a.date > b.date ? -1 : 0));
 
   // --- Magtala: napiling petsa/uri + umiiral na tala ---
-  // Ang "Linggo" ay Linggo lang sa kalendaryo (kasama ang mga dating Linggo);
-  // ang mga Pasalamat (Anniversary, New Year, atbp.) ay pwedeng kahit anong
-  // araw sa kalendaryo -- gaya ng sa Pasalamatan.
+  // Ang "Pagsamba" (Linggo) ay Linggo lang sa kalendaryo (kasama ang mga
+  // dating Linggo); ang mga Pasalamat at Ibang dahilan ay pwedeng kahit
+  // anong araw sa kalendaryo -- gaya ng sa Pasalamatan.
   const selType = (SERVICE_TYPES as readonly string[]).includes(sp.type ?? "") ? (sp.type as string) : "Linggo";
-  const selTypeLabel = gatheringTypeLabel(selType);
   const sundayOnly = isSundayOnlyType(selType);
   const sundayOpts = listSundays(todayPH(), 12, 4);
   const defaultDate = sundayOnly ? lastSunday(todayPH()) : todayPH();
@@ -189,6 +191,7 @@ export default async function AttendanceRecordPage({
       );
   const editMode = sp.edit === "1";
   const existing = gatherings.get(`${selDate}|${selType}`);
+  const selTypeLabel = gatheringTypeDisplay(selType, existing?.customReason ?? null);
   const presentIds = existing ? [...existing.memberIds] : [];
   const visitorsDefault = existing ? existing.guests.filter((g) => g.kind === "visitor").map((g) => g.name) : [];
   const otherLocalsDefault = existing
@@ -209,7 +212,7 @@ export default async function AttendanceRecordPage({
     ? [...gatherings.values()].flatMap((g) =>
         g.guests
           .filter((gu) => qWords.every((w) => norm(gu.name).includes(w)))
-          .map((gu) => ({ ...gu, date: g.date, type: g.type })),
+          .map((gu) => ({ ...gu, date: g.date, type: g.type, customReason: g.customReason })),
       )
     : [];
 
@@ -272,7 +275,7 @@ export default async function AttendanceRecordPage({
               </label>
               {sundayOnly ? (
                 <label className="text-sm font-medium text-gray-700">
-                  Petsa (Linggo)
+                  Petsa (Pagsamba)
                   <select name="date" defaultValue={selDate} required className={`${inputCls} mt-1`}>
                     {dateOpts.map((s) => (
                       <option key={s.value} value={s.value}>
@@ -326,7 +329,7 @@ export default async function AttendanceRecordPage({
                 activeLocalName={activeLocal.name}
               />
               <div className="mt-4">
-                <AttendanceCsvButtons localId={activeLocal.id} serviceDate={selDate} serviceType={selType} />
+                <AttendanceCsvButtons localId={activeLocal.id} serviceDate={selDate} serviceType={selType} customReasonDefault={existing?.customReason ?? ""} />
               </div>
               <div className="mt-4 flex flex-wrap gap-2 border-t border-gray-100 pt-4">
                 <Link
@@ -366,6 +369,7 @@ export default async function AttendanceRecordPage({
                 localName={activeLocal.name}
                 serviceDate={selDate}
                 serviceType={selType}
+                customReasonDefault={existing?.customReason ?? ""}
                 members={((roster ?? []) as any[]).map((m) => ({ id: String(m.id), full_name: m.full_name }))}
                 presentIds={presentIds}
                 visitorsDefault={visitorsDefault}
@@ -389,7 +393,7 @@ export default async function AttendanceRecordPage({
                     <summary className="flex cursor-pointer items-center justify-between gap-3 px-4 py-3 hover:bg-emerald-50/40">
                       <span className="text-sm">
                         <strong className="font-semibold text-gray-900">{fmtDate(g.date)}</strong>
-                        <span className="text-gray-500"> · {gatheringTypeLabel(g.type)}</span>
+                        <span className="text-gray-500"> · {gatheringTypeDisplay(g.type, g.customReason)}</span>
                       </span>
                       <span className="flex items-center gap-2">
                         <StatusBadge status={g.status} />
@@ -426,7 +430,7 @@ export default async function AttendanceRecordPage({
                   <option value="all">Lahat ng petsa</option>
                   {gatheringList.map((g) => (
                     <option key={`${g.date}|${g.type}`} value={g.date}>
-                      {fmtDate(g.date)} · {gatheringTypeLabel(g.type)}
+                      {fmtDate(g.date)} · {gatheringTypeDisplay(g.type, g.customReason)}
                     </option>
                   ))}
                 </select>
@@ -458,7 +462,7 @@ export default async function AttendanceRecordPage({
                           return (
                             <div key={`${g.date}|${g.type}`} className="flex items-center justify-between gap-3 text-sm">
                               <span className="text-gray-600">
-                                {fmtDate(g.date)} · {gatheringTypeLabel(g.type)}
+                                {fmtDate(g.date)} · {gatheringTypeDisplay(g.type, g.customReason)}
                               </span>
                               <strong className={present ? "text-emerald-700" : "text-red-600"}>
                                 {present ? "✓ Dumalo" : "✕ Hindi dumalo"}
@@ -478,7 +482,7 @@ export default async function AttendanceRecordPage({
                       <div className="mt-2">
                         <div className="flex items-center justify-between gap-3 text-sm">
                           <span className="text-gray-600">
-                            {fmtDate(gu.date)} · {gatheringTypeLabel(gu.type)}
+                            {fmtDate(gu.date)} · {gatheringTypeDisplay(gu.type, gu.customReason)}
                           </span>
                           <strong className="text-emerald-700">✓ Dumalo</strong>
                         </div>

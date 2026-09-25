@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { back, fmtDate, getRosterContext, str } from "@/lib/portal";
-import { ATTENDANCE_RECORD_BASE, SERVICE_TYPES, gatheringTypeLabel, isSunday, isSundayOnlyType, isValidDate } from "./constants";
+import { ATTENDANCE_RECORD_BASE, SERVICE_TYPES, gatheringTypeDisplay, isCustomType, isSunday, isSundayOnlyType, isValidDate } from "./constants";
 
 // Petsa depende sa uri ng pagkakatipon: ang "Linggo" ay Linggo lang;
 // ang mga Pasalamat ay pwedeng kahit anong araw sa kalendaryo.
@@ -47,6 +47,10 @@ export async function saveAttendanceRecord(fd: FormData) {
   const dateError = dateErrorForType(date, type);
   if (dateError) {
     back(path, "error", dateError);
+  }
+  const customReason = isCustomType(type) ? str(fd, "custom_reason").trim().slice(0, 120) : "";
+  if (isCustomType(type) && !customReason) {
+    back(path, "error", "I-type ang dahilan ng pagkakatipon.");
   }
   const backPath = `${path}?tab=magtala&local=${localId}&date=${date}&type=${encodeURIComponent(type)}`;
 
@@ -131,6 +135,7 @@ export async function saveAttendanceRecord(fd: FormData) {
       local_id: localId,
       service_date: date,
       service_type: type,
+      custom_reason: customReason || null,
       present: true,
       recorded_by: user.id,
     }));
@@ -143,6 +148,7 @@ export async function saveAttendanceRecord(fd: FormData) {
       local_id: localId,
       service_date: date,
       service_type: type,
+      custom_reason: customReason || null,
       name,
       kind: "visitor",
       recorded_by: user.id,
@@ -151,6 +157,7 @@ export async function saveAttendanceRecord(fd: FormData) {
       local_id: localId,
       service_date: date,
       service_type: type,
+      custom_reason: customReason || null,
       name: o.name,
       kind: "other_local",
       home_local_id: o.homeLocalId,
@@ -168,7 +175,7 @@ export async function saveAttendanceRecord(fd: FormData) {
   back(
     backPath,
     "ok",
-    `Na-save bilang draft ang pagdalo sa ${fmtDate(date)} (${gatheringTypeLabel(type)}): ${total} ang naitala.`,
+    `Na-save bilang draft ang pagdalo sa ${fmtDate(date)} (${gatheringTypeDisplay(type, customReason)}): ${total} ang naitala.`,
   );
 }
 
@@ -185,11 +192,10 @@ export async function submitAttendanceRecord(fd: FormData) {
   if (!local || !(SERVICE_TYPES as readonly string[]).includes(type) || dateErr) {
     back(ATTENDANCE_RECORD_BASE, "error", dateErr ?? "Kumpletuhin ang local, petsa at uri ng pagkakatipon.");
   }
-
   const [{ data: drafts }, { data: guestDrafts }] = await Promise.all([
     supabase
       .from("attendance_records")
-      .select("id")
+      .select("id, custom_reason")
       .eq("local_id", localId)
       .eq("service_date", date)
       .eq("service_type", type)
@@ -226,7 +232,8 @@ export async function submitAttendanceRecord(fd: FormData) {
   if (e2) back(backPath, "error", "Hindi na-submit ang pagdalo: " + e2.message);
 
   revalidatePath(ATTENDANCE_RECORD_BASE, "layout");
-  back(backPath, "ok", `Na-submit ang pagdalo sa ${fmtDate(date)} (${gatheringTypeLabel(type)}) sa Finance Ministry.`);
+  const submitCustomReason = ((drafts ?? []) as any[]).find((r) => r.custom_reason)?.custom_reason ?? null;
+  back(backPath, "ok", `Na-submit ang pagdalo sa ${fmtDate(date)} (${gatheringTypeDisplay(type, submitCustomReason)}) sa Finance Ministry.`);
 }
 
 // ---------------------------------------------------------------
@@ -376,6 +383,10 @@ export async function importAttendanceCsv(fd: FormData) {
   if (!local || !(SERVICE_TYPES as readonly string[]).includes(type) || dateErr) {
     back(ATTENDANCE_RECORD_BASE, "error", dateErr ?? "Kumpletuhin ang local, petsa at uri ng pagkakatipon.");
   }
+  const customReason = isCustomType(type) ? str(fd, "custom_reason").trim().slice(0, 120) : "";
+  if (isCustomType(type) && !customReason) {
+    back(backPath, "error", "I-type ang dahilan ng pagkakatipon bago mag-import.");
+  }
   const { data: locked } = await supabase
     .from("attendance_records")
     .select("id")
@@ -486,6 +497,7 @@ export async function importAttendanceCsv(fd: FormData) {
       local_id: localId,
       service_date: date,
       service_type: type,
+      custom_reason: customReason || null,
       present: true,
       recorded_by: user.id,
     }));
@@ -497,6 +509,7 @@ export async function importAttendanceCsv(fd: FormData) {
       local_id: localId,
       service_date: date,
       service_type: type,
+      custom_reason: customReason || null,
       name,
       kind: "visitor",
       recorded_by: user.id,
@@ -505,6 +518,7 @@ export async function importAttendanceCsv(fd: FormData) {
       local_id: localId,
       service_date: date,
       service_type: type,
+      custom_reason: customReason || null,
       name: o.name,
       kind: "other_local",
       home_local_id: o.homeLocalId,
@@ -519,7 +533,7 @@ export async function importAttendanceCsv(fd: FormData) {
 
   revalidatePath(ATTENDANCE_RECORD_BASE, "layout");
   const total = kaanibIds.size + guestRows.length;
-  let msg = `Na-import ang CSV para sa ${fmtDate(date)} (${gatheringTypeLabel(type)}): ${total} ang naitala (${kaanibIds.size} kaanib, ${visitors.length} bisita, ${otherLocals.length} galing ibang local).`;
+  let msg = `Na-import ang CSV para sa ${fmtDate(date)} (${gatheringTypeDisplay(type, customReason)}): ${total} ang naitala (${kaanibIds.size} kaanib, ${visitors.length} bisita, ${otherLocals.length} galing ibang local).`;
   if (unknown.length > 0) {
     msg += ` Hindi nakilala sa roster (${unknown.length}): ${unknown.slice(0, 10).join(", ")}${unknown.length > 10 ? ", …" : ""}`;
   }

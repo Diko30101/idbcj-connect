@@ -8,15 +8,17 @@ export const ATTENDANCE_RECORD_BASE = "/portal/attendance-record";
 
 // Mga uri ng pagkakatipon: label na Tagalog (gaya ng sa Pasalamat) at ang
 // katumbas na value ng finance_service_type enum sa database.
-// Tanging ang "Linggo" lang ang kailangang tumapat sa araw ng Linggo;
-// ang mga Pasalamat ay pwedeng kahit anong araw sa kalendaryo.
+// Tanging ang "Pagsamba" (Linggo) lang ang kailangang tumapat sa araw ng
+// Linggo; ang mga Pasalamat at Ibang dahilan ay pwedeng kahit anong araw
+// sa kalendaryo. Ang "Ibang dahilan…" ay free-text: ang user ang
+// magta-type ng uri ng pagkakatipon (sakop na nito ang Extra/Private).
 export const GATHERING_TYPES = [
-  { value: "Linggo", label: "Linggo", sundayOnly: true },
-  { value: "New Year Thanksgiving", label: "New Year Pasalamat", sundayOnly: false },
-  { value: "Anniversary Thanksgiving", label: "Anniversary Pasalamat", sundayOnly: false },
-  { value: "Taunang Pasalamat", label: "Taunang Pasalamat", sundayOnly: false },
-  { value: "Birthday Pasalamat", label: "Birthday Pasalamat", sundayOnly: false },
-  { value: "Extra Thanksgiving", label: "Extra Pasalamat", sundayOnly: false },
+  { value: "Linggo", label: "Pagsamba", sundayOnly: true, custom: false },
+  { value: "New Year Thanksgiving", label: "New Year Pasalamat", sundayOnly: false, custom: false },
+  { value: "Anniversary Thanksgiving", label: "Anniversary Pasalamat", sundayOnly: false, custom: false },
+  { value: "Taunang Pasalamat", label: "Taunang Pasalamat", sundayOnly: false, custom: false },
+  { value: "Birthday Pasalamat", label: "Birthday Pasalamat", sundayOnly: false, custom: false },
+  { value: "Ibang Pasalamat", label: "Ibang dahilan…", sundayOnly: false, custom: true },
 ] as const;
 
 // Kapareho ng finance_service_type enum sa database (mga value, pang-validate)
@@ -24,6 +26,21 @@ export const SERVICE_TYPES = GATHERING_TYPES.map((t) => t.value);
 
 export function gatheringTypeLabel(value: string): string {
   return GATHERING_TYPES.find((t) => t.value === value)?.label ?? value;
+}
+
+export function isCustomType(value: string): boolean {
+  return GATHERING_TYPES.find((t) => t.value === value)?.custom ?? false;
+}
+
+// Buong label na may kasamang custom na dahilan,
+// hal. "Ibang dahilan: Paggunita sa mga yumao".
+export function gatheringTypeDisplay(value: string, customReason?: string | null): string {
+  const t = GATHERING_TYPES.find((t) => t.value === value);
+  if (t?.custom) {
+    const reason = (customReason ?? "").trim();
+    return reason ? `Ibang dahilan: ${reason}` : "Ibang dahilan";
+  }
+  return t?.label ?? value;
 }
 
 export function isSundayOnlyType(value: string): boolean {
