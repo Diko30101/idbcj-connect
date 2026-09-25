@@ -260,7 +260,7 @@ function SidebarShell({
 
   const closeDrawer = () => setDrawerOpen(false);
 
-  // Ang mga dropdown group (hal. Finance, Gawain, Mga Kaloob, Pangasiwaan) ay
+  // Ang mga dropdown group (hal. Finance, Gawain, Mga Kaloob, Local Ministry) ay
   // nire-render nang direkta bilang expandable na SidebarGroup sa sidebar.
   const sidebarItems: NavItem[] = navItems;
 
