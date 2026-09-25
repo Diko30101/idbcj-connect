@@ -270,7 +270,7 @@ export default async function LocalFinancePage({
                     <td className="py-2 pr-3 font-semibold text-gray-700">{fmtPeso(yearMonthTotal(m))}</td>
                   </tr>
                 ))}
-                <tr className="bg-emerald-700 font-bold text-white [print-color-adjust:exact]">
+                <tr className="border-t-2 border-gray-300 font-semibold text-gray-900">
                   <td className="py-2 pr-3">Total</td>
                   {FINANCE_CATEGORIES.map((c) => (
                     <td key={c} className="py-2 pr-3">
