@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { requireRoles, fmtDate, KIND_LABEL, ROLE_LABEL, CATEGORY_LABEL, LOCALITY_LABEL, isProtectedMinistryName } from "@/lib/portal";
 import { shownEmail } from "@/lib/username";
 import { ResetPasswordButton } from "@/components/portal/reset-password-button";
+import { DeleteMemberButton } from "@/components/portal/delete-member-button";
 import { addMemberToMinistry, removeFromMinistry, updateMember } from "../../actions";
 import { Empty, Field, Notice, PageHeader, Panel, btnCls, btnDangerCls, btnGhostCls, inputCls } from "@/components/portal/ui";
 
@@ -194,6 +195,17 @@ export default async function MemberDetail({
                   </li>
                 ))}
               </ul>
+            )}
+          </Panel>
+
+          <Panel title="Burahin">
+            <DeleteMemberButton
+              id={m.id}
+              name={m.full_name || m.username || "member"}
+              disabled={readOnlyAdmin || m.id === me.id}
+            />
+            {(readOnlyAdmin || m.id === me.id) && (
+              <p className="mt-2 text-xs text-gray-500">Hindi puwedeng burahin ang sariling account o ng admin.</p>
             )}
           </Panel>
         </div>
