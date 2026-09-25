@@ -90,6 +90,43 @@ export async function submitAbuluyan(fd: FormData) {
   back(path, "ok", "Naipadala ang Abuluyan record. Naka-lock na ito.");
 }
 
+// Maramihang pagpapadala ng mga napiling draft. Tanging draft na may halaga ang
+// naipapadala (gaya ng isahang pagpapadala); ang RLS ang huling harang sa pahintulot.
+export async function submitManyAbuluyan(fd: FormData) {
+  const ctx = await getAbuluyanContext();
+  if (!ctx.isChurch && !ctx.local) denyAbuluyan();
+  const path = target(fd);
+  const ids = fd.getAll("ids").map((v) => String(v)).filter((v) => v !== "");
+  if (ids.length === 0) back(path, "error", "Walang napiling Abuluyan na ipapadala.");
+  if (ids.length > 500) back(path, "error", "Masyadong marami ang napili (500 lang ang pinakamarami).");
+
+  const { data: ok } = await ctx.supabase
+    .from("abuluyan_totals")
+    .select("id")
+    .in("id", ids)
+    .eq("status", "draft")
+    .not("total_amount", "is", null);
+  const sendable = ((ok ?? []) as { id: string }[]).map((d) => d.id);
+  if (sendable.length === 0)
+    back(path, "error", "Walang naipadala. Lagyan muna ng halaga ang mga draft bago ipadala.");
+
+  const { error, count } = await ctx.supabase
+    .from("abuluyan_totals")
+    .update({ status: "submitted" }, { count: "exact" })
+    .in("id", sendable)
+    .eq("status", "draft");
+  if (error || !count) back(path, "error", abuluyanErrorMessage(error, "Hindi naipadala. Subukan ulit."));
+  revalidatePath(ABULUYAN_BASE, "layout");
+  const skipped = ids.length - (count ?? 0);
+  back(
+    path,
+    "ok",
+    `Naipadala ang ${count} Abuluyan record. Naka-lock na ang mga ito.${
+      skipped > 0 ? ` ${skipped} ang hindi naipadala (walang halaga o walang pahintulot).` : ""
+    }`,
+  );
+}
+
 // Burahin ang draft. Local Finance: sarili nilang local lang at hindi ang kapalit na record;
 // church-wide Finance: anumang draft. Ang naipadala at na-void ay hindi puwedeng burahin;
 // ang database (RLS, 021) ang huling harang.
@@ -135,6 +172,7 @@ export async function voidAbuluyan(fd: FormData) {
   if (!localId) back(path, "error", "Pumili ng local.");
   if (!isSunday(serviceDate)) back(path, "error", "Dapat Linggo ang petsa ng Abuluyan.");
   if (reason === "") back(path, "error", "Kailangan ang dahilan ng pag-void.");
+
   const { error } = await ctx.supabase.rpc("void_abuluyan", {
     p_local_id: localId,
     p_service_date: serviceDate,
