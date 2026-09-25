@@ -73,19 +73,40 @@ export function givingErrorMessage(error: { code?: string; message?: string } | 
 }
 
 // ---------------------------------------------------------------------------
-// Pasalamat: uri (enum na pasalamat_type ng 011) at petsa ng pagbibigay. Walang paunang napiling uri.
+// Pasalamat: uri at petsa ng pagbibigay. Walang paunang napiling uri.
+// Dati: enum na pasalamat_type ng 011. Simula 020: text na, para puwedeng
+// mag-type ng sariling uri ang nag-e-encode.
 // ---------------------------------------------------------------------------
-export type PasalamatType = "new_year" | "anniversary" | "extra" | "private";
-export const PASALAMAT_TYPES: PasalamatType[] = ["new_year", "anniversary", "extra", "private"];
-export const PASALAMAT_TYPE_LABEL: Record<PasalamatType, string> = {
+export type PasalamatType = string;
+// Mga pagpipilian sa dropdown. Ang "new_year" at "private" ay mga dating
+// pagpipilian (para sa lumang records) pero hindi na inalok sa form.
+// Ang "anniversary" at "extra" ay dati nang value ("Anibersaryo" at
+// "Karagdagang Pasalamat"), kaya ang mga lumang record ay awtomatikong
+// magpapakita ng bagong label.
+export const PASALAMAT_TYPES: string[] = ["birthday", "anniversary", "annual", "extra"];
+export const PASALAMAT_TYPE_LABEL: Record<string, string> = {
+  birthday: "Birthday Pasalamat",
+  anniversary: "Anniversary Pasalamat",
+  annual: "Taunang Pasalamat",
+  extra: "Extra Pasalamat",
   new_year: "Pasalamat sa Bagong Taon",
-  anniversary: "Anibersaryo",
-  extra: "Karagdagang Pasalamat",
   private: "Pribado",
 };
+// Espesyal na value sa form kapag sariling tina-type ang uri.
+export const PASALAMAT_CUSTOM_TYPE = "__custom__";
+export const PASALAMAT_CUSTOM_LABEL = "Ako ang maglalagay";
+export const PASALAMAT_TYPE_MAX = 80;
 
-export function parsePasalamatType(v: string): PasalamatType | null {
-  return (PASALAMAT_TYPES as string[]).includes(v) ? (v as PasalamatType) : null;
+// Label na ipinapakita: preset → Filipino label; sariling type → kung ano ang tina-type.
+export function pasalamatTypeLabel(t: string): string {
+  return PASALAMAT_TYPE_LABEL[t] ?? t;
+}
+
+// Tumatanggap ng preset o sariling tina-type na uri (1–80 titik, tinatanggal ang sobrang espasyo).
+export function parsePasalamatType(v: string): string | null {
+  const s = v.trim().replace(/\s+/g, " ");
+  if (s.length === 0 || s.length > PASALAMAT_TYPE_MAX) return null;
+  return s;
 }
 
 export type PasalamatRecord = {
