@@ -142,7 +142,7 @@ export function PasalamatList({
                         Ipadala
                       </button>
                     </form>
-                })
+)}
               
                 </div>
               </div>
