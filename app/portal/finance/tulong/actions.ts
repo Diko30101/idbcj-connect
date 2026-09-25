@@ -99,23 +99,33 @@ export async function updateTulong(fd: FormData) {
   back(path, "ok", "Na-update ang Tulong sa Klase Ministeryal.");
 }
 
-// Ipadala lahat: lahat ng draft na Tulong sa Klase Ministeryal ng napiling local
-// ay nagiging submitted nang sabay-sabay. Walang indibidwal na Ipadala at walang I-void.
-export async function submitAllTulong(fd: FormData) {
+// Ipadala ang isang draft na Tulong sa Klase Ministeryal sa church-wide Finance Ministry.
+export async function submitTulong(fd: FormData) {
   const ctx = await requireGiving();
   const path = target(fd);
-  const localId = ctx.isChurch ? strOrNull(fd, "local_id") : ctx.local!.id;
-  if (!localId) back(path, "error", "Pumili ng local.");
   const { error, count } = await ctx.supabase
     .from("tulong_klase_records")
     .update({ status: "submitted" }, { count: "exact" })
-    .eq("local_id", localId)
+    .eq("id", str(fd, "id"))
     .eq("status", "draft");
-  if (error) back(path, "error", givingErrorMessage(error, "Hindi naipadala. Subukan ulit."));
+  if (error || !count) back(path, "error", givingErrorMessage(error, "Hindi naipadala. Subukan ulit."));
   revalidatePath(GIVING_BASE, "layout");
-  back(
-    path,
-    "ok",
-    count ? `Naipadala ang ${count} Tulong sa Klase Ministeryal. Church-wide Finance na lang ang makapagbabago nito.` : "Walang draft na Tulong sa Klase Ministeryal na ipapadala.",
-  );
+  back(path, "ok", "Naipadala ang Tulong sa Klase Ministeryal. Church-wide Finance na lang ang makapagbabago nito.");
+}
+
+// Ipadala ang napili: mga draft lang ang naipapadala; ang database (RLS) pa rin ang huling harang.
+export async function submitManyTulong(fd: FormData) {
+  const ctx = await requireGiving();
+  const path = target(fd);
+  const ids = fd.getAll("ids").map((v) => String(v)).filter((v) => v !== "");
+  if (ids.length === 0) back(path, "error", "Walang napiling Tulong sa Klase Ministeryal na ipapadala.");
+  if (ids.length > 500) back(path, "error", "Masyadong marami ang napili (500 lang ang pinakamarami).");
+  const { error, count } = await ctx.supabase
+    .from("tulong_klase_records")
+    .update({ status: "submitted" }, { count: "exact" })
+    .in("id", ids)
+    .eq("status", "draft");
+  if (error || !count) back(path, "error", givingErrorMessage(error, "Hindi naipadala. Subukan ulit."));
+  revalidatePath(GIVING_BASE, "layout");
+  back(path, "ok", `Naipadala ang ${count} Tulong sa Klase Ministeryal. Church-wide Finance na lang ang makapagbabago ng mga ito.`);
 }
