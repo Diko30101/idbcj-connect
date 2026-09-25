@@ -2,8 +2,9 @@ import Link from "next/link";
 import { getRosterContext, todayPH, fmtDate } from "@/lib/portal";
 import { Empty, Notice, Panel } from "@/components/portal/ui";
 import { inputCls, btnGhostCls } from "@/components/portal/form-bits";
-import { AttendanceRecordForm } from "@/components/portal/attendance-record-form";
-import { SERVICE_TYPES, ATTENDANCE_RECORD_BASE } from "./constants";
+import { AttendanceRecordForm, AttendanceCsvButtons } from "@/components/portal/attendance-record-form";
+import { AttendanceSubmitForm } from "@/components/portal/attendance-submit-form";
+import { SERVICE_TYPES, ATTENDANCE_RECORD_BASE, GATHERING_TYPES, gatheringTypeLabel, isSunday, isSundayOnlyType, isValidDate, listSundays, lastSunday, fmtSundayLabel } from "./constants";
 
 // Attendance Record (Pangasiwaan): itinatala ng local secretary ang
 // pagdalo ng bawat local sa bawat pagkakatipon, galing sa ROSTER
@@ -27,8 +28,9 @@ const norm = (s: string) =>
 type Gathering = {
   date: string;
   type: string;
+  status: "draft" | "submitted";
   memberIds: Set<string>;
-  guests: { name: string; kind: string; homeLocalId: string | null }[];
+  guests: { name: string; kind: string; homeLocalId: string | null; memberId: string | null }[];
 };
 
 function tabHref(tab: TabId, params: Record<string, string>) {
@@ -36,10 +38,78 @@ function tabHref(tab: TabId, params: Record<string, string>) {
   return `${ATTENDANCE_RECORD_BASE}?${p.toString()}`;
 }
 
+function StatusBadge({ status }: { status: "draft" | "submitted" }) {
+  return status === "submitted" ? (
+    <span className="rounded-full bg-emerald-100 px-3 py-1 text-xs font-bold text-emerald-800">Na-submit</span>
+  ) : (
+    <span className="rounded-full bg-amber-100 px-3 py-1 text-xs font-bold text-amber-800">Draft</span>
+  );
+}
+
+// Talaan ng mga dumalo sa isang pagkakatipon (ginagamit sa Magtala at Mga dumalo)
+function TalaanTable({
+  gathering,
+  memberName,
+  localName,
+  activeLocalName,
+}: {
+  gathering: Gathering;
+  memberName: Map<string, string | null>;
+  localName: Map<string, string>;
+  activeLocalName: string;
+}) {
+  const memberRows = [...gathering.memberIds].map((id) => ({
+    name: memberName.get(id) ?? "(walang pangalan)",
+    kind: "Kaanib",
+    local: activeLocalName,
+  }));
+  const guestRows = gathering.guests.map((gu) => ({
+    name: gu.name,
+    kind: gu.kind === "visitor" ? "Bisita" : "Ibang local",
+    local: gu.kind === "visitor" ? "—" : (localName.get(gu.homeLocalId ?? "") ?? ""),
+  }));
+  const rows = [...memberRows, ...guestRows];
+  const nKaanib = memberRows.length;
+  const nBisita = gathering.guests.filter((gu) => gu.kind === "visitor").length;
+  const nIbang = gathering.guests.filter((gu) => gu.kind === "other_local").length;
+  return (
+    <>
+      <div className="overflow-x-auto">
+        <table className="w-full text-left text-sm">
+          <thead>
+            <tr className="text-xs uppercase tracking-wide text-gray-400">
+              <th className="py-2 pr-3">Pangalan</th>
+              <th className="py-2 pr-3">Uri</th>
+              <th className="py-2">Local</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-gray-100">
+            {rows.map((r, i) => (
+              <tr key={i}>
+                <td className="py-2 pr-3 font-medium text-gray-900">{r.name}</td>
+                <td
+                  className={`py-2 pr-3 ${r.kind === "Bisita" ? "font-semibold text-amber-700" : r.kind === "Ibang local" ? "font-semibold text-blue-700" : "text-gray-600"}`}
+                >
+                  {r.kind}
+                </td>
+                <td className="py-2 text-gray-600">{r.local}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      <p className="mt-2 text-xs text-gray-500">
+        Kabuuan: {rows.length} dumalo · {nKaanib} kaanib{nBisita > 0 && ` · ${nBisita} bisita`}
+        {nIbang > 0 && ` · ${nIbang} galing ibang local`}
+      </p>
+    </>
+  );
+}
+
 export default async function AttendanceRecordPage({
   searchParams,
 }: {
-  searchParams: Promise<{ tab?: string; local?: string; date?: string; type?: string; q?: string; sdate?: string; ok?: string; error?: string }>;
+  searchParams: Promise<{ tab?: string; local?: string; date?: string; type?: string; q?: string; sdate?: string; edit?: string; ok?: string; error?: string }>;
 }) {
   const sp = await searchParams;
   const { supabase, locals, isAdmin } = await getRosterContext();
@@ -57,13 +127,13 @@ export default async function AttendanceRecordPage({
       .limit(2000),
     supabase
       .from("attendance_records")
-      .select("member_id, service_date, service_type")
+      .select("member_id, service_date, service_type, status")
       .eq("local_id", activeLocal.id)
       .order("service_date", { ascending: false })
       .limit(5000),
     supabase
       .from("attendance_guests")
-      .select("name, kind, home_local_id, service_date, service_type")
+      .select("name, kind, home_local_id, member_id, service_date, service_type, status")
       .eq("local_id", activeLocal.id)
       .order("service_date", { ascending: false })
       .limit(5000),
@@ -73,36 +143,58 @@ export default async function AttendanceRecordPage({
   const localName = new Map(((allLocals ?? []) as any[]).map((l) => [String(l.id), l.name as string]));
 
   const gatherings = new Map<string, Gathering>();
+  const markStatus = (g: Gathering, s: unknown) => {
+    if (s === "submitted") g.status = "submitted";
+  };
   for (const r of ((records ?? []) as any[])) {
     const key = `${r.service_date}|${r.service_type}`;
     let g = gatherings.get(key);
     if (!g) {
-      g = { date: r.service_date, type: r.service_type, memberIds: new Set(), guests: [] };
+      g = { date: r.service_date, type: r.service_type, status: "draft", memberIds: new Set(), guests: [] };
       gatherings.set(key, g);
     }
+    markStatus(g, r.status);
     g.memberIds.add(String(r.member_id));
   }
   for (const gu of ((guests ?? []) as any[])) {
     const key = `${gu.service_date}|${gu.service_type}`;
     let g = gatherings.get(key);
     if (!g) {
-      g = { date: gu.service_date, type: gu.service_type, memberIds: new Set(), guests: [] };
+      g = { date: gu.service_date, type: gu.service_type, status: "draft", memberIds: new Set(), guests: [] };
       gatherings.set(key, g);
     }
-    g.guests.push({ name: gu.name, kind: gu.kind, homeLocalId: gu.home_local_id ? String(gu.home_local_id) : null });
+    markStatus(g, gu.status);
+    g.guests.push({ name: gu.name, kind: gu.kind, homeLocalId: gu.home_local_id ? String(gu.home_local_id) : null, memberId: gu.member_id ? String(gu.member_id) : null });
   }
   const gatheringList = [...gatherings.values()].sort((a, b) => (a.date < b.date ? 1 : a.date > b.date ? -1 : 0));
 
   // --- Magtala: napiling petsa/uri + umiiral na tala ---
-  const selDate = /^\d{4}-\d{2}-\d{2}$/.test(sp.date ?? "") ? (sp.date as string) : todayPH();
+  // Ang "Linggo" ay Linggo lang sa kalendaryo (kasama ang mga dating Linggo);
+  // ang mga Pasalamat (Anniversary, New Year, atbp.) ay pwedeng kahit anong
+  // araw sa kalendaryo -- gaya ng sa Pasalamatan.
   const selType = (SERVICE_TYPES as readonly string[]).includes(sp.type ?? "") ? (sp.type as string) : "Linggo";
+  const selTypeLabel = gatheringTypeLabel(selType);
+  const sundayOnly = isSundayOnlyType(selType);
+  const sundayOpts = listSundays(todayPH(), 12, 4);
+  const defaultDate = sundayOnly ? lastSunday(todayPH()) : todayPH();
+  const selDate = (() => {
+    const d = sp.date;
+    if (d && isValidDate(d) && (!sundayOnly || isSunday(d))) return d;
+    return defaultDate;
+  })();
+  const dateOpts = sundayOpts.some((s) => s.value === selDate)
+    ? sundayOpts
+    : [...sundayOpts, { value: selDate, label: fmtSundayLabel(selDate) }].sort((a, b) =>
+        a.value < b.value ? -1 : 1,
+      );
+  const editMode = sp.edit === "1";
   const existing = gatherings.get(`${selDate}|${selType}`);
   const presentIds = existing ? [...existing.memberIds] : [];
   const visitorsDefault = existing ? existing.guests.filter((g) => g.kind === "visitor").map((g) => g.name) : [];
   const otherLocalsDefault = existing
     ? existing.guests
         .filter((g) => g.kind === "other_local")
-        .map((g) => ({ name: g.name, homeLocalId: g.homeLocalId ?? "", homeLocalName: localName.get(g.homeLocalId ?? "") ?? "" }))
+        .map((g) => ({ name: g.name, memberId: g.memberId ?? "", homeLocalId: g.homeLocalId ?? "", homeLocalName: localName.get(g.homeLocalId ?? "") ?? "" }))
     : [];
 
   // --- Hanapin ---
@@ -169,41 +261,119 @@ export default async function AttendanceRecordPage({
                 </label>
               )}
               <label className="text-sm font-medium text-gray-700">
-                Petsa
-                <input type="date" name="date" defaultValue={selDate} required className={`${inputCls} mt-1`} />
-              </label>
-              <label className="text-sm font-medium text-gray-700">
                 Uri ng pagkakatipon
                 <select name="type" defaultValue={selType} className={`${inputCls} mt-1`}>
-                  {SERVICE_TYPES.map((t) => (
-                    <option key={t} value={t}>
-                      {t}
+                  {GATHERING_TYPES.map((t) => (
+                    <option key={t.value} value={t.value}>
+                      {t.label}
                     </option>
                   ))}
                 </select>
               </label>
+              {sundayOnly ? (
+                <label className="text-sm font-medium text-gray-700">
+                  Petsa (Linggo)
+                  <select name="date" defaultValue={selDate} required className={`${inputCls} mt-1`}>
+                    {dateOpts.map((s) => (
+                      <option key={s.value} value={s.value}>
+                        {s.label}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+              ) : (
+                <label className="text-sm font-medium text-gray-700">
+                  Petsa
+                  <input type="date" name="date" defaultValue={selDate} required className={`${inputCls} mt-1`} />
+                </label>
+              )}
               <button type="submit" className={btnGhostCls}>
                 Buksan
               </button>
             </form>
           </Panel>
 
-          <Panel
-            title={`Magtala ng pagdalo — ${fmtDate(selDate)} · ${selType}`}
-            subtitle={existing ? "May naka-tala na sa pagtitipong ito; ang pag-save ay papalitan ito." : "Wala pang naka-tala sa pagtitipong ito."}
-          >
-            <AttendanceRecordForm
-              localId={activeLocal.id}
-              localName={activeLocal.name}
-              serviceDate={selDate}
-              serviceType={selType}
-              members={((roster ?? []) as any[]).map((m) => ({ id: String(m.id), full_name: m.full_name }))}
-              presentIds={presentIds}
-              visitorsDefault={visitorsDefault}
-              otherLocalsDefault={otherLocalsDefault}
-              allLocals={((allLocals ?? []) as any[]).map((l) => ({ id: String(l.id), name: l.name }))}
-            />
-          </Panel>
+          {existing && existing.status === "submitted" && (
+            <Panel
+              title={`Talaan ng mga dumalo — ${fmtDate(selDate)} · ${selTypeLabel}`}
+              subtitle="Na-submit na sa Finance Ministry; hindi na pwedeng baguhin."
+            >
+              <div className="mb-3">
+                <StatusBadge status="submitted" />
+              </div>
+              <TalaanTable
+                gathering={existing}
+                memberName={memberName}
+                localName={localName}
+                activeLocalName={activeLocal.name}
+              />
+            </Panel>
+          )}
+
+          {existing && existing.status === "draft" && !editMode && (
+            <Panel
+              title={`Talaan ng mga dumalo — ${fmtDate(selDate)} · ${selTypeLabel}`}
+              subtitle="Suriin ang talaan bago i-submit sa Finance Ministry."
+            >
+              <div className="mb-3 flex flex-wrap items-center gap-2">
+                <StatusBadge status="draft" />
+                <span className="text-xs text-gray-500">Maaari pang i-edit bago i-submit.</span>
+              </div>
+              <TalaanTable
+                gathering={existing}
+                memberName={memberName}
+                localName={localName}
+                activeLocalName={activeLocal.name}
+              />
+              <div className="mt-4">
+                <AttendanceCsvButtons localId={activeLocal.id} serviceDate={selDate} serviceType={selType} />
+              </div>
+              <div className="mt-4 flex flex-wrap gap-2 border-t border-gray-100 pt-4">
+                <Link
+                  href={tabHref("magtala", { ...baseParams, date: selDate, type: selType, edit: "1" })}
+                  className={btnGhostCls}
+                >
+                  I-edit ang tala
+                </Link>
+                <AttendanceSubmitForm
+                  localId={activeLocal.id}
+                  serviceDate={selDate}
+                  serviceType={selType}
+                  count={existing.memberIds.size + existing.guests.length}
+                />
+              </div>
+            </Panel>
+          )}
+
+          {(!existing || (existing.status === "draft" && editMode)) && (
+            <Panel
+              title={`Magtala ng pagdalo — ${fmtDate(selDate)} · ${selTypeLabel}`}
+              subtitle={
+                existing
+                  ? "Draft pa lang ito; ang pag-save ay papalitan ang kasalukuyang tala."
+                  : "Wala pang naka-tala sa pagtitipong ito. Mase-save ito bilang draft."
+              }
+            >
+              {existing && (
+                <div className="mb-4">
+                  <Link href={tabHref("magtala", { ...baseParams, date: selDate, type: selType })} className={btnGhostCls}>
+                    ← Bumalik sa talaan
+                  </Link>
+                </div>
+              )}
+              <AttendanceRecordForm
+                localId={activeLocal.id}
+                localName={activeLocal.name}
+                serviceDate={selDate}
+                serviceType={selType}
+                members={((roster ?? []) as any[]).map((m) => ({ id: String(m.id), full_name: m.full_name }))}
+                presentIds={presentIds}
+                visitorsDefault={visitorsDefault}
+                otherLocalsDefault={otherLocalsDefault}
+                allLocals={((allLocals ?? []) as any[]).map((l) => ({ id: String(l.id), name: l.name }))}
+              />
+            </Panel>
+          )}
         </>
       )}
 
@@ -214,57 +384,27 @@ export default async function AttendanceRecordPage({
           ) : (
             <div className="space-y-2">
               {gatheringList.map((g) => {
-                const memberRows = [...g.memberIds].map((id) => ({
-                  name: memberName.get(id) ?? "(walang pangalan)",
-                  kind: "Kaanib",
-                  local: activeLocal.name,
-                }));
-                const guestRows = g.guests.map((gu) => ({
-                  name: gu.name,
-                  kind: gu.kind === "visitor" ? "Bisita" : "Ibang local",
-                  local: gu.kind === "visitor" ? "—" : (localName.get(gu.homeLocalId ?? "") ?? ""),
-                }));
-                const rows = [...memberRows, ...guestRows];
-                const nKaanib = memberRows.length;
-                const nBisita = g.guests.filter((gu) => gu.kind === "visitor").length;
-                const nIbang = g.guests.filter((gu) => gu.kind === "other_local").length;
                 return (
                   <details key={`${g.date}|${g.type}`} className="rounded-lg border border-gray-200">
                     <summary className="flex cursor-pointer items-center justify-between gap-3 px-4 py-3 hover:bg-emerald-50/40">
                       <span className="text-sm">
                         <strong className="font-semibold text-gray-900">{fmtDate(g.date)}</strong>
-                        <span className="text-gray-500"> · {g.type}</span>
+                        <span className="text-gray-500"> · {gatheringTypeLabel(g.type)}</span>
                       </span>
-                      <span className="rounded-full bg-emerald-50 px-3 py-1 text-xs font-bold text-emerald-700">
-                        {rows.length} dumalo
+                      <span className="flex items-center gap-2">
+                        <StatusBadge status={g.status} />
+                        <span className="rounded-full bg-emerald-50 px-3 py-1 text-xs font-bold text-emerald-700">
+                          {g.memberIds.size + g.guests.length} dumalo
+                        </span>
                       </span>
                     </summary>
                     <div className="border-t border-gray-100 px-4 py-3">
-                      <div className="overflow-x-auto">
-                        <table className="w-full text-left text-sm">
-                          <thead>
-                            <tr className="text-xs uppercase tracking-wide text-gray-400">
-                              <th className="py-2 pr-3">Pangalan</th>
-                              <th className="py-2 pr-3">Uri</th>
-                              <th className="py-2">Local</th>
-                            </tr>
-                          </thead>
-                          <tbody className="divide-y divide-gray-100">
-                            {rows.map((r, i) => (
-                              <tr key={i}>
-                                <td className="py-2 pr-3 font-medium text-gray-900">{r.name}</td>
-                                <td className={`py-2 pr-3 ${r.kind === "Bisita" ? "font-semibold text-amber-700" : r.kind === "Ibang local" ? "font-semibold text-blue-700" : "text-gray-600"}`}>
-                                  {r.kind}
-                                </td>
-                                <td className="py-2 text-gray-600">{r.local}</td>
-                              </tr>
-                            ))}
-                          </tbody>
-                        </table>
-                      </div>
-                      <p className="mt-2 text-xs text-gray-500">
-                        Kabuuan: {nKaanib} kaanib{nBisita > 0 && ` · ${nBisita} bisita`}{nIbang > 0 && ` · ${nIbang} galing ibang local`}
-                      </p>
+                      <TalaanTable
+                        gathering={g}
+                        memberName={memberName}
+                        localName={localName}
+                        activeLocalName={activeLocal.name}
+                      />
                     </div>
                   </details>
                 );
@@ -286,7 +426,7 @@ export default async function AttendanceRecordPage({
                   <option value="all">Lahat ng petsa</option>
                   {gatheringList.map((g) => (
                     <option key={`${g.date}|${g.type}`} value={g.date}>
-                      {fmtDate(g.date)} · {g.type}
+                      {fmtDate(g.date)} · {gatheringTypeLabel(g.type)}
                     </option>
                   ))}
                 </select>
@@ -318,7 +458,7 @@ export default async function AttendanceRecordPage({
                           return (
                             <div key={`${g.date}|${g.type}`} className="flex items-center justify-between gap-3 text-sm">
                               <span className="text-gray-600">
-                                {fmtDate(g.date)} · {g.type}
+                                {fmtDate(g.date)} · {gatheringTypeLabel(g.type)}
                               </span>
                               <strong className={present ? "text-emerald-700" : "text-red-600"}>
                                 {present ? "✓ Dumalo" : "✕ Hindi dumalo"}
@@ -333,12 +473,12 @@ export default async function AttendanceRecordPage({
                     <div key={`g-${i}`} className="rounded-lg border border-gray-200 p-4">
                       <p className="font-semibold text-gray-900">{gu.name}</p>
                       <p className="text-xs text-gray-400">
-                        {gu.kind === "visitor" ? "Bisita" : `Galing ibang local (${localName.get(gu.homeLocalId ?? "") ?? ""})`}
+                        {gu.kind === "visitor" ? "Bisita" : `Galing ibang local (${localName.get(gu.homeLocalId ?? "") ?? ""}) · beripikado sa roster`}
                       </p>
                       <div className="mt-2">
                         <div className="flex items-center justify-between gap-3 text-sm">
                           <span className="text-gray-600">
-                            {fmtDate(gu.date)} · {gu.type}
+                            {fmtDate(gu.date)} · {gatheringTypeLabel(gu.type)}
                           </span>
                           <strong className="text-emerald-700">✓ Dumalo</strong>
                         </div>
