@@ -73,11 +73,11 @@ function GiverTable({
                   <td className="py-2 text-right text-gray-700">{fmtPeso(r.amount)}</td>
                 </tr>
               ))}
-              <tr className="border-t-2 border-gray-300 font-semibold text-gray-900">
-                <td className="py-2 pr-3" colSpan={3}>
+              <tr className="bg-emerald-700 font-bold text-white [print-color-adjust:exact]">
+                <td className="px-2 py-2" colSpan={3}>
                   Kabuuan
                 </td>
-                <td className="py-2 text-right">{fmtPeso(total)}</td>
+                <td className="px-2 py-2 text-right tabular-nums">{fmtPeso(total)}</td>
               </tr>
             </tbody>
           </table>
@@ -270,7 +270,7 @@ export default async function LocalFinancePage({
                     <td className="py-2 pr-3 font-semibold text-gray-700">{fmtPeso(yearMonthTotal(m))}</td>
                   </tr>
                 ))}
-                <tr className="border-t-2 border-gray-300 font-semibold text-gray-900">
+                <tr className="bg-emerald-700 font-bold text-white [print-color-adjust:exact]">
                   <td className="py-2 pr-3">Total</td>
                   {FINANCE_CATEGORIES.map((c) => (
                     <td key={c} className="py-2 pr-3">
