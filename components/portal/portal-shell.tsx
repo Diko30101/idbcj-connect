@@ -18,7 +18,6 @@ import {
   HeartHandshake,
   Home,
   Inbox,
-  KeyRound,
   LayoutDashboard,
   Megaphone,
   Menu,
@@ -27,7 +26,6 @@ import {
   PiggyBank,
   Receipt,
   ScrollText,
-  ShieldCheck,
   User,
   Users,
   Wallet,
@@ -73,8 +71,6 @@ const ICONS: Record<string, LucideIcon> = {
   "/portal/finance/tulong": HandHelping,
   "/portal/finance/pasalamat": Gift,
   "/portal/roster": ClipboardList,
-  "/portal/giving-permissions": KeyRound,
-  "/portal/finance/audit": ShieldCheck,
   "/portal/audit": ScrollText,
 };
 
