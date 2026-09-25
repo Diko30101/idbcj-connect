@@ -7,7 +7,7 @@ import { AbuluyanForm } from "@/components/portal/abuluyan-form";
 import { AbuluyanList } from "@/components/portal/abuluyan-list";
 import { ABULUYAN_BASE, ABULUYAN_BUWANAN_PATH, type AbuluyanRecord } from "@/lib/abuluyan";
 
-// Pahina ng church-wide Finance: lahat ng local. Dito nagvo-void at gumagawa ng kapalit.
+// Pahina ng church-wide Finance at Admin: lahat ng local. Dito nagvo-void at gumagawa ng kapalit.
 export default async function AbuluyanChurchPage({
   searchParams,
 }: {
@@ -15,9 +15,9 @@ export default async function AbuluyanChurchPage({
 }) {
   const { ok, error, local: localParam } = await searchParams;
   const ctx = await getAbuluyanContext();
-  if (!ctx.isChurch) {
+  // Tinanggal na ang /void na pahina; ang Admin ay dito na rin sa lahat-pahina.
+  if (!ctx.isChurch && !ctx.isAdmin) {
     if (ctx.local) redirect(ABULUYAN_BASE);
-    if (ctx.isAdmin) redirect(`${ABULUYAN_BASE}/void`);
     denyAbuluyan();
   }
   const { supabase } = ctx;
