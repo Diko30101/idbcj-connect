@@ -46,7 +46,7 @@ export default async function AbuluyanChurchPage({
     <>
       <PageHeader
         title="Abuluyan — lahat ng local"
-        subtitle="Church-wide Finance: i-void ang naipadala at gumawa ng kapalit"
+        subtitle="Church-wide Finance: lahat ng local"
         action={
           <Link href={ABULUYAN_BUWANAN_PATH} className={btnGhostCls}>
             Buwanang Ulat
