@@ -4,12 +4,16 @@ import {
   FINANCE_CATEGORIES,
   FINANCE_CATEGORY_LABEL,
 } from "@/lib/portal";
-import { currentMonthPH, monthToDate, monthLabel } from "@/lib/finance";
+import { currentMonthPH, monthLabel, fmtPeso } from "@/lib/finance";
+import { getYearlyCollections, LOCALITY_TO_LOCAL_KEY } from "@/lib/finance-collections";
 import { Notice, PageHeader, Panel, btnGhostCls, inputCls } from "@/components/portal/ui";
-import { LocalFinanceGrid } from "@/components/portal/local-finance-grid";
-import { LocalYearlyFinanceGrid } from "@/components/portal/local-yearly-finance-grid";
 import { FinanceChart } from "@/components/portal/finance-chart";
 
+// Local Finance: read-only na buod ng koleksyon ng sariling lokal.
+// Ang data ay galing LAMANG sa apat na pinagmumulan na in-encode ng
+// Local Finance Ministry: Abuluyan, Ambagan, Tulong sa Aral, Pasalamat
+// (mga naipadala na; hindi kasama ang draft at void). Walang manu-manong
+// pag-encode dito.
 export default async function LocalFinancePage({
   searchParams,
 }: {
@@ -20,44 +24,37 @@ export default async function LocalFinancePage({
 
   const month = monthParam && /^\d{4}-\d{2}$/.test(monthParam) ? monthParam : currentMonthPH();
   const year = yearParam && /^\d{4}$/.test(yearParam) ? yearParam : month.slice(0, 4);
+  const mm = month.slice(5, 7);
+  const localKey = LOCALITY_TO_LOCAL_KEY[locality];
 
-  const [monthRes, yearRes] = await Promise.all([
-    supabase
-      .from("financial_records")
-      .select("category, amount, updated_at, profiles!financial_records_updated_by_fkey(full_name)")
-      .eq("record_month", monthToDate(month))
-      .eq("locality", locality),
-    supabase
-      .from("financial_records")
-      .select("record_month, category, amount")
-      .eq("locality", locality)
-      .gte("record_month", `${year}-01-01`)
-      .lt("record_month", `${Number(year) + 1}-01-01`),
-  ]);
+  const collections = await getYearlyCollections(supabase, year);
+  const mine = collections.filter((r) => r.localKey === localKey);
 
-  const initial: Record<string, number> = {};
-  let lastUpdated: { at: string; by: string } | null = null;
-  for (const r of (monthRes.data ?? []) as any[]) {
-    initial[r.category] = Number(r.amount);
-    if (r.updated_at && (!lastUpdated || r.updated_at > lastUpdated.at)) {
-      lastUpdated = { at: r.updated_at, by: r.profiles?.full_name ?? "Local Treasurer" };
-    }
+  // Buwanang buod (napiling buwan)
+  const monthTotals = new Map<string, number>();
+  for (const r of mine) {
+    if (r.month !== mm) continue;
+    monthTotals.set(r.category, (monthTotals.get(r.category) ?? 0) + r.amount);
   }
+  const monthGrand = FINANCE_CATEGORIES.reduce((s, c) => s + (monthTotals.get(c) ?? 0), 0);
 
-  // Taunang buod: buwan x kategorya, para lang sa sariling lokal
-  const yearGrid = new Map<string, number>(); // key = `${MM}_${category}`
-  for (const r of (yearRes.data ?? []) as any[]) {
-    const mm = (r.record_month as string).slice(5, 7);
-    yearGrid.set(`${mm}_${r.category}`, Number(r.amount));
+  // Taunang buod: buwan x kategorya
+  const yearGrid = new Map<string, number>();
+  for (const r of mine) {
+    const key = `${r.month}_${r.category}`;
+    yearGrid.set(key, (yearGrid.get(key) ?? 0) + r.amount);
   }
-  const yearInitialValues: Record<string, number> = Object.fromEntries(yearGrid);
+  const yearValues: Record<string, number> = Object.fromEntries(yearGrid);
   const months12 = Array.from({ length: 12 }, (_, i) => String(i + 1).padStart(2, "0"));
+  const yearCatTotal = (c: string) => months12.reduce((s, m) => s + (yearGrid.get(`${m}_${c}`) ?? 0), 0);
+  const yearMonthTotal = (m: string) => FINANCE_CATEGORIES.reduce((s, c) => s + (yearGrid.get(`${m}_${c}`) ?? 0), 0);
+  const yearGrandTotal = FINANCE_CATEGORIES.reduce((s, c) => s + yearCatTotal(c), 0);
 
   return (
     <>
       <PageHeader
         title="Local Finance"
-        subtitle="Pag-encode ng buwanang koleksyon para sa sariling lokal: Abuluyan, Ambagan, Tulong sa Aral, Pasalamat"
+        subtitle={`Koleksyon ng ${LOCALITY_LABEL[locality]} mula sa Abuluyan, Ambagan, Tulong sa Aral at Pasalamat na na-encode ng Local Finance Ministry`}
       />
       <Notice ok={ok} error={error} />
 
@@ -73,15 +70,21 @@ export default async function LocalFinancePage({
       </Panel>
 
       <div className="mt-6">
-        <Panel title={`I-encode: ${monthLabel(month)}`}>
-          <LocalFinanceGrid
-            month={month}
-            localityLabel={LOCALITY_LABEL[locality]}
-            categories={FINANCE_CATEGORIES}
-            categoryLabel={FINANCE_CATEGORY_LABEL}
-            initial={initial}
-            lastUpdated={lastUpdated}
-          />
+        <Panel title={`Buod · ${monthLabel(month)}`}>
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
+            {FINANCE_CATEGORIES.map((c) => (
+              <div key={c} className="rounded-xl border border-gray-100 bg-slate-50 p-4">
+                <div className="text-xs font-semibold uppercase tracking-wide text-gray-500">
+                  {FINANCE_CATEGORY_LABEL[c]}
+                </div>
+                <div className="mt-1 text-xl font-bold text-gray-900">{fmtPeso(monthTotals.get(c) ?? 0)}</div>
+              </div>
+            ))}
+            <div className="rounded-xl border border-emerald-100 bg-emerald-50 p-4">
+              <div className="text-xs font-semibold uppercase tracking-wide text-emerald-700">Kabuuang Pumasok</div>
+              <div className="mt-1 text-xl font-bold text-emerald-900">{fmtPeso(monthGrand)}</div>
+            </div>
+          </div>
         </Panel>
       </div>
 
@@ -102,16 +105,47 @@ export default async function LocalFinancePage({
               months={months12}
               categories={FINANCE_CATEGORIES}
               categoryLabel={FINANCE_CATEGORY_LABEL}
-              values={yearInitialValues}
+              values={yearValues}
             />
           </div>
 
-          <LocalYearlyFinanceGrid
-            year={year}
-            categories={FINANCE_CATEGORIES}
-            categoryLabel={FINANCE_CATEGORY_LABEL}
-            initial={yearInitialValues}
-          />
+          <div className="overflow-x-auto">
+            <table className="w-full min-w-[720px] border-collapse text-sm">
+              <thead>
+                <tr className="border-b border-gray-200 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">
+                  <th className="py-2 pr-3">Buwan</th>
+                  {FINANCE_CATEGORIES.map((c) => (
+                    <th key={c} className="py-2 pr-3">
+                      {FINANCE_CATEGORY_LABEL[c]}
+                    </th>
+                  ))}
+                  <th className="py-2 pr-3">Total</th>
+                </tr>
+              </thead>
+              <tbody>
+                {months12.map((m) => (
+                  <tr key={m} className="border-b border-gray-100">
+                    <td className="py-2 pr-3 font-medium text-gray-800">{monthLabel(`${year}-${m}`)}</td>
+                    {FINANCE_CATEGORIES.map((c) => (
+                      <td key={c} className="py-2 pr-3 text-gray-700">
+                        {fmtPeso(yearGrid.get(`${m}_${c}`) ?? 0)}
+                      </td>
+                    ))}
+                    <td className="py-2 pr-3 font-semibold text-gray-700">{fmtPeso(yearMonthTotal(m))}</td>
+                  </tr>
+                ))}
+                <tr className="border-t-2 border-gray-300 font-semibold text-gray-900">
+                  <td className="py-2 pr-3">Total</td>
+                  {FINANCE_CATEGORIES.map((c) => (
+                    <td key={c} className="py-2 pr-3">
+                      {fmtPeso(yearCatTotal(c))}
+                    </td>
+                  ))}
+                  <td className="py-2 pr-3">{fmtPeso(yearGrandTotal)}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
         </Panel>
       </div>
     </>
