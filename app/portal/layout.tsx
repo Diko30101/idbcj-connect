@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
-import { getPortalContext, isStaff, isFinance, LOCAL_FINANCE_MINISTRY_NAME, FINANCE_MINISTRY_NAME, PASTORAL_MINISTRY_NAME, ROSTER_MINISTRY_NAMES } from "@/lib/portal";
+import { getPortalContext, isStaff, isFinance, LOCAL_FINANCE_MINISTRY_NAME, FINANCE_MINISTRY_NAME, PASTORAL_MINISTRY_NAME, ROSTER_MINISTRY_NAMES, LOCAL_ADMIN_MINISTRY_NAME } from "@/lib/portal";
 import { PortalShell } from "@/components/portal/portal-shell";
 import type { NavItem } from "@/components/portal/portal-nav";
 import { shownEmail } from "@/lib/username";
@@ -46,12 +46,20 @@ export default async function PortalLayout({ children }: { children: React.React
     items.push({ href: "/portal/sermons", label: "Sermons" });
     items.push({ href: "/portal/events", label: "Events" });
   }
+  let showLocalMinistry = profile.role === "admin";
   {
     const needsMinistryCheck = !(isFinance(profile.role) && isStaff(profile.role));
     // Kinukuha palagi (para sa nav ng Roster); ang lohika ng Finance sa ibaba ay hindi nagbabago (myMinistries ay null kung isFinance ang role)
     const { data: allMinistries } = await supabase.from("ministry_members").select("ministries(name)").eq("profile_id", profile.id);
     const myMinistries = needsMinistryCheck ? allMinistries : null;
     const isRosterMember = ((allMinistries ?? []) as any[]).some((m) => ROSTER_MINISTRY_NAMES.includes(m.ministries?.name));
+    // Ang "Local Ministry" na menu ay para lang sa Local Admin Ministry
+    // (mga nagtatala at nagpapadala ng local data sa Finance at Administrative Ministry),
+    // bukod sa Admin na lahat ay nakikita.
+    const isLocalAdminMinistry = ((allMinistries ?? []) as any[]).some(
+      (m) => m.ministries?.name === LOCAL_ADMIN_MINISTRY_NAME,
+    );
+    showLocalMinistry = profile.role === "admin" || isLocalAdminMinistry;
     const isLocalFinanceMember = ((myMinistries ?? []) as any[]).some(
       (m) => m.ministries?.name === LOCAL_FINANCE_MINISTRY_NAME,
     );
@@ -100,7 +108,7 @@ export default async function PortalLayout({ children }: { children: React.React
   if (profile.role === "admin") items.push({ href: "/portal/audit", label: "Audit Log" });
 
   // Paggrupohin ang mga hindi gaanong ginagamit na item sa mga dropdown
-  // (Gawain, Pangasiwaan) para hindi humaba nang sobra ang nav bar.
+  // (Gawain, Mga Kaloob, Local Ministry) para hindi humaba nang sobra ang nav bar.
   // Ang bawat item ay dati nang na-filter base sa role (sa itaas), kaya ang
   // pag-grupo lang ang binabago dito -- hindi apektado ang access control.
   const ALWAYS_VISIBLE_HREFS = new Set([
@@ -117,8 +125,16 @@ export default async function PortalLayout({ children }: { children: React.React
       hrefs: ["/portal/ministries", "/portal/prayer", "/portal/attendance", "/portal/sermons", "/portal/events"],
     },
     {
-      label: "Pangasiwaan",
-      hrefs: ["/portal/roster", "/portal/attendance-record", "/portal/finance/abuluyan", "/portal/finance/ambagan", "/portal/finance/tulong", "/portal/finance/pasalamat", "/portal/finance/resibo", "/portal/finance/local", "/portal/audit"],
+      label: "Mga Kaloob",
+      hrefs: [
+        "/portal/finance/abuluyan", "/portal/finance/ambagan",
+        "/portal/finance/tulong",
+        "/portal/finance/pasalamat",
+      ],
+    },
+    {
+      label: "Local Ministry",
+      hrefs: ["/portal/roster", "/portal/attendance-record", "/portal/finance/abuluyan", "/portal/finance/resibo", "/portal/finance/local", "/portal/audit"],
     },
   ];
   const alwaysVisible = items.filter((i) => ALWAYS_VISIBLE_HREFS.has(i.href));
@@ -130,6 +146,16 @@ export default async function PortalLayout({ children }: { children: React.React
   for (const def of GROUP_DEFS) {
     const children = def.hrefs.flatMap((h) => overflow.filter((i) => i.href === h));
     if (children.length === 0) continue;
+    // Ang "Local Ministry" ay para lang sa Admin at Local Admin Ministry.
+    // Sa iba (hal. Local Finance o Administrative Ministry lang), direktang
+    // links pa rin ang mga pahinang may access sila -- hindi nawawala.
+    if (def.label === "Local Ministry" && !showLocalMinistry) {
+      const claimedByOthers = new Set(GROUP_DEFS.filter((d) => d !== def).flatMap((d) => d.hrefs));
+      for (const c of children) {
+        if (!claimedByOthers.has(c.href) && !navItems.some((n) => n.href === c.href)) navItems.push(c);
+      }
+      continue;
+    }
     // Kung iisa lang ang laman ng grupo, direktang link na lang -- huwag nang i-dropdown.
     if (children.length === 1) navItems.push(children[0]);
     else navItems.push({ href: children[0].href, label: def.label, children });
