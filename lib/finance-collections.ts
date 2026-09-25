@@ -25,6 +25,7 @@ export const LOCALITY_TO_LOCAL_KEY: Record<Locality, string> = {
 
 export type CollectionRow = {
   month: string; // "01".."12"
+  date: string; // buong petsa gaya ng nasa record (YYYY-MM-DD)
   category: FinanceCategory;
   locality: Locality | null;
   localKey: string | null;
@@ -82,11 +83,13 @@ export async function getYearlyCollections(
 
   const rows: CollectionRow[] = [];
   const push = (dateStr: unknown, amount: unknown, localId: unknown, category: FinanceCategory) => {
-    const mm = String(dateStr ?? "").slice(5, 7);
+    const ds = String(dateStr ?? "");
+    const mm = ds.slice(5, 7);
     if (!/^(0[1-9]|1[0-2])$/.test(mm)) return;
     const localKey = typeof localId === "string" ? (keyById.get(localId) ?? null) : null;
     rows.push({
       month: mm,
+      date: ds.slice(0, 10),
       category,
       locality: localKey ? (LOCAL_KEY_TO_LOCALITY[localKey] ?? null) : null,
       localKey,
