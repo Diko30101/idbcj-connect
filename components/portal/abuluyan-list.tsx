@@ -1,9 +1,9 @@
 "use client";
 
-import { useState, type FormEvent } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 import { AbuluyanForm } from "./abuluyan-form";
 import { AbuluyanVoidForm } from "./abuluyan-void-form";
-import { updateAbuluyanDraft, submitAbuluyan, deleteAbuluyanDraft, createAbuluyan } from "@/app/portal/finance/abuluyan/actions";
+import { updateAbuluyanDraft, submitAbuluyan, submitManyAbuluyan, deleteAbuluyanDraft, createAbuluyan } from "@/app/portal/finance/abuluyan/actions";
 import { btnCls, btnDangerCls, btnGhostCls } from "./form-bits";
 import { fmtPeso } from "@/lib/finance";
 import { ABULUYAN_STATUS_LABEL, type AbuluyanRecord, type AbuluyanStatus } from "@/lib/abuluyan";
@@ -47,6 +47,20 @@ export function AbuluyanList({
 }) {
   const [editingId, setEditingId] = useState<string | null>(null);
 
+  // Maramihang pagpapadala: checkbox sa bawat draft na puwedeng ipadala + "piliin lahat".
+  // Ang kapalit na draft ay church-wide Finance lang ang makapagpapadala (gaya ng isahang Ipadala).
+  const canSubmitRow = (r: AbuluyanRecord) => r.status === "draft" && (mode === "church" || r.replaces_id === null);
+  const submittable = records.filter(canSubmitRow);
+  const [selected, setSelected] = useState<string[]>([]);
+  const draftKey = submittable.map((d) => d.id).join(",");
+  useEffect(() => {
+    const valid = new Set(draftKey.split(",").filter(Boolean));
+    setSelected((prev) => prev.filter((id) => valid.has(id)));
+  }, [draftKey]);
+  const allSelected = submittable.length > 0 && selected.length === submittable.length;
+  const toggleAll = () => setSelected(allSelected ? [] : submittable.map((d) => d.id));
+  const toggleOne = (id: string) => setSelected((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
+
   if (records.length === 0) return <p className="text-sm text-gray-500 py-4 text-center">Wala pang naitatalang Abuluyan.</p>;
 
   function confirmSubmit(e: FormEvent<HTMLFormElement>) {
@@ -61,10 +75,47 @@ export function AbuluyanList({
     }
   }
 
+  function confirmBulk(e: FormEvent<HTMLFormElement>) {
+    if (selected.length === 0) {
+      e.preventDefault();
+      return;
+    }
+    if (!window.confirm(`Ipapadala ang ${selected.length} Abuluyan record? Hindi na ang mga ito puwedeng i-edit pagkatapos.`)) {
+      e.preventDefault();
+    }
+  }
+
   const activeAt = (r: AbuluyanRecord) =>
     records.some((x) => x.local_id === r.local_id && x.service_date === r.service_date && x.status !== "void");
 
   return (
+    <>
+      {submittable.length > 0 && (
+        <form
+          action={submitManyAbuluyan}
+          onSubmit={confirmBulk}
+          className="mb-3 flex flex-wrap items-center gap-x-4 gap-y-2 rounded-lg bg-emerald-50/70 px-3 py-2.5"
+        >
+          <label className="flex cursor-pointer items-center gap-2 text-sm font-medium text-gray-700">
+            <input
+              type="checkbox"
+              checked={allSelected}
+              onChange={toggleAll}
+              aria-label="Piliin lahat ng draft na Abuluyan"
+              className="h-4 w-4 accent-emerald-700"
+            />
+            Piliin lahat ({submittable.length})
+          </label>
+          <span className="text-xs text-gray-500">{selected.length} napili</span>
+          {selected.map((id) => (
+            <input key={id} type="hidden" name="ids" value={id} />
+          ))}
+          <input type="hidden" name="path" value={path} />
+          <button type="submit" className={btnCls} disabled={selected.length === 0}>
+            Ipadala ang napili{selected.length > 0 ? ` (${selected.length})` : ""}
+          </button>
+        </form>
+      )}
     <div className="divide-y divide-gray-100">
       {records.map((r) => {
         const isReplacement = r.replaces_id !== null;
@@ -87,7 +138,16 @@ export function AbuluyanList({
             ) : (
               <div className="grid gap-3">
                 <div className="flex flex-wrap items-center justify-between gap-3">
-                  <div>
+                  {canSubmitRow(r) && (
+                    <input
+                      type="checkbox"
+                      checked={selected.includes(r.id)}
+                      onChange={() => toggleOne(r.id)}
+                      aria-label={`Piliin ang Abuluyan noong ${r.service_date}`}
+                      className="h-4 w-4 shrink-0 accent-emerald-700"
+                    />
+                  )}
+                  <div className="min-w-0 flex-1">
                     <p className="font-semibold text-gray-800">{fmtDatePH(r.service_date)}</p>
                     <p className="text-sm text-gray-500">
                       {r.total_amount === null ? "Wala pang halaga" : fmtPeso(r.total_amount)}
@@ -158,5 +218,6 @@ export function AbuluyanList({
         );
       })}
     </div>
+    </>
   );
 }
