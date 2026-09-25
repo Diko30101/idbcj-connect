@@ -6,7 +6,7 @@ import { AttendanceRecordForm, AttendanceCsvButtons } from "@/components/portal/
 import { AttendanceSubmitForm } from "@/components/portal/attendance-submit-form";
 import { SERVICE_TYPES, ATTENDANCE_RECORD_BASE, GATHERING_TYPES, gatheringTypeDisplay, isSunday, isSundayOnlyType, isValidDate, listSundays, lastSunday, fmtSundayLabel } from "./constants";
 
-// Attendance Record (Pangasiwaan): itinatala ng local secretary ang
+// Attendance Record (Local Ministry): itinatala ng local secretary ang
 // pagdalo ng bawat local sa bawat pagkakatipon, galing sa ROSTER
 // (public.members) -- hindi sa mga login account (profiles).
 // Tabs: Magtala (form) | Mga dumalo (bawat pagkakatipon) | Hanapin.
@@ -221,7 +221,7 @@ export default async function AttendanceRecordPage({
   return (
     <>
       <div className="mb-6">
-        <p className="text-xs font-semibold uppercase tracking-widest text-gray-400">Pangasiwaan</p>
+        <p className="text-xs font-semibold uppercase tracking-widest text-gray-400">Local Ministry</p>
         <h1 className="mt-1 text-2xl font-bold tracking-tight text-gray-900">Attendance Record</h1>
         <p className="mt-1 text-sm text-gray-500">Talaan ng pagdalo sa bawat pagkakatipon · {activeLocal.name}</p>
         <p className="mt-0.5 text-xs text-gray-400">

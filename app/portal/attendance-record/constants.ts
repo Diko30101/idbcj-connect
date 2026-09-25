@@ -14,7 +14,6 @@ export const ATTENDANCE_RECORD_BASE = "/portal/attendance-record";
 // magta-type ng uri ng pagkakatipon (sakop na nito ang Extra/Private).
 export const GATHERING_TYPES = [
   { value: "Linggo", label: "Pagsamba", sundayOnly: true, custom: false },
-  { value: "New Year Thanksgiving", label: "New Year Pasalamat", sundayOnly: false, custom: false },
   { value: "Anniversary Thanksgiving", label: "Anniversary Pasalamat", sundayOnly: false, custom: false },
   { value: "Taunang Pasalamat", label: "Taunang Pasalamat", sundayOnly: false, custom: false },
   { value: "Birthday Pasalamat", label: "Birthday Pasalamat", sundayOnly: false, custom: false },
