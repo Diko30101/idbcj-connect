@@ -102,6 +102,11 @@ export async function getFinanceMinistryRecipientIds(supabase: SupabaseClient): 
 // Mga ministry na nagma-manage ng roster (public.members) ng sariling local (kasama ang Admin, na lahat ng local)
 export const ROSTER_MINISTRY_NAMES = ["Administrative Ministry", "Local Admin Ministry"];
 
+// Ang Local Admin Ministry: mga taga-local na nagtatala at nagpapadala ng
+// local data (roster, attendance, mga kaloob) sa Finance Ministry at
+// Administrative Ministry. Sila ang may-ari ng "Local Ministry" na menu.
+export const LOCAL_ADMIN_MINISTRY_NAME = "Local Admin Ministry";
+
 // ---------------------------------------------------------------
 // Petsa (Philippine time)
 // ---------------------------------------------------------------
