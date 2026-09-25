@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { getAbuluyanContext, denyAbuluyan } from "@/lib/portal";
-import { createAmbagan, searchMembers, submitAllAmbagan } from "./actions";
+import { createAmbagan, searchMembers, submitAmbagan, submitManyAmbagan, updateAmbagan } from "./actions";
 import { Notice, PageHeader, Panel } from "@/components/portal/ui";
 import { AmbaganForm } from "@/components/portal/ambagan-form";
 import { AmbaganList } from "@/components/portal/ambagan-list";
@@ -96,8 +96,8 @@ export default async function AmbaganPage({
                 timezone={selected.timezone}
                 path={path}
                 mode={ctx.isChurch ? "church" : "local"}
-                bulkSubmitAll={{ action: submitAllAmbagan, label: "Ipadala lahat" }}
-                bulkLocalId={ctx.isChurch ? selected.id : undefined}
+                actions={{ update: updateAmbagan, submit: submitAmbagan }}
+                submitMany={{ action: submitManyAmbagan }}
               />
             </Panel>
           </div>
