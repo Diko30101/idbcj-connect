@@ -2,6 +2,7 @@
 
 import { randomInt } from "crypto";
 import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
 import { CATEGORIES, type Category } from "@/lib/categories";
 import { LOCALITIES, type Locality } from "@/lib/locality";
 import { requireRoles, str, strOrNull } from "@/lib/portal";
@@ -148,4 +149,49 @@ export async function resetMemberPassword(_prev: ResetPasswordState, fd: FormDat
   });
 
   return { done: { username: target.username ?? target.email ?? "", tempPassword } };
+}
+
+// ---------------------------------------------------------------
+// BURAHIN ANG MEMBER (admin o secretary). Pinal: binubura ang auth
+// account at ang profile; ang mga kaugnay na tala ay sumusunod sa
+// on-delete rules ng database (cascade o set null).
+// ---------------------------------------------------------------
+export type DeleteMemberState = { error?: string } | null;
+
+export async function deleteMember(_prev: DeleteMemberState, fd: FormData): Promise<DeleteMemberState> {
+  const { user, profile: me } = await requireRoles(["admin", "secretary"]);
+  const id = str(fd, "id");
+  const name = str(fd, "name");
+  if (!id) return { error: "Walang napiling member." };
+  if (id === user.id) return { error: "Hindi puwedeng burahin ang sariling account." };
+
+  let admin;
+  try {
+    admin = createAdminClient();
+  } catch {
+    return { error: NO_KEY_MSG };
+  }
+
+  const { data: target } = await admin.from("profiles").select("id, role, full_name").eq("id", id).maybeSingle();
+  if (!target) return { error: "Hindi nahanap ang member." };
+  if (target.role === "admin" && me.role !== "admin") return { error: "Ang admin lang ang puwedeng magbura ng admin." };
+  if (target.role === "admin") {
+    const { count } = await admin.from("profiles").select("id", { count: "exact", head: true }).eq("role", "admin");
+    if ((count ?? 0) <= 1) return { error: "Hindi puwedeng burahin ang huling admin." };
+  }
+
+  const { error: dErr } = await admin.auth.admin.deleteUser(id);
+  if (dErr) return { error: "Hindi nabura: " + dErr.message };
+  await admin.from("profiles").delete().eq("id", id);
+
+  await admin.from("audit_log").insert({
+    actor: user.id,
+    action: "delete_member",
+    table_name: "profiles",
+    record_id: id,
+    detail: (target as any).full_name ?? null,
+  });
+
+  revalidatePath("/portal/members");
+  redirect("/portal/members?ok=" + encodeURIComponent(`Nabura ang member${name ? `: ${name}` : ""}.`));
 }
