@@ -4,7 +4,7 @@ import { useState } from "react";
 import { btnCls, btnGhostCls, inputCls } from "./form-bits";
 import { MemberPicker } from "./member-picker";
 import { todayInTimezone } from "@/lib/finance";
-import { GIVING_NOTES_MAX, PASALAMAT_TYPES, PASALAMAT_TYPE_LABEL, type MemberChoice, type PasalamatType } from "@/lib/giving";
+import { GIVING_NOTES_MAX, PASALAMAT_CUSTOM_LABEL, PASALAMAT_CUSTOM_TYPE, PASALAMAT_TYPES, PASALAMAT_TYPE_LABEL, PASALAMAT_TYPE_MAX, type MemberChoice, type PasalamatType } from "@/lib/giving";
 
 // Form ng Pasalamat (bago o pag-edit ng draft). Walang default na halaga at walang paunang napiling uri.
 export function PasalamatForm({
@@ -28,6 +28,11 @@ export function PasalamatForm({
   const [date, setDate] = useState(edit?.date ?? "");
   const future = date !== "" && date > today; // ayon sa oras ng local; ang server at database ang huling harang
   const scope = edit?.id ?? "new";
+  // Uri: preset, o "ako ang maglalagay" (custom) na may sariling text input.
+  const editIsPreset = edit ? PASALAMAT_TYPES.includes(edit.type) : true;
+  const [typeSel, setTypeSel] = useState(edit ? (editIsPreset ? edit.type : PASALAMAT_CUSTOM_TYPE) : "");
+  const [customType, setCustomType] = useState(edit && !editIsPreset ? edit.type : "");
+  const showCustom = typeSel === PASALAMAT_CUSTOM_TYPE;
 
   return (
     <form action={action} className="grid gap-4 sm:grid-cols-2">
@@ -48,7 +53,14 @@ export function PasalamatForm({
 
       <label className="grid gap-1.5">
         <span className="text-sm font-medium text-gray-700">Uri ng pasalamat</span>
-        <select id={`type_${scope}`} name="type" defaultValue={edit?.type ?? ""} required className={inputCls}>
+        <select
+          id={`type_${scope}`}
+          name="type"
+          value={typeSel}
+          onChange={(e) => setTypeSel(e.target.value)}
+          required
+          className={inputCls}
+        >
           <option value="" disabled>
             Pumili ng uri…
           </option>
@@ -57,7 +69,22 @@ export function PasalamatForm({
               {PASALAMAT_TYPE_LABEL[t]}
             </option>
           ))}
+          <option value={PASALAMAT_CUSTOM_TYPE}>{PASALAMAT_CUSTOM_LABEL}…</option>
         </select>
+        {showCustom && (
+          <input
+            type="text"
+            id={`custom_type_${scope}`}
+            name="custom_type"
+            value={customType}
+            onChange={(e) => setCustomType(e.target.value)}
+            maxLength={PASALAMAT_TYPE_MAX}
+            required
+            autoComplete="off"
+            placeholder="I-type ang uri ng pasalamat"
+            className={inputCls}
+          />
+        )}
       </label>
       <label className="grid gap-1.5">
         <span className="text-sm font-medium text-gray-700">Halaga (₱)</span>
