@@ -83,7 +83,7 @@ export default async function PortalLayout({ children }: { children: React.React
         ],
       });
     }
-    if (isLocalFinanceMember) items.push({ href: "/portal/finance/local", label: "Local Finance" });
+    if (isLocalFinanceMember) items.push({ href: "/portal/finance/local", label: "Finance Report" });
 
     // Admin/Secretary o Pastoral Ministry members lang ang may access sa Bible Study Courses
     if (isStaff(profile.role) || isPastoralMinistryMember) {
@@ -97,7 +97,7 @@ export default async function PortalLayout({ children }: { children: React.React
     // Ambagan (per-member): Local Finance at church-wide Finance lang; ang pahina ang nagsasala
     if (isLocalFinanceMember || isFinanceMinistryMember) {
       items.push({ href: "/portal/finance/ambagan", label: "Ambagan" });
-      items.push({ href: "/portal/finance/tulong", label: "Tulong sa Klase" });
+      items.push({ href: "/portal/finance/tulong", label: "Tulong sa Aral" });
       items.push({ href: "/portal/finance/pasalamat", label: "Pasalamat" });
     }
     // Roster ng mga kaanib: Admin, Administrative Ministry o Local Admin Ministry (ang pahina ang nagsasala ng local)
@@ -119,7 +119,8 @@ export default async function PortalLayout({ children }: { children: React.React
     "/portal/courses",
     "/portal/profile",
   ]);
-  const GROUP_DEFS: { label: string; hrefs: string[] }[] = [
+  type SubGroupDef = { label: string; hrefs: string[]; after?: string };
+  const GROUP_DEFS: { label: string; hrefs: string[]; subgroups?: SubGroupDef[] }[] = [
     {
       label: "Gawain",
       hrefs: ["/portal/ministries", "/portal/prayer", "/portal/attendance", "/portal/sermons", "/portal/events"],
@@ -134,7 +135,19 @@ export default async function PortalLayout({ children }: { children: React.React
     },
     {
       label: "Local Ministry",
-      hrefs: ["/portal/roster", "/portal/attendance-record", "/portal/finance/abuluyan", "/portal/finance/resibo", "/portal/finance/local", "/portal/audit"],
+      hrefs: ["/portal/roster", "/portal/attendance-record", "/portal/finance/resibo", "/portal/finance/local", "/portal/audit"],
+      subgroups: [
+        {
+          label: "Finance Record",
+          // Ipasok pagkatapos ng Attendance Record, bago ang Buwanang Resibo.
+          after: "/portal/attendance-record",
+          hrefs: [
+            "/portal/finance/abuluyan", "/portal/finance/ambagan",
+            "/portal/finance/tulong",
+            "/portal/finance/pasalamat",
+          ],
+        },
+      ],
     },
   ];
   const alwaysVisible = items.filter((i) => ALWAYS_VISIBLE_HREFS.has(i.href));
@@ -143,22 +156,41 @@ export default async function PortalLayout({ children }: { children: React.React
 
   const navItems: NavItem[] = [...alwaysVisible];
   if (finance) navItems.push(finance);
+  const claimedHrefsOf = (def: (typeof GROUP_DEFS)[number]) =>
+    new Set([...def.hrefs, ...(def.subgroups ?? []).flatMap((s) => s.hrefs)]);
   for (const def of GROUP_DEFS) {
     const children = def.hrefs.flatMap((h) => overflow.filter((i) => i.href === h));
-    if (children.length === 0) continue;
+    // Nested na subgroup (hal. "Finance Record" sa loob ng "Local Ministry"):
+    // binubuo lang mula sa mga item na mayroon na ang user -- walang binabagong access control.
+    const subgroups: { item: NavItem; after?: string }[] = (def.subgroups ?? []).flatMap((sg) => {
+      const sgChildren = sg.hrefs.flatMap((h) => overflow.filter((i) => i.href === h));
+      if (sgChildren.length === 0) return [];
+      return [{ item: { href: sgChildren[0].href, label: sg.label, children: sgChildren }, after: sg.after }];
+    });
+    const allChildren: NavItem[] = [];
+    for (const c of children) {
+      allChildren.push(c);
+      for (const sg of subgroups) if (sg.after === c.href) allChildren.push(sg.item);
+    }
+    for (const sg of subgroups) if (!sg.after && !allChildren.includes(sg.item)) allChildren.push(sg.item);
+    if (allChildren.length === 0) continue;
     // Ang "Local Ministry" ay para lang sa Admin at Local Admin Ministry.
     // Sa iba (hal. Local Finance o Administrative Ministry lang), direktang
     // links pa rin ang mga pahinang may access sila -- hindi nawawala.
     if (def.label === "Local Ministry" && !showLocalMinistry) {
-      const claimedByOthers = new Set(GROUP_DEFS.filter((d) => d !== def).flatMap((d) => d.hrefs));
-      for (const c of children) {
+      const claimedByOthers = new Set(
+        GROUP_DEFS.filter((d) => d !== def).flatMap((d) => [...claimedHrefsOf(d)]),
+      );
+      const pushDirect = (c: NavItem) => {
         if (!claimedByOthers.has(c.href) && !navItems.some((n) => n.href === c.href)) navItems.push(c);
-      }
+      };
+      for (const c of children) pushDirect(c);
+      for (const sg of subgroups) for (const c of sg.item.children ?? []) pushDirect(c);
       continue;
     }
     // Kung iisa lang ang laman ng grupo, direktang link na lang -- huwag nang i-dropdown.
-    if (children.length === 1) navItems.push(children[0]);
-    else navItems.push({ href: children[0].href, label: def.label, children });
+    if (allChildren.length === 1 && subgroups.length === 0) navItems.push(allChildren[0]);
+    else navItems.push({ href: allChildren[0].href, label: def.label, children: allChildren });
   }
 
   // Ang PortalShell (client) ang nagpapasya ng shell base sa pathname:
