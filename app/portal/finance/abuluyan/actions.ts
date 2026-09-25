@@ -160,29 +160,6 @@ export async function deleteAbuluyanDraft(fd: FormData) {
   back(path, "ok", "Nabura ang draft na Abuluyan record.");
 }
 
-// Ang TANGING paraan ng pag-void: void_abuluyan(local_id, service_date, reason). Admin o church-wide Finance lang (sinusuri rin ng database).
-export async function voidAbuluyan(fd: FormData) {
-  const ctx = await getAbuluyanContext();
-  if (!ctx.isChurch && !ctx.isAdmin) denyAbuluyan();
-  const path = target(fd);
-  const localId = str(fd, "local_id");
-  const serviceDate = str(fd, "service_date");
-  const reason = str(fd, "reason");
-
-  if (!localId) back(path, "error", "Pumili ng local.");
-  if (!isSunday(serviceDate)) back(path, "error", "Dapat Linggo ang petsa ng Abuluyan.");
-  if (reason === "") back(path, "error", "Kailangan ang dahilan ng pag-void.");
-
-  const { error } = await ctx.supabase.rpc("void_abuluyan", {
-    p_local_id: localId,
-    p_service_date: serviceDate,
-    p_reason: reason,
-  });
-  if (error) back(path, "error", abuluyanErrorMessage(error, "Hindi na-void. Subukan ulit."));
-  revalidatePath(ABULUYAN_BASE, "layout");
-  back(path, "ok", "Na-void ang Abuluyan record. Pinal na ito.");
-}
-
 // Buwanang Ulat ng Abuluyan: ipadala bilang liham sa mga miyembro ng Finance Ministry.
 // Church-wide Finance at Admin: lahat ng local. Local Finance: sariling local lang.
 // Ang padron ng pag-insert ng liham ay gaya ng createLetter (letters -> letter_recipients -> letter_messages).
