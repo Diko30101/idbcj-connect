@@ -97,7 +97,6 @@ export default async function TulongPage({
                 timezone={selected.timezone}
                 path={path}
                 mode={ctx.isChurch ? "church" : "local"}
-                actions={{ update: updateTulong }}
                 labels={{ monthPhrase: "Tulong para sa", empty: "Wala pang naitatalang Tulong sa Klase Ministeryal.", periodLabel: "Buwan ng tulong" }}
                 actions={{ update: updateTulong, submit: submitTulong }}
                 submitMany={{ action: submitManyTulong }}
