@@ -73,7 +73,7 @@ function GiverTable({
                   <td className="py-2 text-right text-gray-700">{fmtPeso(r.amount)}</td>
                 </tr>
               ))}
-              <tr className="bg-emerald-700 font-bold text-white [print-color-adjust:exact]">
+              <tr className="bg-emerald-100 font-bold text-emerald-950 [print-color-adjust:exact]">
                 <td className="px-2 py-2" colSpan={3}>
                   Kabuuan
                 </td>
