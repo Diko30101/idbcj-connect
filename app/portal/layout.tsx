@@ -52,10 +52,6 @@ export default async function PortalLayout({ children }: { children: React.React
     const { data: allMinistries } = await supabase.from("ministry_members").select("ministries(name)").eq("profile_id", profile.id);
     const myMinistries = needsMinistryCheck ? allMinistries : null;
     const isRosterMember = ((allMinistries ?? []) as any[]).some((m) => ROSTER_MINISTRY_NAMES.includes(m.ministries?.name));
-    const isPastoralMember = ((allMinistries ?? []) as any[]).some((m) => m.ministries?.name === "Pastoral Ministry");
-    const inFinanceMinistry = ((allMinistries ?? []) as any[]).some((m) => m.ministries?.name === FINANCE_MINISTRY_NAME);
-    // Church-wide Finance: sinusuri lang kung kasapi ng Finance Ministry (para hindi dagdag na tawag sa lahat)
-    const { data: isChurchWide } = inFinanceMinistry ? await supabase.rpc("is_church_wide_finance") : { data: false };
     const isLocalFinanceMember = ((myMinistries ?? []) as any[]).some(
       (m) => m.ministries?.name === LOCAL_FINANCE_MINISTRY_NAME,
     );
@@ -98,10 +94,6 @@ export default async function PortalLayout({ children }: { children: React.React
     }
     // Roster ng mga kaanib: Admin, Administrative Ministry o Local Admin Ministry (ang pahina ang nagsasala ng local)
     if (profile.role === "admin" || isRosterMember) items.push({ href: "/portal/roster", label: "Membership Record" });
-    // Pahintulot sa Inactive na kaanib: lider ng Pastoral Ministry na Admin (bumibigay), at church-wide Finance (nagbabasa)
-    if ((profile.role === "admin" && isPastoralMember) || isChurchWide === true) items.push({ href: "/portal/giving-permissions", label: "Pahintulot" });
-    // Audit ng pananalapi: church-wide Finance lang
-    if (isChurchWide === true) items.push({ href: "/portal/finance/audit", label: "Audit ng Pananalapi" });
   }
   if (profile.role === "admin") items.push({ href: "/portal/audit", label: "Audit Log" });
 
@@ -128,12 +120,11 @@ export default async function PortalLayout({ children }: { children: React.React
         "/portal/finance/abuluyan", "/portal/finance/ambagan",
         "/portal/finance/tulong",
         "/portal/finance/pasalamat",
-        "/portal/giving-permissions",
       ],
     },
     {
       label: "Pangasiwaan",
-      hrefs: ["/portal/roster", "/portal/finance/resibo", "/portal/finance/local", "/portal/finance/audit", "/portal/audit"],
+      hrefs: ["/portal/roster", "/portal/finance/abuluyan", "/portal/finance/resibo", "/portal/finance/local", "/portal/audit"],
     },
   ];
   const alwaysVisible = items.filter((i) => ALWAYS_VISIBLE_HREFS.has(i.href));
