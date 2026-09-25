@@ -3,8 +3,8 @@
 import { useState, type FormEvent } from "react";
 import { AbuluyanForm } from "./abuluyan-form";
 import { AbuluyanVoidForm } from "./abuluyan-void-form";
-import { updateAbuluyanDraft, submitAbuluyan, createAbuluyan } from "@/app/portal/finance/abuluyan/actions";
-import { btnCls, btnGhostCls } from "./form-bits";
+import { updateAbuluyanDraft, submitAbuluyan, deleteAbuluyanDraft, createAbuluyan } from "@/app/portal/finance/abuluyan/actions";
+import { btnCls, btnDangerCls, btnGhostCls } from "./form-bits";
 import { fmtPeso } from "@/lib/finance";
 import { ABULUYAN_STATUS_LABEL, type AbuluyanRecord, type AbuluyanStatus } from "@/lib/abuluyan";
 
@@ -32,8 +32,8 @@ function StatusPill({ status }: { status: AbuluyanStatus }) {
   );
 }
 
-// mode "local": Local Finance (draft nila lang ang mae-edit; ang kapalit na draft ay read-only).
-// mode "church": church-wide Finance (edit/submit ng draft, i-void ang naipadala, gumawa ng kapalit sa void).
+// mode "local": Local Finance (draft nila lang ang mae-edit/mabubura; ang kapalit na draft ay read-only).
+// mode "church": church-wide Finance (edit/submit/bura ng draft, i-void ang naipadala, gumawa ng kapalit sa void).
 export function AbuluyanList({
   records,
   timezone,
@@ -55,6 +55,12 @@ export function AbuluyanList({
     }
   }
 
+  function confirmDelete(e: FormEvent<HTMLFormElement>) {
+    if (!window.confirm("Sigurado ka bang buburahin ang draft na ito? Hindi na ito maibabalik.")) {
+      e.preventDefault();
+    }
+  }
+
   const activeAt = (r: AbuluyanRecord) =>
     records.some((x) => x.local_id === r.local_id && x.service_date === r.service_date && x.status !== "void");
 
@@ -63,6 +69,7 @@ export function AbuluyanList({
       {records.map((r) => {
         const isReplacement = r.replaces_id !== null;
         const canEdit = r.status === "draft" && (mode === "church" || !isReplacement);
+        const canDelete = canEdit;
         return (
           <div key={r.id} className="py-4">
             {editingId === r.id ? (
@@ -104,6 +111,15 @@ export function AbuluyanList({
                             Ipadala
                           </button>
                         </form>
+                        {canDelete && (
+                          <form action={deleteAbuluyanDraft} onSubmit={confirmDelete}>
+                            <input type="hidden" name="path" value={path} />
+                            <input type="hidden" name="id" value={r.id} />
+                            <button type="submit" className={btnDangerCls}>
+                              Burahin
+                            </button>
+                          </form>
+                        )}
                       </>
                     )}
                   </div>
