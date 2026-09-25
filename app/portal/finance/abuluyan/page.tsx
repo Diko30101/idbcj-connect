@@ -7,7 +7,7 @@ import { AbuluyanForm } from "@/components/portal/abuluyan-form";
 import { AbuluyanList } from "@/components/portal/abuluyan-list";
 import { ABULUYAN_BASE, ABULUYAN_BUWANAN_PATH, type AbuluyanRecord } from "@/lib/abuluyan";
 
-// Pahina ng Local Finance (sariling local). Ang church-wide Finance at Admin ay may sariling pahina.
+// Pahina ng Local Finance (sariling local). Ang church-wide Finance at Admin ay sa lahat-pahina.
 export default async function AbuluyanPage({
   searchParams,
 }: {
@@ -19,9 +19,10 @@ export default async function AbuluyanPage({
 
   // Ang church-wide Finance ay maaaring kasapi rin ng Local Finance sa sarili nilang local; ang pahina ng church-wide
   // (lahat ng local, kasama ang sarili nila) ang gagamitin nila, kaya laging doon muna.
+  // Tinanggal na ang /void na pahina; ang Admin ay sa lahat-pahina na rin pumupunta.
   if (ctx.isChurch) redirect(`${ABULUYAN_BASE}/lahat`);
   if (!local) {
-    if (ctx.isAdmin) redirect(`${ABULUYAN_BASE}/void`);
+    if (ctx.isAdmin) redirect(`${ABULUYAN_BASE}/lahat`);
     denyAbuluyan();
   }
 
