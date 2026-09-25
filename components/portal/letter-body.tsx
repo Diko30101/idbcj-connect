@@ -97,8 +97,8 @@ export function LetterBody({ body }: { body: string }) {
               key={i}
               className={
                 b.grand
-                  ? "my-2 rounded bg-emerald-800 px-3 py-2 text-base font-bold text-white [print-color-adjust:exact]"
-                  : "my-1 rounded bg-emerald-700 px-2 py-1.5 font-bold text-white [print-color-adjust:exact]"
+                  ? "my-2 rounded bg-emerald-200 px-3 py-2 text-base font-bold text-emerald-900 [print-color-adjust:exact]"
+                  : "my-1 rounded bg-emerald-100 px-2 py-1.5 font-bold text-emerald-900 [print-color-adjust:exact]"
               }
             >
               {b.line}
