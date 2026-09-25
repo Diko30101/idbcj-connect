@@ -100,7 +100,7 @@ export default async function PortalLayout({ children }: { children: React.React
   if (profile.role === "admin") items.push({ href: "/portal/audit", label: "Audit Log" });
 
   // Paggrupohin ang mga hindi gaanong ginagamit na item sa mga dropdown
-  // (Gawain, Mga Kaloob, Pangasiwaan) para hindi humaba nang sobra ang nav bar.
+  // (Gawain, Pangasiwaan) para hindi humaba nang sobra ang nav bar.
   // Ang bawat item ay dati nang na-filter base sa role (sa itaas), kaya ang
   // pag-grupo lang ang binabago dito -- hindi apektado ang access control.
   const ALWAYS_VISIBLE_HREFS = new Set([
@@ -117,16 +117,8 @@ export default async function PortalLayout({ children }: { children: React.React
       hrefs: ["/portal/ministries", "/portal/prayer", "/portal/attendance", "/portal/sermons", "/portal/events"],
     },
     {
-      label: "Mga Kaloob",
-      hrefs: [
-        "/portal/finance/abuluyan", "/portal/finance/ambagan",
-        "/portal/finance/tulong",
-        "/portal/finance/pasalamat",
-      ],
-    },
-    {
       label: "Pangasiwaan",
-      hrefs: ["/portal/roster", "/portal/attendance-record", "/portal/finance/abuluyan", "/portal/finance/resibo", "/portal/finance/local", "/portal/audit"],
+      hrefs: ["/portal/roster", "/portal/attendance-record", "/portal/finance/abuluyan", "/portal/finance/ambagan", "/portal/finance/tulong", "/portal/finance/pasalamat", "/portal/finance/resibo", "/portal/finance/local", "/portal/audit"],
     },
   ];
   const alwaysVisible = items.filter((i) => ALWAYS_VISIBLE_HREFS.has(i.href));
