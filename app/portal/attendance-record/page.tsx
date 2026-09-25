@@ -3,7 +3,7 @@ import { getRosterContext, todayPH, fmtDate } from "@/lib/portal";
 import { Empty, Notice, Panel } from "@/components/portal/ui";
 import { inputCls, btnGhostCls } from "@/components/portal/form-bits";
 import { AttendanceRecordForm } from "@/components/portal/attendance-record-form";
-import { SERVICE_TYPES, ATTENDANCE_RECORD_BASE } from "./actions";
+import { SERVICE_TYPES, ATTENDANCE_RECORD_BASE } from "./constants";
 
 // Attendance Record (Pangasiwaan): itinatala ng local secretary ang
 // pagdalo ng bawat local sa bawat pagkakatipon, galing sa ROSTER
