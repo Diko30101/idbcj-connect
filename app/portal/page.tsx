@@ -1,6 +1,6 @@
-import Link from "next/link";
-import { requirePortalAccess, isStaff, isFinanceMember, fmtDate, todayPH, KIND_LABEL } from "@/lib/portal";
+import Link from "next/link";import { requirePortalAccess, isStaff, isFinanceMember, fmtDate, todayPH, KIND_LABEL } from "@/lib/portal";
 import { yearToDateLabel } from "@/lib/finance";
+import { getYearlyCollections } from "@/lib/finance-collections";
 import { Empty, Notice, Panel, RoleBadge, StatusBadge } from "@/components/portal/ui";
 import { FinanceSummaryPie } from "@/components/portal/finance-summary-pie";
 
@@ -56,19 +56,17 @@ export default async function PortalHome({
   let financeIncome = 0;
   let financeExpense = 0;
   if (financeAccess) {
-    const [incomeRes, expenseRes] = await Promise.all([
-      supabase
-        .from("financial_records")
-        .select("amount")
-        .gte("record_month", `${financeYear}-01-01`)
-        .lt("record_month", `${Number(financeYear) + 1}-01-01`),
+        // Ang "pumasok" ay galing LAMANG sa Abuluyan, Ambagan, Tulong sa Aral at
+        // Pasalamat na na-encode ng Local Finance Ministry (mga naipadala na).
+    const [collections, expenseRes] = await Promise.all([
+            getYearlyCollections(supabase, financeYear),
       supabase
         .from("expense_records")
         .select("amount")
         .gte("expense_month", `${financeYear}-01-01`)
         .lt("expense_month", `${Number(financeYear) + 1}-01-01`),
     ]);
-    financeIncome = ((incomeRes.data ?? []) as any[]).reduce((s, r) => s + Number(r.amount), 0);
+    financeIncome = collections.reduce((s, r) => s + r.amount, 0);
     financeExpense = ((expenseRes.data ?? []) as any[]).reduce((s, r) => s + Number(r.amount), 0);
   }
   const financePeriodLabel = yearToDateLabel(financeYear, Number(today.slice(5, 7)));
