@@ -64,7 +64,7 @@ export default async function RosterPage({
     <>
       <div className="mb-6 flex flex-wrap items-start justify-between gap-4">
         <div>
-          <p className="text-xs font-semibold uppercase tracking-widest text-gray-400">Pangasiwaan</p>
+          <p className="text-xs font-semibold uppercase tracking-widest text-gray-400">Local Ministry</p>
           <h1 className="mt-1 text-2xl font-bold tracking-tight text-gray-900">Mga Miyembro</h1>
           <p className="mt-1 text-sm text-gray-500">Membership Record at impormasyon ng kapatiran</p>
           <p className="mt-0.5 text-xs text-gray-400">
