@@ -1,6 +1,6 @@
 import Link from "next/link";import { requirePortalAccess, isStaff, isFinanceMember, fmtDate, todayPH, KIND_LABEL } from "@/lib/portal";
-import { yearToDateLabel } from "@/lib/finance";
-import { getYearlyCollections } from "@/lib/finance-collections";
+import { yearToDateLabel, fmtPeso, FINANCE_CATEGORIES, FINANCE_CATEGORY_LABEL, type FinanceCategory } from "@/lib/finance";
+import { getYearlyCollections, type CollectionRow } from "@/lib/finance-collections";
 import { Empty, Notice, Panel, RoleBadge, StatusBadge } from "@/components/portal/ui";
 import { FinanceSummaryPie } from "@/components/portal/finance-summary-pie";
 
@@ -12,6 +12,7 @@ export default async function PortalHome({
   const { ok, error } = await searchParams;
   const { supabase, profile } = await requirePortalAccess();
   const staff = isStaff(profile.role);
+  const isAdmin = profile.role === "admin";
   const today = todayPH();
 
   const [ann, mine, sched, att, counts, birthdays] = await Promise.all([
@@ -55,20 +56,45 @@ export default async function PortalHome({
   const financeYear = today.slice(0, 4);
   let financeIncome = 0;
   let financeExpense = 0;
+  let collections: CollectionRow[] = [];
+  const localNames = new Map<string, string>();
   if (financeAccess) {
         // Ang "pumasok" ay galing LAMANG sa Abuluyan, Ambagan, Tulong sa Aral at
         // Pasalamat na na-encode ng Local Finance Ministry (mga naipadala na).
-    const [collections, expenseRes] = await Promise.all([
+    const [colls, expenseRes, localsRes] = await Promise.all([
             getYearlyCollections(supabase, financeYear),
       supabase
         .from("expense_records")
         .select("amount")
         .gte("expense_month", `${financeYear}-01-01`)
         .lt("expense_month", `${Number(financeYear) + 1}-01-01`),
+      isAdmin
+        ? supabase.from("locals").select("id, key, name")
+        : Promise.resolve({ data: null as { id: string; key: string; name: string }[] | null }),
     ]);
+    collections = colls;
     financeIncome = collections.reduce((s, r) => s + r.amount, 0);
     financeExpense = ((expenseRes.data ?? []) as any[]).reduce((s, r) => s + Number(r.amount), 0);
+    for (const l of ((localsRes.data ?? []) as { id: string; key: string; name: string }[])) {
+      localNames.set(l.key, l.name);
+    }
   }
+
+  // Buong Sistema dashboard (Admin lang): koleksyon ayon sa kategorya at local.
+  const catTotals = new Map<FinanceCategory, number>();
+  const localTotals = new Map<string, { name: string; cats: Map<FinanceCategory, number>; total: number }>();
+  for (const r of collections) {
+    catTotals.set(r.category, (catTotals.get(r.category) ?? 0) + r.amount);
+    const key = r.localKey ?? "";
+    let lt = localTotals.get(key);
+    if (!lt) {
+      lt = { name: key ? (localNames.get(key) ?? key) : "Hindi natukoy na local", cats: new Map(), total: 0 };
+      localTotals.set(key, lt);
+    }
+    lt.cats.set(r.category, (lt.cats.get(r.category) ?? 0) + r.amount);
+    lt.total += r.amount;
+  }
+  const localRows = [...localTotals.values()].sort((a, b) => b.total - a.total);
   const financePeriodLabel = yearToDateLabel(financeYear, Number(today.slice(5, 7)));
 
   const todayMonth = today.slice(5, 7);
@@ -94,6 +120,87 @@ export default async function PortalHome({
         </div>
       </div>
       <Notice ok={ok} error={error} />
+
+      {isAdmin && (
+        <section className="mb-6">
+          <Panel title="Buong Sistema — Pangkalahatang Tanaw" subtitle={financePeriodLabel}>
+            <div className="mb-5 grid grid-cols-2 gap-3 lg:grid-cols-4">
+              <div className="rounded-xl border border-gray-200 bg-white p-4 text-center shadow-sm">
+                <div className="text-2xl font-bold text-emerald-700">{fmtPeso(financeIncome)}</div>
+                <div className="text-xs font-medium uppercase tracking-wide text-gray-500">Pumasok</div>
+              </div>
+              <div className="rounded-xl border border-gray-200 bg-white p-4 text-center shadow-sm">
+                <div className="text-2xl font-bold text-red-700">{fmtPeso(financeExpense)}</div>
+                <div className="text-xs font-medium uppercase tracking-wide text-gray-500">Lumabas</div>
+              </div>
+              <div className="rounded-xl border border-gray-200 bg-white p-4 text-center shadow-sm">
+                <div className="text-2xl font-bold text-blue-700">{fmtPeso(financeIncome - financeExpense)}</div>
+                <div className="text-xs font-medium uppercase tracking-wide text-gray-500">Balanse</div>
+              </div>
+              <div className="rounded-xl border border-gray-200 bg-white p-4 text-center shadow-sm">
+                <div className="text-2xl font-bold text-emerald-800">{stat("active")}</div>
+                <div className="text-xs font-medium uppercase tracking-wide text-gray-500">Active na kaanib</div>
+              </div>
+            </div>
+
+            <h3 className="mb-2 text-sm font-bold text-gray-900">Koleksyon ayon sa kategorya</h3>
+            <div className="mb-5 divide-y divide-gray-100 rounded-xl border border-gray-200">
+              {FINANCE_CATEGORIES.map((c) => (
+                <div key={c} className="flex items-center justify-between px-4 py-2 text-sm">
+                  <span className="text-gray-700">{FINANCE_CATEGORY_LABEL[c]}</span>
+                  <span className="font-semibold text-gray-900">{fmtPeso(catTotals.get(c) ?? 0)}</span>
+                </div>
+              ))}
+              <div className="flex items-center justify-between bg-emerald-50 px-4 py-2 text-sm">
+                <span className="font-bold text-emerald-900">Kabuuan</span>
+                <span className="font-bold text-emerald-900">{fmtPeso(financeIncome)}</span>
+              </div>
+            </div>
+
+            <h3 className="mb-2 text-sm font-bold text-gray-900">Koleksyon ayon sa local</h3>
+            {localRows.length === 0 ? (
+              <Empty>Wala pang naitatalang koleksyon para sa {financeYear}.</Empty>
+            ) : (
+              <div className="overflow-x-auto rounded-xl border border-gray-200">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="bg-gray-50 text-left text-xs uppercase tracking-wide text-gray-500">
+                      <th className="px-4 py-2">Local</th>
+                      {FINANCE_CATEGORIES.map((c) => (
+                        <th key={c} className="px-4 py-2 text-right">
+                          {FINANCE_CATEGORY_LABEL[c]}
+                        </th>
+                      ))}
+                      <th className="px-4 py-2 text-right">Kabuuan</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-100">
+                    {localRows.map((r) => (
+                      <tr key={r.name}>
+                        <td className="px-4 py-2 font-medium text-gray-900">{r.name}</td>
+                        {FINANCE_CATEGORIES.map((c) => (
+                          <td key={c} className="px-4 py-2 text-right text-gray-700">
+                            {fmtPeso(r.cats.get(c) ?? 0)}
+                          </td>
+                        ))}
+                        <td className="px-4 py-2 text-right font-bold text-gray-900">{fmtPeso(r.total)}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+            <div className="mt-4 text-right">
+              <Link
+                href="/portal/finance/report"
+                className="text-sm font-semibold text-emerald-700 hover:underline"
+              >
+                Tingnan ang buong ulat →
+              </Link>
+            </div>
+          </Panel>
+        </section>
+      )}
 
       {staff && (
         <div className="mb-6 grid grid-cols-3 gap-3">
@@ -138,7 +245,7 @@ export default async function PortalHome({
         </Panel>
 
         <div className="space-y-6">
-          {financeAccess && (
+          {financeAccess && !isAdmin && (
             <Panel title="Financial Report — Buod" subtitle={financePeriodLabel}>
               <FinanceSummaryPie year={financeYear} income={financeIncome} expense={financeExpense} />
             </Panel>
