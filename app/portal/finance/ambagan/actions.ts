@@ -99,23 +99,33 @@ export async function updateAmbagan(fd: FormData) {
   back(path, "ok", "Na-update ang Ambagan.");
 }
 
-// Ipadala lahat: lahat ng draft na Ambagan ng napiling local ay nagiging
-// submitted nang sabay-sabay. Walang indibidwal na Ipadala at walang I-void.
-export async function submitAllAmbagan(fd: FormData) {
+// Ipadala ang isang draft na Ambagan sa church-wide Finance Ministry.
+export async function submitAmbagan(fd: FormData) {
   const ctx = await requireGiving();
   const path = target(fd);
-  const localId = ctx.isChurch ? strOrNull(fd, "local_id") : ctx.local!.id;
-  if (!localId) back(path, "error", "Pumili ng local.");
   const { error, count } = await ctx.supabase
     .from("ambagan_records")
     .update({ status: "submitted" }, { count: "exact" })
-    .eq("local_id", localId)
+    .eq("id", str(fd, "id"))
     .eq("status", "draft");
-  if (error) back(path, "error", givingErrorMessage(error, "Hindi naipadala. Subukan ulit."));
+  if (error || !count) back(path, "error", givingErrorMessage(error, "Hindi naipadala. Subukan ulit."));
   revalidatePath(GIVING_BASE, "layout");
-  back(
-    path,
-    "ok",
-    count ? `Naipadala ang ${count} Ambagan. Church-wide Finance na lang ang makapagbabago nito.` : "Walang draft na Ambagan na ipapadala.",
-  );
+  back(path, "ok", "Naipadala ang Ambagan. Church-wide Finance na lang ang makapagbabago nito.");
+}
+
+// Ipadala ang napili: mga draft lang ang naipapadala; ang database (RLS) pa rin ang huling harang.
+export async function submitManyAmbagan(fd: FormData) {
+  const ctx = await requireGiving();
+  const path = target(fd);
+  const ids = fd.getAll("ids").map((v) => String(v)).filter((v) => v !== "");
+  if (ids.length === 0) back(path, "error", "Walang napiling Ambagan na ipapadala.");
+  if (ids.length > 500) back(path, "error", "Masyadong marami ang napili (500 lang ang pinakamarami).");
+  const { error, count } = await ctx.supabase
+    .from("ambagan_records")
+    .update({ status: "submitted" }, { count: "exact" })
+    .in("id", ids)
+    .eq("status", "draft");
+  if (error || !count) back(path, "error", givingErrorMessage(error, "Hindi naipadala. Subukan ulit."));
+  revalidatePath(GIVING_BASE, "layout");
+  back(path, "ok", `Naipadala ang ${count} Ambagan. Church-wide Finance na lang ang makapagbabago ng mga ito.`);
 }
