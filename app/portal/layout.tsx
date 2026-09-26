@@ -32,9 +32,22 @@ export default async function PortalLayout({ children }: { children: React.React
     );
   }
 
+  // Bilang ng hindi pa nababasang inbox letters (para sa bell notification badge)
+  const { data: unreadRecipients } = await supabase
+    .from("letter_recipients")
+    .select("letter_id")
+    .eq("profile_id", profile.id)
+    .is("read_at", null);
+  const { data: deletedLetters } = await supabase
+    .from("letter_deletions")
+    .select("letter_id")
+    .eq("profile_id", profile.id);
+  const deletedIds = new Set(((deletedLetters ?? []) as any[]).map((d) => d.letter_id));
+  const unreadCount = ((unreadRecipients ?? []) as any[]).filter((r) => !deletedIds.has(r.letter_id)).length;
+
   const items: NavItem[] = [
     { href: "/portal", label: "Home" },
-    { href: "/portal/inbox", label: "Inbox" },
+    { href: "/portal/inbox", label: "Inbox", badge: unreadCount > 0 ? unreadCount : undefined },
     { href: "/portal/announcements", label: "Announcements" },
     { href: "/portal/prayer", label: "Prayer" },
     { href: "/portal/profile", label: "My Profile" },
