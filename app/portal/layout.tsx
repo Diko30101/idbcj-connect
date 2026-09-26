@@ -117,12 +117,12 @@ export default async function PortalLayout({ children }: { children: React.React
 
     // Aprubadong Tulong Financial member na gumagamit ng portal login:
     // makikita sa kanyang menu ang "Tulong Financial" — sariling record,
-    // history ng bawat transaction, at balanse. (Ang Finance Ministry at
-    // Admin ay may sariling item sa ilalim ng Finance menu.)
+    // history ng bawat transaction, at balanse, sa LOOB ng portal.
+    // (Ang Finance Ministry at Admin ay may sariling item sa ilalim ng Finance menu.)
     if (!isFinanceMinistryMember && profile.role !== "admin") {
       const { data: tulongMemberRecord } = await supabase.rpc("tulong_borrower_record_by_profile");
       if (tulongMemberRecord) {
-        items.push({ href: "/tulong-financial", label: "Tulong Financial" });
+        items.push({ href: "/portal/tulong-financial", label: "Tulong Financial" });
       }
     }
 
