@@ -8,6 +8,7 @@ import { pasalamatTypeLabel } from "@/lib/giving";
 import { RESIBO_BASE } from "@/lib/resibo";
 import { getResiboSummary } from "./summary";
 import { PrintButton } from "./print-button";
+import { KAANIB_RESIBO_BASE } from "./kaanib/page";
 
 // Buwanang Resibo: printable monthly receipt per lokal — pinagsasama sa iisang
 // buwan ang Abuluyan, Ambagan, Tulong sa Aral, at Pasalamat.
@@ -16,7 +17,7 @@ export default async function ResiboPage({
   searchParams,
 }: {
   searchParams: Promise<{ buwan?: string; local?: string; ok?: string; error?: string }>;
-}) {
+) {
   const { buwan: buwanParam, local: localParam, ok, error } = await searchParams;
   const ctx = await getAbuluyanContext();
   const wide = ctx.isChurch || ctx.isAdmin;
@@ -71,6 +72,24 @@ export default async function ResiboPage({
       />
       <Notice ok={ok} error={error} />
 
+            {/* Uri ng resibo: Per Local / Per Member (Kaanib) */}
+      {ctx.local && (}
+        <div className="no-print mt-4 flex flex-wrap gap-2">
+          <span className="rounded-full border border-emerald-600 bg-emerald-50 px-3 py-1 text-sm font-medium text-emerald-800">
+            Per Local
+          </span>
+          <Link
+            href={KAANIB_RESIBO_BASE}
+            className="rounded-full border border-gray-300 bg-white px-3 py-1 text-sm font-medium text-gray-700 hover:bg-gray-50"
+          >
+            Per Member
+          </Link>
+        </div>
+      )}
+
+
+
+      
       {wide && locals.length > 1 && (
         <div className="no-print mt-6 flex flex-wrap gap-2">
           {locals.map((l) => (
