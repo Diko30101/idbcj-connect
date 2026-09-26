@@ -28,6 +28,16 @@ export async function BorrowerLoginsPanel({ returnTo }: { returnTo: string }) {
   ]);
 
   const memberById = new Map(((memberRows ?? []) as any[]).map((m) => [m.id, m]));
+  // Sa dropdown: Active members na WALA PANG account lang (para sa unang account).
+  // Hindi kasama ang may borrower login na o may naghihintay pang kahilingan —
+  // pagka-approve ng admin, automatic na silang kasapi ng Tulong Financial Members.
+  const borrowerMemberIds = new Set(((borrowerRows ?? []) as any[]).map((b) => b.member_id));
+  const pendingMemberIds = new Set(
+    ((usernameRequests ?? []) as any[]).filter((r) => r.status === "pending").map((r) => r.member_id),
+  );
+  const eligibleMembers = ((memberRows ?? []) as any[]).filter(
+    (m) => !borrowerMemberIds.has(m.id) && !pendingMemberIds.has(m.id),
+  );
   const borrowers = ((borrowerRows ?? []) as any[]).map((b) => ({
     ...b,
     memberName: memberById.get(b.member_id)?.full_name ?? "—",
@@ -48,12 +58,12 @@ export async function BorrowerLoginsPanel({ returnTo }: { returnTo: string }) {
       <form action={requestTulongUsername} className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
         <input type="hidden" name="return_to" value={returnTo} />
         <label className="grid gap-1.5">
-          <span className="text-sm font-medium text-gray-700">Kaanib (Active lang)</span>
+          <span className="text-sm font-medium text-gray-700">Kaanib (Active, walang account)</span>
           <select name="member_id" required className={inputCls} defaultValue="">
             <option value="" disabled>
               Pumili ng kaanib
             </option>
-            {((memberRows ?? []) as any[]).map((m) => (
+            {eligibleMembers.map((m) => (
               <option key={m.id} value={m.id}>
                 {m.full_name}
               </option>
