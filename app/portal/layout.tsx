@@ -80,13 +80,19 @@ export default async function PortalLayout({ children }: { children: React.React
     // ng Local Finance Ministry, at hindi rin ng secretary/treasurer na hindi kasapi
     // ng Finance Ministry.
     if (isFinance(profile.role) || isFinanceMinistryMember) {
-      const financeChildren = [
+      const financeChildren: NavItem[] = [
         { href: "/portal/finance", label: "Financial Management" },
         { href: "/portal/finance/report", label: "Audit Report" },
         { href: "/portal/finance/expenses", label: "Expenses" },
       ];
       if (profile.role === "admin" || isFinanceMinistryMember) {
-        financeChildren.push({ href: "/portal/finance/tulong-financial", label: "Tulong Financial" });
+        financeChildren.push({
+          href: "/portal/finance/tulong-financial",
+          label: "Tulong Financial",
+          children: [
+            { href: "/tulong-financial/finance", label: "Create New Account" },
+          ],
+        });
       }
       items.push({
         href: "/portal/finance",
