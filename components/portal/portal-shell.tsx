@@ -34,6 +34,7 @@ import {
 } from "lucide-react";
 import { PortalNav, type NavItem } from "./portal-nav";
 import { NotificationBell } from "./notification-bell";
+import { SignOutMenu } from "./sign-out-menu";
 
 // Lokal na kopya ng role labels — hindi ini-import ang @/lib/portal dito
 // dahil may server-only code ito (next/headers).
@@ -205,22 +206,11 @@ function initialsOf(name: string) {
   return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
 }
 
-const signOutClassic = (
-  <form action="/auth/sign-out" method="post">
-    <button className="rounded-md border border-gray-300 px-3 py-1.5 text-sm font-medium text-gray-600 hover:bg-red-50 hover:text-red-600">
-      Sign Out
-    </button>
-  </form>
 );
 
-const signOutDark = (
-  <form action="/auth/sign-out" method="post">
-    <button className="flex w-full items-center justify-center gap-2 rounded-lg border border-white/20 px-3 py-2 text-sm font-medium text-[#dceae4] transition hover:bg-white/10 hover:text-white">
-      Sign Out
-    </button>
-  </form>
-);
+const signOutClassic = <SignOutMenu />;
 
+const signOutDark = <SignOutMenu dark />;
 // Klasikong shell — eksaktong kapareho ng dating layout para sa lahat ng
 // portal page maliban sa home.
 function ClassicShell({
