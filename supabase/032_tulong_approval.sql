@@ -47,8 +47,12 @@ create index if not exists tulong_loan_requests_status_idx on public.tulong_loan
 create table if not exists public.tulong_username_requests (
   id uuid primary key default gen_random_uuid(),
   member_id uuid not null references public.members(id),
-  username text not null,
-  password_hash text not null,
+  -- Para sa kaanib na WALANG portal account: bagong borrower login ang lilikhain.
+  username text,
+  password_hash text,
+  -- Para sa kaanib na MAY portal account na: gagamitin ang portal login
+  -- (walang bagong username/password; approval letter lang ang kailangan).
+  profile_id uuid references public.profiles(id),
   status text not null default 'pending'
     check (status in ('pending','approved','rejected')),
   requested_by uuid references public.profiles(id),
@@ -56,6 +60,14 @@ create table if not exists public.tulong_username_requests (
   decided_at timestamptz,
   decided_by uuid references public.profiles(id)
 );
+
+-- Kung ang migration ay tumakbo na sa lumang hugis (hindi pa sa production),
+-- idagdag ang mga bagong column.
+alter table public.tulong_username_requests
+  alter column username drop not null,
+  alter column password_hash drop not null;
+alter table public.tulong_username_requests
+  add column if not exists profile_id uuid references public.profiles(id);
 
 -- Isang pending na kahilingan lang bawat kaanib.
 create unique index if not exists tulong_username_requests_pending_member_uidx
@@ -345,17 +357,26 @@ begin
   end if;
 
   if p_approve then
-    -- Siguraduhing hindi pa nagagamit ang username o may account na ang kaanib.
-    if exists (select 1 from public.tulong_financial_borrowers where lower(username) = lower(v_rec.username)) then
-      raise exception 'gamit na ang username na ito';
+    if v_rec.profile_id is not null then
+      -- May portal account na ang kaanib: walang bagong account na lilikhain;
+      -- apruba lang, at gagamitin niya ang kanyang portal login.
+      null;
+    else
+      -- Siguraduhing hindi pa nagagamit ang username o may account na ang kaanib.
+      if v_rec.username is null or v_rec.password_hash is null then
+        raise exception 'walang username/password ang kahilingang ito';
+      end if;
+      if exists (select 1 from public.tulong_financial_borrowers where lower(username) = lower(v_rec.username)) then
+        raise exception 'gamit na ang username na ito';
+      end if;
+      if exists (select 1 from public.tulong_financial_borrowers where member_id = v_rec.member_id) then
+        raise exception 'may account na ang kaanib na ito';
+      end if;
+      insert into public.tulong_financial_borrowers
+        (member_id, username, password_hash, is_active, created_by, password_is_temporary)
+      values
+        (v_rec.member_id, v_rec.username, v_rec.password_hash, true, v_decider, true);
     end if;
-    if exists (select 1 from public.tulong_financial_borrowers where member_id = v_rec.member_id) then
-      raise exception 'may account na ang kaanib na ito';
-    end if;
-    insert into public.tulong_financial_borrowers
-      (member_id, username, password_hash, is_active, created_by, password_is_temporary)
-    values
-      (v_rec.member_id, v_rec.username, v_rec.password_hash, true, v_decider, true);
   end if;
 
   update public.tulong_username_requests
@@ -367,7 +388,10 @@ begin
   insert into public.letter_messages (letter_id, author_id, body)
   select l.letter_id, v_decider,
          case when p_approve
-           then 'APRUBADO ng admin. Nalikha na ang account (aktibo na, maaari nang mag-login ang kaanib).'
+           then case when v_rec.profile_id is not null
+             then 'APRUBADO ng admin. Maaari nang mag-login ang kaanib gamit ang kanyang portal account sa idbcj.org/tulong-financial.'
+             else 'APRUBADO ng admin. Nalikha na ang account (aktibo na, maaari nang mag-login ang kaanib).'
+             end
            else 'TINANGGIHAN ng admin ang kahilingang ito.' end
   from public.tulong_request_letters l
   where l.request_kind = 'username' and l.request_id = p_request_id;
@@ -433,3 +457,190 @@ $$;
 
 revoke all on function public.tulong_borrower_change_password(text, text, text) from public, anon;
 grant execute on function public.tulong_borrower_change_password(text, text, text) to anon, authenticated;
+
+-- ---------------------------------------------------------------------------
+-- Portal login: ang kaanib na MAY portal account na ay gagamit ng kanyang
+-- portal login (hindi na gagawa ng bagong borrower username/password).
+-- ---------------------------------------------------------------------------
+
+-- 5g) Portal user: sariling record (member_name + loans). Kailangang may
+--     aprubadong username request ang kaanib, o may naitala nang hiram.
+create or replace function public.tulong_borrower_record_by_profile()
+returns jsonb language plpgsql stable security definer set search_path = '' as $$
+declare
+  v_profile uuid;
+  v_member_id uuid;
+  v_member_name text;
+  v_loans jsonb;
+begin
+  v_profile := auth.uid();
+  if v_profile is null then return null; end if;
+
+  select m.id into v_member_id from public.members m where m.profile_id = v_profile;
+  if v_member_id is null then
+    select r.member_id into v_member_id
+    from public.tulong_username_requests r
+    where r.profile_id = v_profile and r.status = 'approved'
+    order by r.decided_at desc nulls last limit 1;
+  end if;
+  if v_member_id is null then return null; end if;
+
+  if not exists (
+    select 1 from public.tulong_username_requests r
+    where r.member_id = v_member_id and r.status = 'approved'
+  ) and not exists (
+    select 1 from public.tulong_financial_loans l where l.member_id = v_member_id
+  ) then
+    return null;
+  end if;
+
+  select full_name into v_member_name from public.members where id = v_member_id;
+
+  select coalesce(jsonb_agg(
+    jsonb_build_object(
+      'id', l.id,
+      'amount', l.amount,
+      'date_borrowed', l.date_borrowed,
+      'target_return_date', l.target_return_date,
+      'notes', l.notes,
+      'payments', coalesce((
+        select jsonb_agg(jsonb_build_object('amount', p.amount, 'date_paid', p.date_paid) order by p.date_paid)
+        from public.tulong_financial_payments p
+        where p.loan_id = l.id
+      ), '[]'::jsonb)
+    ) order by l.date_borrowed desc
+  ), '[]'::jsonb)
+  into v_loans
+  from public.tulong_financial_loans l
+  where l.member_id = v_member_id;
+
+  return jsonb_build_object('member_name', coalesce(v_member_name, ''), 'loans', v_loans,
+    'password_is_temporary', false);
+end;
+$$;
+
+revoke all on function public.tulong_borrower_record_by_profile() from public, anon;
+grant execute on function public.tulong_borrower_record_by_profile() to authenticated;
+
+-- 5h) Portal user: sariling mga kahilingan ng hiram (para makita ang status).
+create or replace function public.tulong_my_loan_requests_by_profile()
+returns jsonb language plpgsql stable security definer set search_path = '' as $$
+declare
+  v_profile uuid;
+  v_member_id uuid;
+  v_out jsonb;
+begin
+  v_profile := auth.uid();
+  if v_profile is null then return '[]'::jsonb; end if;
+
+  select m.id into v_member_id from public.members m where m.profile_id = v_profile;
+  if v_member_id is null then return '[]'::jsonb; end if;
+
+  select coalesce(jsonb_agg(jsonb_build_object(
+      'id', r.id,
+      'amount', r.amount,
+      'target_return_date', r.target_return_date,
+      'notes', r.notes,
+      'status', r.status,
+      'requested_at', r.requested_at,
+      'decided_at', r.decided_at
+    ) order by r.requested_at desc), '[]'::jsonb)
+  into v_out
+  from public.tulong_loan_requests r
+  where r.member_id = v_member_id;
+
+  return v_out;
+end;
+$$;
+
+revoke all on function public.tulong_my_loan_requests_by_profile() from public, anon;
+grant execute on function public.tulong_my_loan_requests_by_profile() to authenticated;
+
+-- 5i) Portal user: humiling ng hiram gamit ang portal login.
+--     Kailangang may aprubadong username request, o may naitala nang hiram.
+create or replace function public.tulong_create_loan_request_by_profile(
+  p_amount numeric, p_target_return_date date, p_notes text
+)
+returns uuid language plpgsql volatile security definer set search_path = '' as $$
+declare
+  v_profile uuid;
+  v_member_id uuid;
+  v_request_id uuid;
+begin
+  v_profile := auth.uid();
+  if v_profile is null then return null; end if;
+  if p_amount is null or p_amount <= 0 then return null; end if;
+
+  select m.id into v_member_id from public.members m where m.profile_id = v_profile;
+  if v_member_id is null then return null; end if;
+
+  if not exists (
+    select 1 from public.tulong_username_requests r
+    where r.member_id = v_member_id and r.status = 'approved'
+  ) and not exists (
+    select 1 from public.tulong_financial_loans l where l.member_id = v_member_id
+  ) then
+    return null;
+  end if;
+
+  -- Isang naghihintay na kahilingan lang bawat kaanib.
+  if exists (
+    select 1 from public.tulong_loan_requests
+    where member_id = v_member_id and status in ('pending','sent')
+  ) then
+    return null;
+  end if;
+
+  insert into public.tulong_loan_requests
+    (borrower_id, member_id, amount, target_return_date, notes, status)
+  values
+    (null, v_member_id, round(p_amount, 2), p_target_return_date,
+     nullif(trim(coalesce(p_notes, '')), ''), 'pending')
+  returning id into v_request_id;
+
+  return v_request_id;
+end;
+$$;
+
+revoke all on function public.tulong_create_loan_request_by_profile(numeric, date, text) from public, anon;
+grant execute on function public.tulong_create_loan_request_by_profile(numeric, date, text) to authenticated;
+
+-- 5j) Finance Ministry: hanapin ang portal account ng isang kaanib.
+--     Una: direktang members.profile_id link. Kung wala: pagtugmain ang
+--     pangalan (normalized). Para matiyak na hindi gagawa ng bagong
+--     username/password kung may portal account na ang kaanib.
+create or replace function public.tulong_find_portal_profile(p_member_id uuid)
+returns jsonb language plpgsql stable security definer set search_path = '' as $$
+declare
+  v_member_name text;
+  v_profile_id uuid;
+  v_out jsonb;
+begin
+  if p_member_id is null then return null; end if;
+
+  select m.full_name, m.profile_id into v_member_name, v_profile_id
+  from public.members m where m.id = p_member_id;
+  if v_member_name is null then return null; end if;
+
+  if v_profile_id is not null then
+    select jsonb_build_object('profile_id', p.id, 'full_name', p.full_name, 'email', p.email, 'via', 'link')
+    into v_out from public.profiles p where p.id = v_profile_id;
+    return v_out;
+  end if;
+
+  -- Paghahambing ng pangalan (hindi case-sensitive, walang sobrang espasyo).
+  select jsonb_build_object('profile_id', p.id, 'full_name', p.full_name, 'email', p.email, 'via', 'name')
+  into v_out
+  from public.profiles p
+  where p.status = 'active'
+    and lower(regexp_replace(trim(p.full_name), '\s+', ' ', 'g'))
+      = lower(regexp_replace(trim(v_member_name), '\s+', ' ', 'g'))
+  order by p.created_at nulls last
+  limit 1;
+
+  return v_out;
+end;
+$$;
+
+revoke all on function public.tulong_find_portal_profile(uuid) from public, anon;
+grant execute on function public.tulong_find_portal_profile(uuid) to authenticated;
