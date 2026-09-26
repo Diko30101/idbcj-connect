@@ -43,11 +43,8 @@ create policy tulong_sessions_all on public.tulong_financial_sessions for all to
   with check (public.is_tulong_financial());
 
 -- Helper: i-hash ang password (ginagamit ng Finance Ministry sa paglikha/pag-reset).
-create or replace function public.tulong_hash_password(p_password text)
-returns text language sql stable security definer set search_path = '' as $$
-  select public.tulong_crypt(p_password, public.tulong_gen_salt());
-$$;
-
+-- Tandaan: ang SQL-language function ay bine-validate ng Postgres sa CREATE time,
+-- kaya ang mga helper sa ibaba ay DAPAT mauna bago ang tulong_hash_password.
 -- Maliit na wrapper para hindi umasa sa search_path ng caller.
 create or replace function public.tulong_crypt(pw text, salt text)
 returns text language sql stable security definer set search_path = public, extensions as $$
@@ -57,6 +54,11 @@ $$;
 create or replace function public.tulong_gen_salt()
 returns text language sql volatile security definer set search_path = public, extensions as $$
   select gen_salt('bf', 10);
+$$;
+
+create or replace function public.tulong_hash_password(p_password text)
+returns text language sql stable security definer set search_path = '' as $$
+  select public.tulong_crypt(p_password, public.tulong_gen_salt());
 $$;
 
 revoke all on function public.tulong_hash_password(text) from public, anon;
