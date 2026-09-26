@@ -99,6 +99,11 @@ function SidebarLink({
     >
       <Icon className="h-[18px] w-[18px] shrink-0" aria-hidden="true" />
       <span className="truncate">{item.label}</span>
+      {item.badge != null && item.badge > 0 && (
+        <span className="ml-auto flex h-5 min-w-5 items-center justify-center rounded-full bg-red-600 px-1.5 text-[11px] font-bold leading-none text-white">
+          {item.badge > 9 ? "9+" : item.badge}
+        </span>
+      )}
     </Link>
   );
 }

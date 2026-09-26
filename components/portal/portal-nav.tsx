@@ -5,7 +5,7 @@ import { usePathname } from "next/navigation";
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 
-export type NavItem = { href: string; label: string; children?: NavItem[] };
+export type NavItem = { href: string; label: string; children?: NavItem[]; badge?: number };
 
 function isActive(pathname: string, href: string) {
   return href === "/portal" ? pathname === "/portal" : pathname.startsWith(href);
