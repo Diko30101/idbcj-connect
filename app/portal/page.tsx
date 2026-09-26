@@ -1,4 +1,4 @@
-import Link from "next/link";import { requirePortalAccess, isStaff, isFinanceMember, fmtDate, todayPH, KIND_LABEL } from "@/lib/portal";
+import Link from "next/link";import { requirePortalAccess, isStaff, isFinanceMember, fmtDate, todayPH, KIND_LABEL, FINANCE_MINISTRY_NAME } from "@/lib/portal";
 import { yearToDateLabel, fmtPeso, monthLabel, FINANCE_CATEGORIES, FINANCE_CATEGORY_LABEL, type FinanceCategory } from "@/lib/finance";
 import { getYearlyCollections, summarizeCollections, type CollectionRow } from "@/lib/finance-collections";
 import { Empty, Notice, Panel, RoleBadge, StatusBadge } from "@/components/portal/ui";
@@ -100,11 +100,19 @@ export default async function PortalHome({
   let tulongRecent: { date: string; name: string; kind: "hiram" | "bayad"; amount: number }[] = [];
   if (tulongAccess) {
     const [tLoansRes, tPaymentsRes] = await Promise.all([
-      supabase.from("tulong_financial_loans").select("id, member_id, amount, date_borrowed, members(full_name)"),
+      supabase.from("tulong_financial_loans").select("id, member_id, amount, date_borrowed"),
       supabase.from("tulong_financial_payments").select("id, amount, date_paid, loan"),
     ]);
     const tLoans = (tLoansRes.data ?? []) as any[];
     const tPayments = (tPaymentsRes.data ?? []) as any[];
+    // Kunin ang mga pangalan ng kaanib nang hiwalay (maaaring ma-block ng RLS para sa hindi admin;
+    // sa ganitong kaso ay "—" ang ipapakita pero tuloy pa rin ang mga total).
+    const memberIds = [...new Set(tLoans.map((l) => String(l.member_id ?? "")).filter(Boolean))];
+    let memberNameById = new Map<string, string>();
+    if (memberIds.length > 0) {
+      const { data: memRows } = await supabase.from("members").select("id, full_name").in("id", memberIds);
+      memberNameById = new Map(((memRows ?? []) as any[]).map((m) => [String(m.id), m.full_name ?? "—"]));
+    }
     const loanMember = new Map<string, { memberId: string; name: string }>();
     const tBalances = new Map<string, { name: string; bal: number }>();
     const txs: { date: string; name: string; kind: "hiram" | "bayad"; amount: number }[] = [];
@@ -112,7 +120,7 @@ export default async function PortalHome({
       const amt = Number(l.amount) || 0;
       tulongTotalLent += amt;
       const mid = String(l.member_id ?? "");
-      const name = l.members?.full_name ?? "—";
+      const name = memberNameById.get(mid) ?? "—";
       if (mid) {
         loanMember.set(String(l.id), { memberId: mid, name });
         const e = tBalances.get(mid) ?? { name, bal: 0 };
@@ -134,6 +142,7 @@ export default async function PortalHome({
     tulongActiveBorrowers = [...tBalances.values()].filter((e) => e.bal > 0.005).length;
     tulongRecent = txs.filter((t) => t.date).sort((a, b) => b.date.localeCompare(a.date)).slice(0, 8);
   }
+
   // Buong Sistema dashboard (Admin lang): koleksyon ayon sa kategorya at local.
   const catTotals = new Map<FinanceCategory, number>();
   const localTotals = new Map<string, { name: string; cats: Map<FinanceCategory, number>; total: number }>();
@@ -608,6 +617,7 @@ export default async function PortalHome({
           </Panel>
         </section>
       )}
+
       {isAdmin && attMaxDate && (
         <section className="mb-6">
           <Panel title="Attendance — Huling Pagtitipon" subtitle={fmtDate(attMaxDate)}>
