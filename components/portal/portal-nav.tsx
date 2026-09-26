@@ -72,18 +72,24 @@ function NavSubmenuRow({ item, onNavigate }: { item: NavItem; onNavigate: () => 
 
   return (
     <li ref={rowRef} onMouseEnter={() => { cancelClose(); openMenu(); }} onMouseLeave={scheduleClose}>
-      <button
-        type="button"
-        onClick={toggle}
-        aria-expanded={open}
-        aria-haspopup="true"
+      <div
         className={`flex w-full items-center justify-between gap-2 px-4 py-2 text-sm transition ${
           subActive || open
             ? "bg-emerald-50 font-medium text-emerald-800"
             : "text-gray-600 hover:bg-emerald-50 hover:text-emerald-800"
         }`}
       >
-        <span>{item.label}</span>
+        <Link href={item.href} onClick={onNavigate} className="flex-1">
+          {item.label}
+        </Link>
+        <button
+          type="button"
+          onClick={toggle}
+          aria-expanded={open}
+          aria-haspopup="true"
+          aria-label={`Buksan ang submenu ng ${item.label}`}
+          className="shrink-0 rounded p-0.5 hover:bg-emerald-100"
+        >
         <svg
           className="h-3.5 w-3.5 shrink-0"
           viewBox="0 0 20 20"
@@ -96,7 +102,8 @@ function NavSubmenuRow({ item, onNavigate }: { item: NavItem; onNavigate: () => 
             clipRule="evenodd"
           />
         </svg>
-      </button>
+        </button>
+      </div>
       {open
         ? createPortal(
             <ul
