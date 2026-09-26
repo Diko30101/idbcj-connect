@@ -1,10 +1,12 @@
 import { requireTulongFinancialAccess } from "@/lib/portal";
 import { fmtPeso } from "@/lib/finance";
-import { Empty, Notice, PageHeader, Panel, btnGhostCls, inputCls } from "@/components/portal/ui";
+import { Empty, Notice, PageHeader, Panel, btnGhostCls, btnCls, inputCls, Field } from "@/components/portal/ui";
 import {
   forwardLoanRequestToAdmin,
   addTulongPayment,
+  createLoanRequest,
 } from "@/app/portal/finance/tulong-financial/actions";
+import { SignaturePad } from "./signature-pad";
 
 type StatusFilter = "lahat" | "bukas" | "bahagya" | "bayad";
 
@@ -128,6 +130,45 @@ export async function TulongFinanceWorkspace({
         </Panel>
         <Panel title={`Natitirang balanse (${openLoans.length} bukas)`}>
           <p className="text-2xl font-bold text-red-700">{fmtPeso(totalBalance)}</p>
+        </Panel>
+      </div>
+
+      <div className="mt-6">
+        <Panel title="📝 Humiling ng Hiram" subtitle="Mula sa Finance Ministry — ipapadala sa admin bilang Inbox letter para sa apruba.">
+          <form action={createLoanRequest} className="grid gap-4 sm:grid-cols-2">
+            <input type="hidden" name="return_to" value={returnTo} />
+            <Field label="Kaanib na nanghihiram">
+              <select name="member_id" required className={inputCls} defaultValue="">
+                <option value="" disabled>Piliin ang kaanib…</option>
+                {((memberRows ?? []) as any[]).map((m) => (
+                  <option key={m.id} value={m.id}>
+                    {m.full_name} — {localNameById.get(m.local_id) ?? "—"}
+                  </option>
+                ))}
+              </select>
+            </Field>
+            <Field label="Halaga ng hihiramin (₱)">
+              <input type="number" name="amount" min="1" step="0.01" required className={inputCls} placeholder="Hal. 5000" />
+            </Field>
+            <Field label="Dahilan ng paggagamitan" className="sm:col-span-2">
+              <textarea name="notes" className={inputCls} rows={3} placeholder="Hal. Pambayad ng tuition ng anak…" />
+              <p className="mt-1 text-xs text-gray-500">Makikita ito ng admin sa Inbox letter.</p>
+            </Field>
+            <Field label="Target na petsa ng pagbabayad">
+              <input type="date" name="target_return_date" className={inputCls} />
+            </Field>
+            <div className="sm:col-span-2">
+              <div className="mb-2 rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-800">
+                ✍️ <strong>Pananagutan:</strong> Sa pagpirma sa ibaba, pinatutunayan ng nanghihiram na siya ay mananagot sa pagbabayad ng hiniram na halaga.
+              </div>
+              <label className="mb-2 block text-sm font-medium text-gray-700">Pirma ng nanghihiram (electronic signature)</label>
+              <SignaturePad name="signature" />
+            </div>
+            <div className="sm:col-span-2">
+              <button className={btnCls}>Ipadala sa Admin para sa Apruba →</button>
+              <p className="mt-2 text-xs text-gray-500">Kapag isinumite, awtomatikong malilikha ang Inbox letter para sa admin. Hindi pa ito maitatalang hiram hangga't hindi inaaprubahan.</p>
+            </div>
+          </form>
         </Panel>
       </div>
 
