@@ -71,7 +71,7 @@ export default async function PortalLayout({ children }: { children: React.React
     );
 
     // Finance role (Admin/Secretary/Treasurer) at Finance Ministry members ay parehong may
-    // buong access sa Finance section (Financial Management, Audit Report, Expenses)
+    // buong access sa Finance section (Financial Management, Audit Report, Expenses, Tulong Financial)
     if (isFinance(profile.role) || isFinanceMinistryMember) {
       items.push({
         href: "/portal/finance",
@@ -80,6 +80,7 @@ export default async function PortalLayout({ children }: { children: React.React
           { href: "/portal/finance", label: "Financial Management" },
           { href: "/portal/finance/report", label: "Audit Report" },
           { href: "/portal/finance/expenses", label: "Expenses" },
+          { href: "/portal/finance/tulong-financial", label: "Tulong Financial" },
         ],
       });
     }
