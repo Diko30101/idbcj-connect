@@ -94,7 +94,7 @@ export default async function PortalLayout({ children }: { children: React.React
       items.push({ href: "/portal/finance/abuluyan", label: "Abuluyan" });
       items.push({ href: "/portal/finance/resibo", label: "Buwanang Resibo" });
     }
-    // Ambagan (per-member): Local Finance at church-wide Finance lang; ang pahina ang nagsasala
+    /* Resibo ng Kaanib (per-member): Local Finance Ministry lang */ if (isLocalFinanceMember) { items.push({ href: "/portal/finance/resibo/kaanib", label: "Resibo ng Kaanib" }); }    // Ambagan (per-member): Local Finance at church-wide Finance lang; ang pahina ang nagsasala
     if (isLocalFinanceMember || isFinanceMinistryMember) {
       items.push({ href: "/portal/finance/ambagan", label: "Ambagan" });
       items.push({ href: "/portal/finance/tulong", label: "Tulong sa Aral" });
@@ -135,7 +135,7 @@ export default async function PortalLayout({ children }: { children: React.React
     },
     {
       label: "Local Ministry",
-      hrefs: ["/portal/roster", "/portal/attendance-record", "/portal/finance/resibo", "/portal/finance/local", "/portal/audit"],
+      hrefs: ["/portal/roster", "/portal/attendance-record", "/portal/finance/resibo", "/portal/finance/resibo/kaanib", "/portal/finance/local", "/portal/audit"],
       subgroups: [
         {
           label: "Finance Record",
