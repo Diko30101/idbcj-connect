@@ -1,6 +1,7 @@
 import { borrowerLogin } from "../actions";
 import { inputCls, btnCls } from "@/components/portal/ui";
 import { isTulongFinancePortalUser, isTulongMemberPortalUser } from "../finance-check";
+import { redirect } from "next/navigation";
 
 export const metadata = { title: "Tulong Financial — Login" };
 export const dynamic = "force-dynamic";
@@ -13,17 +14,6 @@ export default async function TulongLoginPage({
   const { error } = await searchParams;
   const financeAuthed = await isTulongFinancePortalUser();
   const memberAuthed = !financeAuthed && (await isTulongMemberPortalUser());
-
-  // Kung naka-login na sa portal at aprubadong Tulong member:
-  // diretso na sa record — hindi na kailangan pang mag-login ulit.
-  if (financeAuthed) {
-    const { redirect } = await import("next/navigation");
-    redirect("/tulong-financial/finance");
-  }
-  if (memberAuthed) {
-    const { redirect } = await import("next/navigation");
-    redirect("/tulong-financial");
-  }
 
   return (
     <main className="mx-auto flex min-h-[70vh] w-full max-w-3xl items-center px-4 py-12">
