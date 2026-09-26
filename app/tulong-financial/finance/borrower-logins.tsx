@@ -1,10 +1,10 @@
 import { requireTulongFinancialAccess } from "@/lib/portal";
 import { Empty, Panel, btnGhostCls, inputCls } from "@/components/portal/ui";
 import {
-  requestTulongUsername,
   resetBorrowerPassword,
   setBorrowerActive,
 } from "@/app/portal/finance/tulong-financial/actions";
+import UsernameRequestForm from "./username-request-form";
 
 // Pamamahala ng mga login ng pinahiram — nasa bagong Tulong Financial portal lang
 // (Finance Ministry at Admin). Ang paggawa ng username ay dumadaan sa apruba ng
@@ -50,38 +50,12 @@ export async function BorrowerLoginsPanel({ returnTo }: { returnTo: string }) {
   return (
     <Panel title="Mga login ng pinahiram (username/password)">
       <p className="mb-4 text-sm text-gray-500">
-        Ang Finance Ministry ang gumagawa ng username at password para sa active member na
-        magre-request ng Tulong Financial. Ang kahilingan ay ipapadala sa admin — pag-apruba
-        ng admin sa Inbox letter, saka lang malilikha ang account. Makikita ng kaanib ang
-        sarili niyang record sa <span className="font-medium text-gray-700">idbcj.org/tulong-financial/login</span>.
+        Pumili ng active member — awtomatikong malilikha ang username (mula sa pangalan) at
+        temporary password. Ang kahilingan ay ipapadala sa admin — pag-apruba ng admin sa
+        Inbox letter, saka lang malilikha ang account. Makikita ng kaanib ang sarili niyang
+        record sa <span className="font-medium text-gray-700">idbcj.org/tulong-financial/login</span>.
       </p>
-      <form action={requestTulongUsername} className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-        <input type="hidden" name="return_to" value={returnTo} />
-        <label className="grid gap-1.5">
-          <span className="text-sm font-medium text-gray-700">Kaanib (Active, walang account)</span>
-          <select name="member_id" required className={inputCls} defaultValue="">
-            <option value="" disabled>
-              Pumili ng kaanib
-            </option>
-            {eligibleMembers.map((m) => (
-              <option key={m.id} value={m.id}>
-                {m.full_name}
-              </option>
-            ))}
-          </select>
-        </label>
-        <label className="grid gap-1.5">
-          <span className="text-sm font-medium text-gray-700">Username</span>
-          <input name="username" type="text" required minLength={3} maxLength={30} className={inputCls} placeholder="hal. juan.delacruz" />
-        </label>
-        <label className="grid gap-1.5">
-          <span className="text-sm font-medium text-gray-700">Password (min. 6)</span>
-          <input name="password" type="text" required minLength={6} className={inputCls} />
-        </label>
-        <div className="flex items-end">
-          <button className={btnGhostCls}>Ipadala sa admin</button>
-        </div>
-      </form>
+      <UsernameRequestForm members={eligibleMembers} />
 
       <div className="mt-6">
         <h3 className="mb-2 text-sm font-semibold text-gray-700">Mga kahilingan ng username</h3>
