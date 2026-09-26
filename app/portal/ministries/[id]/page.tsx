@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { requirePortalAccess, isStaff, fmtDate, todayPH, isProtectedMinistryName } from "@/lib/portal";
+import { isTulongFinancePortalUser } from "@/app/tulong-financial/finance-check";
 import { MSG_PROTECTED_MEMBERS } from "@/lib/ministry-ops";
 import {
   addMemberToMinistry,
@@ -27,7 +28,12 @@ export default async function MinistryDetail({
   const { data: ministry } = await supabase.from("ministries").select("*").eq("id", id).maybeSingle();
   if (!ministry) notFound();
   const protectedMinistry = isProtectedMinistryName(ministry.name);
-  const canManageMembers = staff && (profile.role === "admin" || !protectedMinistry);
+  // Ang "Tulong Financial Members" ay awtomatikong membership (view) — walang manual na dagdag/bawas.
+  const isBorrowerMinistry = !!(ministry as any).is_borrower_ministry;
+  const canManageMembers = !isBorrowerMinistry && staff && (profile.role === "admin" || !protectedMinistry);
+
+  // Ang listahan ng mga pinahiram ay para sa Finance Ministry at Admin lang.
+  const canSeeBorrowers = isBorrowerMinistry ? await isTulongFinancePortalUser() : false;
 
   const [mine, roster, sched] = await Promise.all([
     supabase.from("ministry_members").select("is_leader").eq("ministry_id", id).eq("profile_id", profile.id).maybeSingle(),
@@ -40,6 +46,12 @@ export default async function MinistryDetail({
   const canManageSchedule = staff || isLeader;
   const rosterRows = (roster.data ?? []) as { profile_id: string; full_name: string | null; phone_number: string | null; status: string; is_leader: boolean }[];
   const nameOf = new Map(rosterRows.map((r) => [r.profile_id, r.full_name || "(walang pangalan)"]));
+
+  let borrowerRows: { member_id: string; full_name: string | null; local_name: string | null; username: string | null; has_loan: boolean; has_login: boolean }[] = [];
+  if (canSeeBorrowers) {
+    const { data } = await supabase.from("tulong_financial_ministry_members").select("*").order("full_name");
+    borrowerRows = (data ?? []) as typeof borrowerRows;
+  }
 
   let candidates: { id: string; full_name: string | null }[] = [];
   if (canManageMembers) {
@@ -131,7 +143,40 @@ export default async function MinistryDetail({
 
         <div className="space-y-6">
           <Panel title="Mga miyembro">
-            {rosterRows.length === 0 ? (
+            {isBorrowerMinistry ? (
+              !canSeeBorrowers ? (
+                <Empty>Ang listahan ng mga miyembro ay para sa Finance Ministry at Admin lang.</Empty>
+              ) : borrowerRows.length === 0 ? (
+                <Empty>Wala pang kaanib na may hiram o account sa Tulong Financial.</Empty>
+              ) : (
+                <>
+                  <p className="mb-4 text-xs text-gray-500">
+                    Awtomatikong kasapi ang bawat kaanib na may hiram o may account. Hindi ito manual
+                    na idinaragdag o inaalis.
+                  </p>
+                  <ul className="space-y-3 text-sm">
+                    {borrowerRows.map((r) => (
+                      <li key={r.member_id} className="flex items-start justify-between gap-2">
+                        <div>
+                          <div className="font-medium text-gray-900">{r.full_name || "(walang pangalan)"}</div>
+                          <div className="text-xs text-gray-500">
+                            {[r.local_name, r.username ? `@${r.username}` : null].filter(Boolean).join(" · ") || "—"}
+                          </div>
+                        </div>
+                        <div className="flex shrink-0 gap-1">
+                          {r.has_loan && (
+                            <span className="rounded-full bg-amber-50 px-2 py-0.5 text-xs font-semibold text-amber-700">May hiram</span>
+                          )}
+                          {r.has_login && (
+                            <span className="rounded-full bg-emerald-50 px-2 py-0.5 text-xs font-semibold text-emerald-700">May account</span>
+                          )}
+                        </div>
+                      </li>
+                    ))}
+                  </ul>
+                </>
+              )
+            ) : rosterRows.length === 0 ? (
               <Empty>
                 {isMember
                   ? "Miyembro ka ng ministry na ito. Ang leader at ang staff lang ang nakakakita ng listahan."
@@ -172,8 +217,8 @@ export default async function MinistryDetail({
               </ul>
             )}
 
-            {staff && !canManageMembers && <p className="mt-4 text-xs text-gray-500">{MSG_PROTECTED_MEMBERS}</p>}
-            {canManageMembers && candidates.length > 0 && (
+            {!isBorrowerMinistry && staff && !canManageMembers && <p className="mt-4 text-xs text-gray-500">{MSG_PROTECTED_MEMBERS}</p>}
+            {!isBorrowerMinistry && canManageMembers && candidates.length > 0 && (
               <form action={addMemberToMinistry} className="mt-4 flex gap-2">
                 <input type="hidden" name="ministry_id" value={id} />
                 <input type="hidden" name="return_to" value={back} />
