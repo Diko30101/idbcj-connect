@@ -1,213 +1,219 @@
-import Link from "next/link";
-import { notFound } from "next/navigation";
-import { requirePortalAccess, isStaff, fmtDate } from "@/lib/portal";
+import { redirect } from "next/navigation";
+import { createClient } from "@/lib/supabase/server";
+import { cookies } from "next/headers";
 import { fmtPeso } from "@/lib/finance";
-import { Empty, Notice, PageHeader, Panel, btnGhostCls } from "@/components/portal/ui";
-import { LetterBody } from "@/components/portal/letter-body";
-import {
-  decideLoanRequest,
-  decideUsernameRequest,
-} from "@/app/portal/finance/tulong-financial/actions";
+import { Empty, Notice, Panel, btnGhostCls, inputCls } from "@/components/portal/ui";
+import { borrowerLogout, getBorrowerSessionToken, submitLoanRequest } from "./actions";
+import { isTulongFinancePortalUser } from "./finance-check";
 
-export default async function LetterThreadPage({
-  params,
+export const metadata = { title: "Tulong Financial — Aking Record" };
+export const dynamic = "force-dynamic";
+
+type Loan = {
+  id: string;
+  amount: number;
+  date_borrowed: string;
+  target_return_date: string | null;
+  notes: string | null;
+  payments: { amount: number; date_paid: string }[];
+};
+
+function statusOf(amount: number, paid: number) {
+  if (paid >= amount - 0.005) return { label: "Bayad na", cls: "bg-emerald-100 text-emerald-800" };
+  if (paid > 0) return { label: "Bahagyang nabayaran", cls: "bg-amber-100 text-amber-800" };
+  return { label: "Hindi pa nababayaran", cls: "bg-red-100 text-red-700" };
+}
+
+const REQUEST_STATUS: Record<string, { label: string; cls: string }> = {
+  pending: { label: "Naghihintay sa Finance Ministry", cls: "bg-amber-100 text-amber-800" },
+  sent: { label: "Ipinadala na sa admin — naghihintay ng apruba", cls: "bg-blue-100 text-blue-800" },
+  approved: { label: "Aprubado", cls: "bg-emerald-100 text-emerald-800" },
+  rejected: { label: "Tinanggihan", cls: "bg-red-100 text-red-700" },
+};
+
+export default async function TulongBorrowerPage({
   searchParams,
 }: {
-  params: Promise<{ id: string }>;
   searchParams: Promise<{ ok?: string; error?: string }>;
 }) {
-  const { id } = await params;
   const { ok, error } = await searchParams;
-  const { supabase, profile } = await requirePortalAccess();
-  const staff = isStaff(profile.role);
+  const token = await getBorrowerSessionToken();
+  if (!token) {
+    // Ang Finance Ministry ay may sariling workspace sa bagong portal.
+    if (await isTulongFinancePortalUser()) redirect("/tulong-financial/finance");
+    redirect("/tulong-financial/login");
+  }
 
-  const { data: letter } = await supabase
-    .from("letters")
-    .select("id, subject, created_at, created_by, profiles!letters_created_by_fkey(full_name)")
-    .eq("id", id)
-    .maybeSingle();
-  if (!letter) notFound();
-
-  const [messages, myRecipient, recipients] = await Promise.all([
-    supabase
-      .from("letter_messages")
-      .select("id, body, created_at, author_id, profiles!letter_messages_author_id_fkey(full_name)")
-      .eq("letter_id", id)
-      .order("created_at", { ascending: true })
-      .limit(500),
-    supabase.from("letter_recipients").select("id, read_at").eq("letter_id", id).eq("profile_id", profile.id).maybeSingle(),
-    staff
-      ? supabase.from("letter_recipients").select("profile_id, read_at, profiles!letter_recipients_profile_id_fkey(full_name)").eq("letter_id", id)
-      : Promise.resolve({ data: null as any[] | null }),
+  const cookieStore = cookies();
+  const supabase = createClient(cookieStore);
+  const [{ data }, { data: myRequests }] = await Promise.all([
+    supabase.rpc("tulong_borrower_record", { p_token: token }),
+    supabase.rpc("tulong_my_loan_requests", { p_token: token }),
   ]);
-
-  // I-mark na nabasa kapag binuksan ng tatanggap
-  if (myRecipient.data && !myRecipient.data.read_at) {
-    await supabase.from("letter_recipients").update({ read_at: new Date().toISOString() }).eq("id", myRecipient.data.id);
+  const record = data as { member_name: string; loans: Loan[] } | null;
+  if (!record) {
+    const cs = await cookies();
+    cs.delete("tulong_session");
+    redirect("/tulong-financial/login?error=" + encodeURIComponent("Paso na ang session. Mag-login ulit."));
   }
 
-  const thread = (messages.data ?? []) as any[];
+  const loans = (record.loans ?? []).map((l) => {
+    const amount = Number(l.amount);
+    const paid = l.payments.reduce((s, p) => s + Number(p.amount), 0);
+    return { ...l, amount, paid, balance: Math.round((amount - paid) * 100) / 100 };
+  });
+  const totalBorrowed = loans.reduce((s, l) => s + l.amount, 0);
+  const totalPaid = loans.reduce((s, l) => s + l.paid, 0);
+  const totalBalance = Math.round(loans.reduce((s, l) => s + Math.max(l.balance, 0), 0) * 100) / 100;
 
-  // Tulong Financial approval: kung ang letter na ito ay nakaugnay sa isang
-  // kahilingan ng hiram o username, ipakita ang detalye at pindutan ng apruba.
-  const { data: reqLink } = await supabase
-    .from("tulong_request_letters")
-    .select("request_kind, request_id")
-    .eq("letter_id", id)
-    .maybeSingle();
-
-  let approval: {
-    kind: string;
-    requestId: string;
-    memberName: string;
-    detail: string;
-    status: string;
-    awaiting: boolean;
-  } | null = null;
-
-  if (reqLink) {
-    const kind = (reqLink as any).request_kind as string;
-    const requestId = (reqLink as any).request_id as string;
-    if (kind === "loan") {
-      const { data: r } = await supabase
-        .from("tulong_loan_requests")
-        .select("id, amount, target_return_date, notes, status, member_id")
-        .eq("id", requestId)
-        .maybeSingle();
-      if (r) {
-        const { data: m } = await supabase.from("members").select("full_name").eq("id", (r as any).member_id).maybeSingle();
-        approval = {
-          kind,
-          requestId,
-          memberName: (m as any)?.full_name ?? "—",
-          detail: `${fmtPeso(Number((r as any).amount))}${(r as any).target_return_date ? ` · target balik ${(r as any).target_return_date}` : ""}${(r as any).notes ? ` · ${(r as any).notes}` : ""}`,
-          status: (r as any).status,
-          awaiting: (r as any).status === "sent",
-        };
-      }
-    } else if (kind === "username") {
-      const { data: r } = await supabase
-        .from("tulong_username_requests")
-        .select("id, username, status, member_id")
-        .eq("id", requestId)
-        .maybeSingle();
-      if (r) {
-        const { data: m } = await supabase.from("members").select("full_name").eq("id", (r as any).member_id).maybeSingle();
-        approval = {
-          kind,
-          requestId,
-          memberName: (m as any)?.full_name ?? "—",
-          detail: `Iminungkahing username: @${(r as any).username}`,
-          status: (r as any).status,
-          awaiting: (r as any).status === "pending",
-        };
-      }
-    }
-  }
-
-  const isAdmin = profile.role === "admin";
-  const decideAction = approval?.kind === "loan" ? decideLoanRequest : decideUsernameRequest;
+  const requests = ((myRequests ?? []) as any[]).map((r) => ({ ...r, amount: Number(r.amount) }));
+  const hasPendingRequest = requests.some((r) => r.status === "pending" || r.status === "sent");
 
   return (
-    <>
-      <PageHeader
-        title={(letter as any).subject}
-        subtitle={`Mula kay ${(letter as any).profiles?.full_name ?? "Staff"} · ${fmtDate((letter as any).created_at)}`}
-        action={
-          <Link href="/portal/inbox" className={btnGhostCls}>
-            ← Inbox
-          </Link>
-        }
-      />
+    <main className="mx-auto w-full max-w-4xl px-4 py-10">
       <Notice ok={ok} error={error} />
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-bold text-emerald-900">Aking Record — Tulong Financial</h1>
+          <p className="mt-1 text-sm text-gray-500">
+            {record.member_name} · Ito ang talaan ng iyong mga hiram at bayad.
+          </p>
+        </div>
+        <form action={borrowerLogout}>
+          <button className="rounded-lg border border-gray-200 px-4 py-2 text-sm font-medium text-gray-600 hover:bg-gray-50">
+            Mag-logout
+          </button>
+        </form>
+      </div>
 
-      {approval && (
-        <Panel
-          title={approval.kind === "loan" ? "Kahilingan ng hiram — desisyon ng admin" : "Kahilingan ng username — desisyon ng admin"}
-        >
-          <div className="text-sm text-gray-700">
-            <p>
-              <strong>{approval.memberName}</strong> · {approval.detail}
+      <div className="mt-6 grid gap-4 sm:grid-cols-3">
+        <Panel title="Kabuuang hiniram">
+          <p className="text-2xl font-bold text-emerald-900">{fmtPeso(totalBorrowed)}</p>
+        </Panel>
+        <Panel title="Kabuuang nabayaran">
+          <p className="text-2xl font-bold text-emerald-900">{fmtPeso(totalPaid)}</p>
+        </Panel>
+        <Panel title="Natitirang balanse">
+          <p className="text-2xl font-bold text-red-700">{fmtPeso(totalBalance)}</p>
+        </Panel>
+      </div>
+
+      <div className="mt-6">
+        <Panel title="Humiling ng hiram">
+          {hasPendingRequest ? (
+            <p className="text-sm text-gray-500">
+              May naghihintay ka pang kahilingan sa ibaba. Hintayin muna ang desisyon bago humiling ulit.
             </p>
-            <p className="mt-1 text-xs text-gray-500">
-              Katayuan:{" "}
-              {approval.status === "approved"
-                ? "Aprubado na"
-                : approval.status === "rejected"
-                  ? "Tinanggihan na"
-                  : approval.kind === "loan"
-                    ? "Naghihintay ng apruba ng admin"
-                    : "Naghihintay ng apruba ng admin"}
-            </p>
-          </div>
-          {approval.awaiting && isAdmin && (
-            <div className="mt-3 flex flex-wrap gap-2">
-              <form action={decideAction}>
-                <input type="hidden" name="letter_id" value={id} />
-                <input type="hidden" name="request_id" value={approval.requestId} />
-                <input type="hidden" name="decision" value="approve" />
-                <button className="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-700">
-                  Aprubahan
-                </button>
-              </form>
-              <form action={decideAction}>
-                <input type="hidden" name="letter_id" value={id} />
-                <input type="hidden" name="request_id" value={approval.requestId} />
-                <input type="hidden" name="decision" value="reject" />
-                <button className="rounded-lg border border-red-200 px-4 py-2 text-sm font-semibold text-red-700 hover:bg-red-50">
-                  Tanggihan
-                </button>
-              </form>
-            </div>
-          )}
-          {approval.awaiting && !isAdmin && (
-            <p className="mt-2 text-xs text-gray-400">Ang admin lang ang maaaring mag-apruba o tumanggi.</p>
+          ) : (
+            <form action={submitLoanRequest} className="grid gap-3 sm:grid-cols-2">
+              <label className="grid gap-1.5">
+                <span className="text-sm font-medium text-gray-700">Halagang hihiramin (₱)</span>
+                <input name="amount" type="number" min="1" step="0.01" required className={inputCls} />
+              </label>
+              <label className="grid gap-1.5">
+                <span className="text-sm font-medium text-gray-700">Target na petsa ng pagbalik</span>
+                <input name="target_return_date" type="date" className={inputCls} />
+              </label>
+              <label className="grid gap-1.5 sm:col-span-2">
+                <span className="text-sm font-medium text-gray-700">Tala (opsyonal)</span>
+                <input name="notes" type="text" maxLength={200} className={inputCls} placeholder="Dahilan ng paghiram" />
+              </label>
+              <div className="sm:col-span-2">
+                <button className={btnGhostCls}>Ipadala ang kahilingan</button>
+                <p className="mt-2 text-xs text-gray-400">
+                  Ang kahilingan ay dadaan sa Finance Ministry at kailangan ng apruba ng admin.
+                </p>
+              </div>
+            </form>
           )}
         </Panel>
-      )}
-
-      <div className="grid gap-6 lg:grid-cols-3">
-        <div className="space-y-4 lg:col-span-2">
-          <Panel>
-            {thread.length === 0 ? (
-              <Empty>Walang mensahe.</Empty>
-            ) : (
-              <ul className="space-y-4">
-                {thread.map((m) => (
-                  <li key={m.id} className="rounded-lg border border-gray-100 bg-slate-50 p-3">
-                    <div className="mb-1 flex items-center justify-between text-xs">
-                      <span className="font-semibold text-emerald-800">{m.profiles?.full_name ?? "Miyembro"}</span>
-                      <span className="text-gray-400">{fmtDate(m.created_at)}</span>
-                    </div>
-                    <LetterBody body={m.body} />
-                  </li>
-                ))}
-              </ul>
-            )}
-          </Panel>
-        </div>
-
-        {staff && (
-          <div>
-            <Panel title="Mga tatanggap">
-              {((recipients.data ?? []) as any[]).length === 0 ? (
-                <Empty>Walang tatanggap.</Empty>
-              ) : (
-                <ul className="space-y-2 text-sm">
-                  {((recipients.data ?? []) as any[]).map((r) => (
-                    <li key={r.profile_id} className="flex items-center justify-between gap-2">
-                      <span className="text-gray-800">{r.profiles?.full_name ?? "(walang pangalan)"}</span>
-                      <span className={r.read_at ? "text-xs text-emerald-700" : "text-xs text-gray-400"}>
-                        {r.read_at ? `Nabasa ${fmtDate(r.read_at)}` : "Hindi pa nabasa"}
-                      </span>
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </Panel>
-          </div>
-        )}
       </div>
-    </>
+
+      <div className="mt-6">
+        <Panel title="Mga kahilingan ko">
+          {requests.length === 0 ? (
+            <Empty>Wala ka pang kahilingan ng hiram.</Empty>
+          ) : (
+            <ul className="divide-y divide-gray-100">
+              {requests.map((r) => {
+                const st = REQUEST_STATUS[r.status] ?? REQUEST_STATUS.pending;
+                return (
+                  <li key={r.id} className="flex flex-wrap items-center justify-between gap-2 py-2.5">
+                    <div className="text-sm">
+                      <span className="font-semibold text-gray-900">{fmtPeso(r.amount)}</span>
+                      {r.target_return_date && (
+                        <span className="text-gray-500"> · target balik {r.target_return_date}</span>
+                      )}
+                      {r.notes && <span className="text-gray-500"> · {r.notes}</span>}
+                      <div className="text-xs text-gray-400">
+                        Hiniling noong {new Date(r.requested_at).toLocaleString("en-PH")}
+                      </div>
+                    </div>
+                    <span className={`inline-block rounded-full px-2.5 py-0.5 text-xs font-semibold ${st.cls}`}>
+                      {st.label}
+                    </span>
+                  </li>
+                );
+              })}
+            </ul>
+          )}
+        </Panel>
+      </div>
+
+      <div className="mt-6">
+        <Panel title="Mga hiram">
+          {loans.length === 0 ? (
+            <Empty>Wala ka pang naitatalang hiram.</Empty>
+          ) : (
+            <div className="grid gap-4">
+              {loans.map((l) => {
+                const st = statusOf(l.amount, l.paid);
+                return (
+                  <div key={l.id} className="rounded-xl border border-gray-100 p-4">
+                    <div className="flex flex-wrap items-center justify-between gap-2">
+                      <div className="text-sm text-gray-500">
+                        Hiniram noong <span className="font-semibold text-gray-800">{l.date_borrowed}</span>
+                        {l.target_return_date && (
+                          <>
+                            {" "}· target balik <span className="font-semibold text-gray-800">{l.target_return_date}</span>
+                          </>
+                        )}
+                      </div>
+                      <span className={`inline-block rounded-full px-2.5 py-0.5 text-xs font-semibold ${st.cls}`}>
+                        {st.label}
+                      </span>
+                    </div>
+                    <div className="mt-2 flex flex-wrap gap-6 text-sm">
+                      <span className="text-gray-500">Hiniram: <strong className="text-gray-900">{fmtPeso(l.amount)}</strong></span>
+                      <span className="text-gray-500">Nabayaran: <strong className="text-gray-900">{fmtPeso(l.paid)}</strong></span>
+                      <span className="text-gray-500">Balanse: <strong className="text-red-700">{fmtPeso(Math.max(l.balance, 0))}</strong></span>
+                    </div>
+                    {l.notes && <p className="mt-1 text-sm text-gray-500">Tala: {l.notes}</p>}
+                    <div className="mt-3">
+                      <p className="text-xs font-semibold uppercase tracking-wide text-gray-400">Mga bayad</p>
+                      {l.payments.length === 0 ? (
+                        <p className="mt-1 text-sm text-gray-400">Wala pang bayad.</p>
+                      ) : (
+                        <ul className="mt-1 divide-y divide-gray-50 text-sm">
+                          {l.payments.map((p, i) => (
+                            <li key={i} className="flex justify-between py-1.5">
+                              <span className="text-gray-600">{p.date_paid}</span>
+                              <span className="font-medium text-gray-800">{fmtPeso(Number(p.amount))}</span>
+                            </li>
+                          ))}
+                        </ul>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </Panel>
+      </div>
+      <p className="mt-6 text-xs text-gray-400">
+        Kung may tanong sa record na ito, makipag-ugnayan sa Finance Ministry.
+      </p>
+    </main>
   );
 }
