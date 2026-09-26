@@ -353,9 +353,9 @@ begin
       raise exception 'may account na ang kaanib na ito';
     end if;
     insert into public.tulong_financial_borrowers
-      (member_id, username, password_hash, is_active, created_by)
+      (member_id, username, password_hash, is_active, created_by, password_is_temporary)
     values
-      (v_rec.member_id, v_rec.username, v_rec.password_hash, true, v_decider);
+      (v_rec.member_id, v_rec.username, v_rec.password_hash, true, v_decider, true);
   end if;
 
   update public.tulong_username_requests
@@ -376,3 +376,60 @@ $$;
 
 revoke all on function public.tulong_decide_username_request(uuid, boolean) from public, anon;
 grant execute on function public.tulong_decide_username_request(uuid, boolean) to authenticated;
+
+-- ---------------------------------------------------------------------------
+-- Temporary-password flag: ang auto-generated na password ay kailangang
+-- palitan ng kaanib pagkatapos ng unang login. Idinagdag dito (hindi pa
+-- tumatakbo ang alinmang migration sa production).
+-- ---------------------------------------------------------------------------
+alter table public.tulong_financial_borrowers
+  add column if not exists password_is_temporary boolean not null default false;
+
+-- Borrower: palitan ang sariling password (kailangan ang kasalukuyang password).
+-- Pinapatay ang ibang sessions; ang kasalukuyang session ay nananatili.
+create or replace function public.tulong_borrower_change_password(p_token text, p_current text, p_new text)
+returns void language plpgsql volatile security definer set search_path = '' as $$
+declare
+  v_borrower_id uuid;
+  v_hash text;
+  v_token_hash text;
+begin
+  if p_token is null or p_token = '' then
+    raise exception 'hindi wasto ang session. Mag-login ulit.';
+  end if;
+  if p_new is null or char_length(p_new) < 6 then
+    raise exception 'ang bagong password ay hindi bababa sa 6 na characters';
+  end if;
+
+  v_token_hash := encode(public.tulong_sha256(p_token), 'hex');
+
+  select s.borrower_id into v_borrower_id
+  from public.tulong_financial_sessions s
+  join public.tulong_financial_borrowers b on b.id = s.borrower_id
+  where s.token_hash = v_token_hash
+    and s.expires_at > now()
+    and b.is_active;
+  if v_borrower_id is null then
+    raise exception 'hindi wasto ang session. Mag-login ulit.';
+  end if;
+
+  select password_hash into v_hash
+  from public.tulong_financial_borrowers
+  where id = v_borrower_id;
+  if public.tulong_crypt(p_current, v_hash) <> v_hash then
+    raise exception 'mali ang kasalukuyang password';
+  end if;
+
+  update public.tulong_financial_borrowers
+  set password_hash = public.tulong_hash_password(p_new),
+      password_is_temporary = false
+  where id = v_borrower_id;
+
+  delete from public.tulong_financial_sessions
+  where borrower_id = v_borrower_id
+    and token_hash <> v_token_hash;
+end;
+$$;
+
+revoke all on function public.tulong_borrower_change_password(text, text, text) from public, anon;
+grant execute on function public.tulong_borrower_change_password(text, text, text) to anon, authenticated;

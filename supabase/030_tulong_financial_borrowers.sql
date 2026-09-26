@@ -125,11 +125,12 @@ returns jsonb language plpgsql stable security definer set search_path = '' as $
 declare
   v_member_id uuid;
   v_member_name text;
+  v_temporary boolean;
   v_loans jsonb;
 begin
   if p_token is null then return null; end if;
 
-  select b.member_id into v_member_id
+  select b.member_id, b.password_is_temporary into v_member_id, v_temporary
   from public.tulong_financial_sessions s
   join public.tulong_financial_borrowers b on b.id = s.borrower_id
   where s.token_hash = encode(public.tulong_sha256(p_token), 'hex')
@@ -158,7 +159,8 @@ begin
   from public.tulong_financial_loans l
   where l.member_id = v_member_id;
 
-  return jsonb_build_object('member_name', coalesce(v_member_name, ''), 'loans', v_loans);
+  return jsonb_build_object('member_name', coalesce(v_member_name, ''), 'loans', v_loans,
+    'password_is_temporary', coalesce(v_temporary, false));
 end;
 $$;
 
