@@ -1,27 +1,70 @@
-import { BorrowerLoginsPanel } from "./borrower-logins";
+import { borrowerLogin } from "../actions";
+import { inputCls, btnCls } from "@/components/portal/ui";
+import { isTulongFinancePortalUser } from "../finance-check";
 
+export const metadata = { title: "Tulong Financial — Login" };
 export const dynamic = "force-dynamic";
-export const metadata = { title: "Tulong Financial Portal" };
 
-// Bagong Tulong Financial portal — para sa Finance Ministry (portal account):
-// dito pinamamahalaan ang mga login ng pinahiram. Ang pagtatala ng hiram at bayad
-// ay nasa main portal pa rin. Ang guard ay nasa panel (requireTulongFinancialAccess):
-// kapag hindi naka-login, dadalhin sa /auth/login; kapag walang access, sa /portal.
-export default function TulongFinancePortalPage() {
+export default async function TulongLoginPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ error?: string }>;
+}) {
+  const { error } = await searchParams;
+  const financeAuthed = await isTulongFinancePortalUser();
+
   return (
-    <main className="mx-auto w-full max-w-6xl px-4 py-10">
-      <div className="mb-6 flex items-start justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold text-emerald-900">Tulong Financial Portal</h1>
+    <main className="mx-auto flex min-h-[70vh] w-full max-w-3xl items-center px-4 py-12">
+      <div className="grid w-full gap-6 md:grid-cols-2">
+        <div className="rounded-2xl border border-emerald-100 bg-white p-8 shadow-sm">
+          <h1 className="text-xl font-bold text-emerald-900">Tulong Financial</h1>
           <p className="mt-1 text-sm text-gray-500">
-            Pamamahala ng mga login ng pinahiram — Finance Ministry at Admin lang ang nakakakita.
+            <span className="font-semibold text-gray-700">Para sa mga pinahiram:</span> ilagay ang
+            username at password na ibinigay ng Finance Ministry para makita ang iyong record.
+          </p>
+          {error && (
+            <p className="mt-4 rounded-lg bg-red-50 px-3 py-2 text-sm font-medium text-red-700">{error}</p>
+          )}
+          <form action={borrowerLogin} className="mt-6 grid gap-4">
+            <label className="grid gap-1.5">
+              <span className="text-sm font-medium text-gray-700">Username</span>
+              <input name="username" type="text" autoComplete="username" required className={inputCls} />
+            </label>
+            <label className="grid gap-1.5">
+              <span className="text-sm font-medium text-gray-700">Password</span>
+              <input name="password" type="password" autoComplete="current-password" required className={inputCls} />
+            </label>
+            <button className={btnCls}>Mag-login</button>
+          </form>
+          <p className="mt-4 text-xs text-gray-400">
+            Kung nakalimutan ang password, makipag-ugnayan sa Finance Ministry para i-reset ito.
           </p>
         </div>
-        <a href="/portal" className="shrink-0 text-sm font-medium text-emerald-700 hover:underline">
-          ← Bumalik sa portal
-        </a>
+
+        <div className="rounded-2xl border border-emerald-100 bg-white p-8 shadow-sm">
+          <h2 className="text-xl font-bold text-emerald-900">Finance Ministry</h2>
+          <p className="mt-1 text-sm text-gray-500">
+            Gamitin ang iyong portal account para pamahalaan ang mga login ng pinahiram. Ang
+            pagtatala ng hiram at bayad ay nasa main portal pa rin.
+          </p>
+          <div className="mt-6">
+            {financeAuthed ? (
+              <a href="/tulong-financial/finance" className={`${btnCls} inline-block text-center`}>
+                Magpatuloy sa portal
+              </a>
+            ) : (
+              <>
+                <a href="/auth/login" className={`${btnCls} inline-block text-center`}>
+                  Mag-login sa portal
+                </a>
+                <p className="mt-3 text-xs text-gray-400">
+                  Pagkatapos mag-login sa portal, bumalik sa pahinang ito para magpatuloy.
+                </p>
+              </>
+            )}
+          </div>
+        </div>
       </div>
-      <BorrowerLoginsPanel returnTo="/tulong-financial/finance" />
     </main>
   );
 }
