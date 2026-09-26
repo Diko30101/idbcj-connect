@@ -104,6 +104,8 @@ export default async function PortalLayout({ children }: { children: React.React
     if (profile.role === "admin" || isRosterMember) items.push({ href: "/portal/roster", label: "Membership Record" });
     if (profile.role === "admin" || isRosterMember)
       items.push({ href: "/portal/attendance-record", label: "Attendance Record" });
+    if (profile.role === "admin" || isRosterMember)
+      items.push({ href: "/portal/attendance-report", label: "Attendance Report" });
   }
   if (profile.role === "admin") items.push({ href: "/portal/audit", label: "Audit Log" });
 
@@ -127,7 +129,7 @@ export default async function PortalLayout({ children }: { children: React.React
     },
     {
       label: "Local Ministry",
-      hrefs: ["/portal/roster", "/portal/attendance-record", "/portal/finance/resibo", "/portal/finance/resibo/kaanib", "/portal/finance/local", "/portal/audit"],
+      hrefs: ["/portal/roster", "/portal/attendance-record", "/portal/attendance-report", "/portal/finance/resibo", "/portal/finance/resibo/kaanib", "/portal/finance/local", "/portal/audit"],
       subgroups: [
         {
           label: "Finance Record",
