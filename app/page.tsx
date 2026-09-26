@@ -34,7 +34,7 @@ export default function Home() {
               <Link href="/im-new" className={`${pill} bg-amber-400 text-emerald-800 shadow-lg hover:bg-amber-300`}>
                 Plan Your Visit
               </Link>
-              <Link href="/auth/login" className={`${pill} border border-white/70 text-white hover:bg-white hover:text-emerald-800`}>
+              <Link href="/auth/login?next=/" className={`${pill} border border-white/70 text-white hover:bg-white hover:text-emerald-800`}>
                 Members Login
               </Link>
             </div>
@@ -200,7 +200,7 @@ export default function Home() {
               Sign in to IDBCJ Connect for announcements, ministries, prayer requests, and your member profile.
             </p>
           </div>
-          <Link href="/auth/login" className={`${pill} shrink-0 bg-amber-400 text-emerald-800 hover:bg-amber-300`}>
+          <Link href="/auth/login?next=/" className={`${pill} shrink-0 bg-amber-400 text-emerald-800 hover:bg-amber-300`}>
             Members Login
           </Link>
         </div>
