@@ -34,7 +34,6 @@ import {
 } from "lucide-react";
 import { PortalNav, type NavItem } from "./portal-nav";
 import { NotificationBell } from "./notification-bell";
-import { SignOutMenu } from "./sign-out-menu";
 
 // Lokal na kopya ng role labels — hindi ini-import ang @/lib/portal dito
 // dahil may server-only code ito (next/headers).
@@ -206,11 +205,12 @@ function initialsOf(name: string) {
   return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
 }
 
-);
+import { SignOutMenu } from "./sign-out-menu";
 
 const signOutClassic = <SignOutMenu />;
 
 const signOutDark = <SignOutMenu dark />;
+
 // Klasikong shell — eksaktong kapareho ng dating layout para sa lahat ng
 // portal page maliban sa home.
 function ClassicShell({
@@ -265,7 +265,7 @@ function SidebarShell({
 
   const closeDrawer = () => setDrawerOpen(false);
 
-  // Ang mga dropdown group (hal. Finance, Gawain, Mga Talaan, Local Ministry) ay
+  // Ang mga dropdown group (hal. Finance, Gawain, Local Ministry) ay
   // nire-render nang direkta bilang expandable na SidebarGroup sa sidebar.
   const sidebarItems: NavItem[] = navItems;
 
