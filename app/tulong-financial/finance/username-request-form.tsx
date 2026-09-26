@@ -1,10 +1,11 @@
 "use client";
 
 import { useState } from "react";
-import { requestTulongUsername, type UsernameRequestResult } from "@/app/portal/finance/tulong-financial/actions";
+import { requestTulongUsername, lookupPortalAccount, type UsernameRequestResult } from "@/app/portal/finance/tulong-financial/actions";
 import { inputCls, btnGhostCls } from "@/components/portal/form-bits";
 
 type Member = { id: string; full_name: string };
+type PortalAccount = { profile_id: string; full_name: string; email: string | null; via: string };
 
 function CopyButton({ text, label }: { text: string; label: string }) {
   const [copied, setCopied] = useState(false);
@@ -27,24 +28,77 @@ function CopyButton({ text, label }: { text: string; label: string }) {
   );
 }
 
-// Form ng Finance Ministry: pumili ng kaanib, awtomatikong malilikha ang
-// username at temporary password. Isang beses lang ipapakita ang password.
+// Form ng Finance Ministry: pumili ng kaanib.
+// - Tinitiyak muna kung may portal account na: kung meron, gagamitin ang
+//   portal login (approval letter lang, walang bagong username/password).
+// - Kung wala: awtomatikong malilikha ang username at temporary password
+//   (isang beses lang ipapakita ang password).
 export default function UsernameRequestForm({ members }: { members: Member[] }) {
   const [busy, setBusy] = useState(false);
+  const [looking, setLooking] = useState(false);
   const [result, setResult] = useState<UsernameRequestResult | null>(null);
+  const [selectedId, setSelectedId] = useState("");
+  const [portalAccount, setPortalAccount] = useState<PortalAccount | null>(null);
+  const [usePortal, setUsePortal] = useState(true);
+
+  const selected = members.find((m) => m.id === selectedId) ?? null;
+
+  async function onSelect(memberId: string) {
+    setSelectedId(memberId);
+    setResult(null);
+    setPortalAccount(null);
+    setUsePortal(true);
+    if (!memberId) return;
+    setLooking(true);
+    try {
+      const found = await lookupPortalAccount(memberId);
+      setPortalAccount(found);
+    } catch {
+      setPortalAccount(null);
+    } finally {
+      setLooking(false);
+    }
+  }
 
   async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setBusy(true);
     setResult(null);
     try {
-      const res = await requestTulongUsername(new FormData(e.currentTarget));
+      const fd = new FormData(e.currentTarget);
+      fd.set("use_portal", portalAccount && usePortal ? "1" : "");
+      const res = await requestTulongUsername(fd);
       setResult(res);
     } catch {
       setResult({ ok: false, error: "Hindi naipadala ang kahilingan. Subukan ulit." });
     } finally {
       setBusy(false);
     }
+  }
+
+  function reset() {
+    setResult(null);
+    setSelectedId("");
+    setPortalAccount(null);
+    setUsePortal(true);
+  }
+
+  if (result?.ok && result.portalUser) {
+    return (
+      <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-4">
+        <p className="text-sm font-bold text-emerald-900">
+          Naipadala na sa admin ang kahilingan para kay {result.memberName}.
+        </p>
+        <p className="mt-2 text-sm text-emerald-800">
+          May portal account na ang kaanib — <strong>gagamitin niya ang kanyang portal login</strong>.
+          Walang bagong username/password na nilikha. Pagkatapos ma-aprubahan ng admin, makikita niya
+          ang <strong>Tulong Financial</strong> sa kanyang menu (history ng transactions at balanse).
+        </p>
+        <button type="button" onClick={reset} className={btnGhostCls + " mt-3"}>
+          Gumawa ng isa pang kahilingan
+        </button>
+      </div>
+    );
   }
 
   if (result?.ok) {
@@ -83,7 +137,7 @@ export default function UsernameRequestForm({ members }: { members: Member[] }) 
         </div>
         <button
           type="button"
-          onClick={() => setResult(null)}
+          onClick={reset}
           className={btnGhostCls + " mt-3"}
         >
           Gumawa ng isa pang kahilingan
@@ -96,7 +150,13 @@ export default function UsernameRequestForm({ members }: { members: Member[] }) 
     <form onSubmit={onSubmit} className="grid gap-3 sm:grid-cols-[1fr_auto] sm:items-end">
       <label className="grid gap-1.5">
         <span className="text-sm font-medium text-gray-700">Kaanib (Active, walang account)</span>
-        <select name="member_id" required className={inputCls} defaultValue="">
+        <select
+          name="member_id"
+          required
+          className={inputCls}
+          value={selectedId}
+          onChange={(e) => onSelect(e.target.value)}
+        >
           <option value="" disabled>
             Pumili ng kaanib…
           </option>
@@ -108,16 +168,46 @@ export default function UsernameRequestForm({ members }: { members: Member[] }) 
         </select>
       </label>
       <div>
-        <button className={btnGhostCls} disabled={busy}>
-          {busy ? "Ipinapadala…" : "Ipadala sa admin"}
+        <button className={btnGhostCls} disabled={busy || looking || !selectedId}>
+          {busy ? "Ipinapadala…" : portalAccount && usePortal ? "Ipadala ang kahilingan ng pag-apruba" : "Ipadala sa admin"}
         </button>
       </div>
-      <p className="text-xs text-gray-400 sm:col-span-2">
-        Awtomatikong malilikha ang username (mula sa pangalan) at temporary password.
-        {result && !result.ok && (
-          <span className="mt-1 block font-semibold text-red-600">{result.error}</span>
-        )}
-      </p>
+      {looking && (
+        <p className="text-xs text-gray-400 sm:col-span-2">Tinitiyak kung may portal account na ang kaanib…</p>
+      )}
+      {!looking && portalAccount && selected && (
+        <div className="rounded-lg border border-blue-200 bg-blue-50 p-3 sm:col-span-2">
+          <p className="text-sm font-bold text-blue-900">
+            May portal account na si {selected.full_name}:
+          </p>
+          <p className="mt-1 text-sm text-blue-800">
+            {portalAccount.full_name}
+            {portalAccount.email ? ` · ${portalAccount.email}` : ""}
+          </p>
+          <label className="mt-2 flex cursor-pointer items-start gap-2 text-sm text-blue-900">
+            <input
+              type="checkbox"
+              checked={usePortal}
+              onChange={(e) => setUsePortal(e.target.checked)}
+              className="mt-1"
+            />
+            <span>
+              Gamitin ang portal account na ito — <strong>approval letter lang</strong> ang kailangan;
+              walang bagong username/password na lilikhain. Pagkatapos ma-aprubahan, makikita niya ang
+              Tulong Financial sa kanyang menu.
+            </span>
+          </label>
+        </div>
+      )}
+      {!looking && !portalAccount && selected && (
+        <p className="text-xs text-gray-400 sm:col-span-2">
+          Walang nakitang portal account — awtomatikong malilikha ang username (mula sa pangalan) at
+          temporary password.
+        </p>
+      )}
+      {result && !result.ok && (
+        <p className="font-semibold text-red-600 text-sm sm:col-span-2">{result.error}</p>
+      )}
     </form>
   );
 }

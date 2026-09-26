@@ -29,14 +29,17 @@ export async function BorrowerLoginsPanel({ returnTo }: { returnTo: string }) {
 
   const memberById = new Map(((memberRows ?? []) as any[]).map((m) => [m.id, m]));
   // Sa dropdown: Active members na WALA PANG account lang (para sa unang account).
-  // Hindi kasama ang may borrower login na o may naghihintay pang kahilingan —
-  // pagka-approve ng admin, automatic na silang kasapi ng Tulong Financial Members.
+  // Hindi kasama ang may borrower login na, may naghihintay pang kahilingan, o
+  // na-aprubahan na — pagka-approve ng admin, automatic na silang kasapi ng
+  // Tulong Financial Members.
   const borrowerMemberIds = new Set(((borrowerRows ?? []) as any[]).map((b) => b.member_id));
-  const pendingMemberIds = new Set(
-    ((usernameRequests ?? []) as any[]).filter((r) => r.status === "pending").map((r) => r.member_id),
+  const decidedMemberIds = new Set(
+    ((usernameRequests ?? []) as any[])
+      .filter((r) => r.status === "pending" || r.status === "approved")
+      .map((r) => r.member_id),
   );
   const eligibleMembers = ((memberRows ?? []) as any[]).filter(
-    (m) => !borrowerMemberIds.has(m.id) && !pendingMemberIds.has(m.id),
+    (m) => !borrowerMemberIds.has(m.id) && !decidedMemberIds.has(m.id),
   );
   const borrowers = ((borrowerRows ?? []) as any[]).map((b) => ({
     ...b,
@@ -50,10 +53,10 @@ export async function BorrowerLoginsPanel({ returnTo }: { returnTo: string }) {
   return (
     <Panel title="Mga login ng pinahiram (username/password)">
       <p className="mb-4 text-sm text-gray-500">
-        Pumili ng active member — awtomatikong malilikha ang username (mula sa pangalan) at
-        temporary password. Ang kahilingan ay ipapadala sa admin — pag-apruba ng admin sa
-        Inbox letter, saka lang malilikha ang account. Makikita ng kaanib ang sarili niyang
-        record sa <span className="font-medium text-gray-700">idbcj.org/tulong-financial/login</span>.
+        Pumili ng active member. Kung may portal account na ang kaanib, gagamitin niya ang kanyang
+        portal login — approval letter lang ang kailangan. Kung wala pa, awtomatikong malilikha ang
+        username (mula sa pangalan) at temporary password. Ang kahilingan ay ipapadala sa admin —
+        pag-apruba ng admin sa Inbox letter, saka lang magiging kasapi ng Tulong Financial.
       </p>
       <UsernameRequestForm members={eligibleMembers} />
 
@@ -66,7 +69,12 @@ export async function BorrowerLoginsPanel({ returnTo }: { returnTo: string }) {
             {unameRequests.map((r) => (
               <li key={r.id} className="flex flex-wrap items-center justify-between gap-2 py-2 text-sm">
                 <span className="text-gray-800">
-                  <strong>{r.memberName}</strong> · <span className="text-gray-600">@{r.username}</span>
+                  <strong>{r.memberName}</strong> ·{" "}
+                  {r.username ? (
+                    <span className="text-gray-600">@{r.username}</span>
+                  ) : (
+                    <span className="text-gray-600">portal login</span>
+                  )}
                   <span className="text-xs text-gray-400"> · {new Date(r.requested_at).toLocaleDateString("en-PH")}</span>
                 </span>
                 <span
