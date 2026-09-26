@@ -12,6 +12,26 @@ async function supa() {
   return createClient(cookies());
 }
 
+// Abisuhan ang admin sa Telegram via n8n webhook (fire-and-forget).
+// Hindi hahadlang ang notification kapag pumalya o walang webhook na nakatakda.
+async function notifyTelegram(payload: Record<string, unknown>): Promise<void> {
+  const hook = process.env.N8N_TULONG_NOTIFY_WEBHOOK;
+  if (!hook) return;
+  try {
+    const ctrl = new AbortController();
+    const t = setTimeout(() => ctrl.abort(), 8000);
+    await fetch(hook, {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify(payload),
+      signal: ctrl.signal,
+    });
+    clearTimeout(t);
+  } catch {
+    /* tahimik na palya — hindi dapat maapektuhan ang kahilingan */
+  }
+}
+
 // Borrower login: username + password (dedicated Tulong Financial credentials,
 // itinakda ng Finance Ministry). Ang session ay httpOnly cookie na may 7-araw na bisa.
 export async function borrowerLogin(fd: FormData): Promise<never> {
@@ -53,7 +73,7 @@ export async function getBorrowerSessionToken(): Promise<string | null> {
 }
 
 // Borrower: humiling ng hiram (kailangan aktibo ang account; walang username = walang hiram).
-// Ang kahilingan ay makikita ng Finance Ministry at ipapadala sa admin para sa apruba.
+// Ang kahilingan ay awtomatikong nagkakaroon ng Inbox letter sa admin para sa apruba.
 export async function submitLoanRequest(fd: FormData): Promise<never> {
   const token = await getBorrowerSessionToken();
   if (!token) redirect(`${BASE}/login`);
@@ -76,11 +96,19 @@ export async function submitLoanRequest(fd: FormData): Promise<never> {
       `${BASE}?error=` +
         encodeURIComponent("Hindi naipadala ang kahilingan. Maaaring may naghihintay ka pang kahilingan."),
     );
+
+  await notifyTelegram({
+    kind: "loan",
+    member_name: "isang kaanib",
+    amount: Math.round(amount * 100) / 100,
+  });
+
   redirect(`${BASE}?ok=` + encodeURIComponent("Naipadala na ang iyong kahilingan ng hiram. Hintayin ang apruba ng admin."));
 }
 
 // Portal user (may portal account, aprubadong Tulong Financial member):
 // humiling ng hiram gamit ang portal login (walang borrower token).
+// Ang kahilingan ay awtomatikong nagkakaroon ng Inbox letter sa admin para sa apruba.
 export async function submitLoanRequestAsPortalUser(fd: FormData): Promise<never> {
   const amount = Number(String(fd.get("amount") ?? "").replace(/,/g, ""));
   const target = String(fd.get("target_return_date") ?? "").trim();
@@ -99,6 +127,20 @@ export async function submitLoanRequestAsPortalUser(fd: FormData): Promise<never
       `${BASE}?error=` +
         encodeURIComponent("Hindi naipadala ang kahilingan. Maaaring may naghihintay ka pang kahilingan."),
     );
+
+  // Kunin ang pangalan ng miyembro para sa Telegram notification.
+  const { data: { user } } = await supabase.auth.getUser();
+  let memberName = "isang kaanib";
+  if (user) {
+    const { data: prof } = await supabase.from("profiles").select("full_name").eq("id", user.id).maybeSingle();
+    if ((prof as any)?.full_name) memberName = (prof as any).full_name;
+  }
+  await notifyTelegram({
+    kind: "loan",
+    member_name: memberName,
+    amount: Math.round(amount * 100) / 100,
+  });
+
   redirect(`${BASE}?ok=` + encodeURIComponent("Naipadala na ang iyong kahilingan ng hiram. Hintayin ang apruba ng admin."));
 }
 
