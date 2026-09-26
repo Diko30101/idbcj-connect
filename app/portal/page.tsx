@@ -135,7 +135,7 @@ export default async function PortalHome({
     const weekEnd = addDays(weekStart, 6);
     const trendStart = addDays(today, -55);
 
-    const [dAbuluyan, dAmbagan, dTulong, dPasalamat, weekAbuluyan, resiboLetters, attLatest, attTrendRows, auditRows] =
+    const [dAbuluyan, dAmbagan, dTulong, dPasalamat, weekAbuluyan, resiboLetters, attLatest, attTrendRows, auditRows, tulongUserReq, tulongLoanReq] =
       await Promise.all([
         supabase.from("abuluyan_totals").select("id").eq("status", "draft").limit(500),
         supabase.from("ambagan_records").select("id").eq("status", "draft").limit(500),
@@ -165,6 +165,9 @@ export default async function PortalHome({
           .select("id, at, actor, action, table_name")
           .order("at", { ascending: false })
           .limit(8),
+        // Tulong Financial: mga naghihintay ng apruba ng admin
+        supabase.from("tulong_username_requests").select("id").eq("status", "pending").limit(500),
+        supabase.from("tulong_loan_requests").select("id").eq("status", "sent").limit(500),
       ]);
 
     const localsList = [...localNames.entries()].map(([key, name]) => ({ key, name }));
@@ -190,7 +193,22 @@ export default async function PortalHome({
       });
     }
 
-    // 2) Mga local na walang Abuluyan ngayong linggo
+    // 2) Tulong Financial: mga naghihintay ng apruba ng admin
+    const tulongUserCount = (tulongUserReq.data ?? []).length;
+    const tulongLoanCount = (tulongLoanReq.data ?? []).length;
+    if (tulongUserCount + tulongLoanCount > 0) {
+      const parts: string[] = [];
+      if (tulongUserCount > 0) parts.push(`${tulongUserCount} account approval`);
+      if (tulongLoanCount > 0) parts.push(`${tulongLoanCount} hiram`);
+      actionItems.push({
+        icon: "💰",
+        text: `Tulong Financial: ${parts.join(" at ")} na naghihintay ng iyong apruba`,
+        href: "/portal/inbox",
+        linkText: "Tingnan sa Inbox",
+      });
+    }
+
+    // 3) Mga local na walang Abuluyan ngayong linggo
     const weekLocalIds = new Set(((weekAbuluyan.data ?? []) as any[]).map((r) => String(r.local_id)).filter((v) => v && v !== "null"));
     const missingAbuluyan = ((localsWithId ?? []) as { id: string; name: string }[]).filter((l) => !weekLocalIds.has(String(l.id)));
     if (missingAbuluyan.length > 0) {
@@ -203,7 +221,7 @@ export default async function PortalHome({
       });
     }
 
-    // 3) Buwanang Resibo ngayong buwan
+    // 4) Buwanang Resibo ngayong buwan
     const resiboThisMonth = ((resiboLetters.data ?? []) as any[]).filter((l) => String(l.subject ?? "").includes(curMonthLabel));
     const resiboLocals = new Set(resiboThisMonth.map((l) => String(l.subject ?? "").split("—")[1]?.trim()).filter(Boolean));
     resiboSent = resiboLocals.size;
@@ -217,7 +235,7 @@ export default async function PortalHome({
       });
     }
 
-    // 4) Attendance ng huling pagtitipon
+    // 5) Attendance ng huling pagtitipon
     attMaxDate = ((attLatest.data ?? []) as any[])[0]?.service_date ?? null;
     if (attMaxDate) {
       const { data: attRows } = await supabase
