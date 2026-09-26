@@ -11,7 +11,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-
+import { Label } from "@/components/ui/label";
 import { useState } from "react";
 import Link from "next/link"; // Import Link for the redirect
 import { loginToEmail } from "@/lib/username";
@@ -24,7 +24,6 @@ export function LoginForm({
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-
 
   // 1. Function to handle Logging In
   const handleLogin = async (e: React.FormEvent) => {
@@ -44,6 +43,8 @@ export function LoginForm({
       
       // Ibalik sa pahinang pinuntahan bago siya pinag-login; kung wala, sa member portal.
       // Puwede lang ang loob ng site (nagsisimula sa "/"), para hindi magamit sa panloloko.
+      // Hard navigation (hindi router.push) para siguradong mabasa ng server
+      // ang bagong session cookie sa susunod na page load.
       const raw = new URLSearchParams(window.location.search).get("next");
       const dest =
         raw && raw.startsWith("/") && !raw.startsWith("//") && !raw.startsWith("/\\") && !raw.startsWith("/auth")
