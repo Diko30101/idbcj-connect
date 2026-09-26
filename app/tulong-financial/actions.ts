@@ -103,7 +103,7 @@ export async function submitLoanRequest(fd: FormData): Promise<never> {
     amount: Math.round(amount * 100) / 100,
   });
 
-  redirect(`${BASE}?ok=` + encodeURIComponent("Naipadala na ang iyong kahilingan ng hiram. Hintayin ang apruba ng admin."));
+  redirect(`${BASE}?ok=` + encodeURIComponent("Naipadala na ang iyong kahilingan sa Finance Ministry. Hintayin ang kanilang pag-forward sa admin para sa apruba."));
 }
 
 // Portal user (may portal account, aprubadong Tulong Financial member):
@@ -141,7 +141,7 @@ export async function submitLoanRequestAsPortalUser(fd: FormData): Promise<never
     amount: Math.round(amount * 100) / 100,
   });
 
-  redirect(`${BASE}?ok=` + encodeURIComponent("Naipadala na ang iyong kahilingan ng hiram. Hintayin ang apruba ng admin."));
+  redirect(`${BASE}?ok=` + encodeURIComponent("Naipadala na ang iyong kahilingan sa Finance Ministry. Hintayin ang kanilang pag-forward sa admin para sa apruba."));
 }
 
 // Borrower: palitan ang sariling password (kailangan ang kasalukuyang password).
