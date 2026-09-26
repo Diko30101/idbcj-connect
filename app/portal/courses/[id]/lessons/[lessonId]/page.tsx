@@ -7,6 +7,25 @@ import { Field, Notice, PageHeader, Panel, btnCls, btnDangerCls, btnGhostCls, in
 
 type CompletionRow = { passed: boolean; correct_count: number; total_count: number; completed_at: string };
 
+// Ginagawang clickable ang mga URL sa lesson content; parehong teksto, link lang ang nadagdag.
+function renderContent(text: string) {
+  return text.split(/(https?:\/\/[^\s]+)/g).map((part, i) =>
+    /^https?:\/\//.test(part) ? (
+      <a
+        key={i}
+        href={part}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="text-emerald-700 underline break-all"
+      >
+        {part}
+      </a>
+    ) : (
+      <span key={i}>{part}</span>
+    )
+  );
+}
+
 export default async function LessonDetailPage({
   params,
   searchParams,
@@ -101,7 +120,7 @@ export default async function LessonDetailPage({
           )}
 
           <Panel>
-            <p className="whitespace-pre-line text-sm text-gray-700">{lesson.content}</p>
+            <p className="whitespace-pre-line text-sm text-gray-700">{renderContent(lesson.content ?? "")}</p>
           </Panel>
 
           {quiz.length > 0 && (
