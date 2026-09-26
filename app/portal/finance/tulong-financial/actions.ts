@@ -133,30 +133,67 @@ export async function addTulongPayment(fd: FormData): Promise<never> {
 // Borrower logins (username/password) -- hinahawakan ng Finance Ministry.
 // ---------------------------------------------------------------------------
 
-function validUsername(u: string): boolean {
-  return /^[a-z0-9._-]{3,30}$/.test(u);
-}
-
 async function hashPassword(supabase: any, password: string): Promise<string | null> {
   const { data, error } = await supabase.rpc("tulong_hash_password", { p_password: password });
   if (error || !data) return null;
   return data as string;
 }
 
+// Gumawa ng username mula sa pangalan ng kaanib (hal. "Juan Dela Cruz" -> "juan.dela.cruz").
+// Kapag gamit na, dinudugtungan ng numero (juan.delacruz2, ...).
+function usernameBaseFromName(fullName: string, memberId: string): string {
+  let base = fullName
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z0-9]+/g, ".")
+    .replace(/\.{2,}/g, ".")
+    .replace(/^\.|\.$/g, "");
+  if (base.replace(/[^a-z0-9]/g, "").length < 3) {
+    base = "kaamib." + memberId.replace(/-/g, "").slice(0, 8);
+  }
+  return base.slice(0, 27);
+}
+
+async function uniqueUsername(supabase: any, base: string): Promise<string> {
+  let candidate = base;
+  for (let i = 2; i < 1000; i++) {
+    const [{ data: b }, { data: r }] = await Promise.all([
+      supabase.from("tulong_financial_borrowers").select("id").ilike("username", candidate).limit(1),
+      supabase.from("tulong_username_requests").select("id").ilike("username", candidate).limit(1),
+    ]);
+    if ((b ?? []).length === 0 && (r ?? []).length === 0) return candidate;
+    candidate = base.slice(0, 27) + String(i);
+  }
+  // Pinakahuling fallback: idagdag ang timestamp fragment.
+  return (base.slice(0, 24) + Date.now().toString(36).slice(-6)).slice(0, 30);
+}
+
+// Gumawa ng temporary password (12 characters, walang nakakalitong letra/numero).
+function generateTempPassword(): string {
+  const alphabet = "abcdefghjkmnpqrstuvwxyzABCDEFGHJKMNPQRSTUVWXYZ23456789";
+  const bytes = crypto.getRandomValues(new Uint8Array(12));
+  return Array.from(bytes, (b) => alphabet[b % alphabet.length]).join("");
+}
+
+export type UsernameRequestResult = {
+  ok: boolean;
+  username?: string;
+  tempPassword?: string;
+  memberName?: string;
+  error?: string;
+};
+
 // Humiling ng username para sa isang active member (Finance Ministry ang gumagawa).
+// AWTOMATIKONG nalilikha ang username at temporary password — isang beses lang
+// ipapakita ang password sa Finance Ministry (hash lang ang itinatago sa database).
 // Hindi agad nalilikha ang account — magiging kahilingan muna para sa admin;
 // pag-apruba ng admin, saka lang malilikha ang account (aktibo agad).
-export async function requestTulongUsername(fd: FormData): Promise<never> {
+export async function requestTulongUsername(fd: FormData): Promise<UsernameRequestResult> {
   const { supabase, profile } = await requireTulongFinancialAccess();
-  const ret = returnTo(fd);
   const memberId = String(fd.get("member_id") ?? "").trim();
-  const username = String(fd.get("username") ?? "").trim().toLowerCase();
-  const password = String(fd.get("password") ?? "");
 
-  if (!memberId) back(ret, "error", "Pumili ng kaanib.");
-  if (!validUsername(username))
-    back(ret, "error", "Ang username ay 3-30 characters: letra, numero, tuldok, gitling o underscore lang.");
-  if (password.length < 6) back(ret, "error", "Ang password ay hindi bababa sa 6 na characters.");
+  if (!memberId) return { ok: false, error: "Pumili ng kaanib." };
 
   const { data: member } = await supabase
     .from("members")
@@ -164,15 +201,15 @@ export async function requestTulongUsername(fd: FormData): Promise<never> {
     .eq("id", memberId)
     .maybeSingle();
   if (!member || (member as any).status !== "Active")
-    back(ret, "error", "Active na kaanib lang ang maaaring bigyan ng login.");
+    return { ok: false, error: "Active na kaanib lang ang maaaring bigyan ng login." };
 
   const { data: taken } = await supabase
     .from("tulong_financial_borrowers")
     .select("id")
-    .or(`member_id.eq.${memberId},username.ilike.${username}`)
+    .eq("member_id", memberId)
     .limit(1);
   if ((taken ?? []).length > 0)
-    back(ret, "error", "May login na ang kaanib na ito o gamit na ang username.");
+    return { ok: false, error: "May login na ang kaanib na ito." };
 
   const { data: pendingReq } = await supabase
     .from("tulong_username_requests")
@@ -181,10 +218,13 @@ export async function requestTulongUsername(fd: FormData): Promise<never> {
     .eq("status", "pending")
     .limit(1);
   if ((pendingReq ?? []).length > 0)
-    back(ret, "error", "May naghihintay nang kahilingan ng username para sa kaanib na ito.");
+    return { ok: false, error: "May naghihintay nang kahilingan ng username para sa kaanib na ito." };
 
-  const passwordHash = await hashPassword(supabase, password);
-  if (!passwordHash) back(ret, "error", "Hindi nalikha ang password. Subukan ulit.");
+  const username = await uniqueUsername(supabase, usernameBaseFromName((member as any).full_name ?? "", memberId));
+  const tempPassword = generateTempPassword();
+
+  const passwordHash = await hashPassword(supabase, tempPassword);
+  if (!passwordHash) return { ok: false, error: "Hindi nalikha ang password. Subukan ulit." };
 
   const { data: req, error: e1 } = await supabase
     .from("tulong_username_requests")
@@ -196,7 +236,7 @@ export async function requestTulongUsername(fd: FormData): Promise<never> {
     })
     .select("id")
     .single();
-  if (e1 || !req) back(ret, "error", "Hindi naipadala ang kahilingan. Subukan ulit.");
+  if (e1 || !req) return { ok: false, error: "Hindi naipadala ang kahilingan. Subukan ulit." };
 
   const { error: e2 } = await supabase.rpc("tulong_send_request_letter", {
     p_kind: "username",
@@ -204,15 +244,16 @@ export async function requestTulongUsername(fd: FormData): Promise<never> {
     p_subject: `Kahilingan ng username — ${(member as any).full_name}`,
     p_body:
       `Humihiling ang Finance Ministry ng username para kay ${(member as any).full_name} ` +
-      `(iminungkahing username: ${username}). Pakitingnan sa ibaba: Aprubahan o Tanggihan. ` +
+      `(awtomatikong username: ${username}). Pakitingnan sa ibaba: Aprubahan o Tanggihan. ` +
       `Kapag na-aprubahan, malilikha ang account at maaari nang mag-login ang kaanib sa ` +
-      `idbcj.org/tulong-financial/login.`,
+      `idbcj.org/tulong-financial/login gamit ang temporary password na ibinigay ng Finance Ministry.`,
   });
-  if (e2) back(ret, "error", "Nalikha ang kahilingan pero hindi naipadala ang letter: " + e2.message);
+  if (e2) return { ok: false, error: "Nalikha ang kahilingan pero hindi naipadala ang letter: " + e2.message };
 
-  revalidatePath(ret);
+  revalidatePath("/portal/finance/tulong-financial");
+  revalidatePath("/tulong-financial/finance");
   revalidatePath("/portal/inbox", "layout");
-  back(ret, "ok", "Naipadala na sa admin ang kahilingan ng username.");
+  return { ok: true, username, tempPassword, memberName: (member as any).full_name };
 }
 
 // I-reset ang password ng isang borrower (pinapatay din ang lahat ng session niya).
