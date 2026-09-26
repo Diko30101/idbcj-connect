@@ -3,7 +3,7 @@ import { getRosterContext, todayPH, fmtDate } from "@/lib/portal";
 import { Empty, Notice, Panel } from "@/components/portal/ui";
 import { inputCls, btnGhostCls } from "@/components/portal/form-bits";
 import { AttendanceRecordForm, AttendanceCsvButtons } from "@/components/portal/attendance-record-form";
-import { AttendanceSubmitForm } from "@/components/portal/attendance-submit-form";
+import { AttendanceGatheringList, type GatheringView } from "@/components/portal/attendance-gathering-list";
 import { SERVICE_TYPES, ATTENDANCE_RECORD_BASE, GATHERING_TYPES, gatheringTypeDisplay, isSunday, isSundayOnlyType, isValidDate, listSundays, lastSunday, fmtSundayLabel } from "./constants";
 
 // Attendance Record (Local Ministry): itinatala ng local secretary ang
@@ -299,7 +299,7 @@ export default async function AttendanceRecordPage({
           {existing && existing.status === "submitted" && (
             <Panel
               title={`Talaan ng mga dumalo — ${fmtDate(selDate)} · ${selTypeLabel}`}
-              subtitle="Na-submit na sa Finance Ministry; hindi na pwedeng baguhin."
+              subtitle="Na-submit na sa Administrative Ministry; hindi na pwedeng baguhin."
             >
               <div className="mb-3">
                 <StatusBadge status="submitted" />
@@ -316,7 +316,7 @@ export default async function AttendanceRecordPage({
           {existing && existing.status === "draft" && !editMode && (
             <Panel
               title={`Talaan ng mga dumalo — ${fmtDate(selDate)} · ${selTypeLabel}`}
-              subtitle="Suriin ang talaan bago i-submit sa Finance Ministry."
+              subtitle="Draft pa ito — na-save na. Pumunta sa tab na “Mga dumalo” para i-submit sa Administrative Ministry."
             >
               <div className="mb-3 flex flex-wrap items-center gap-2">
                 <StatusBadge status="draft" />
@@ -338,12 +338,9 @@ export default async function AttendanceRecordPage({
                 >
                   I-edit ang tala
                 </Link>
-                <AttendanceSubmitForm
-                  localId={activeLocal.id}
-                  serviceDate={selDate}
-                  serviceType={selType}
-                  count={existing.memberIds.size + existing.guests.length}
-                />
+                <Link href={tabHref("dumalo", baseParams)} className={btnGhostCls}>
+                  Pumunta sa “Mga dumalo” para i-submit →
+                </Link>
               </div>
             </Panel>
           )}
@@ -382,39 +379,37 @@ export default async function AttendanceRecordPage({
       )}
 
       {tab === "dumalo" && (
-        <Panel title="Mga pagkakatipon" subtitle="Pindutin ang isang petsa para makita ang listahan ng mga dumalo.">
-          {gatheringList.length === 0 ? (
-            <Empty>Wala pang naka-talang pagdalo para sa local na ito.</Empty>
-          ) : (
-            <div className="space-y-2">
-              {gatheringList.map((g) => {
-                return (
-                  <details key={`${g.date}|${g.type}`} className="rounded-lg border border-gray-200">
-                    <summary className="flex cursor-pointer items-center justify-between gap-3 px-4 py-3 hover:bg-emerald-50/40">
-                      <span className="text-sm">
-                        <strong className="font-semibold text-gray-900">{fmtDate(g.date)}</strong>
-                        <span className="text-gray-500"> · {gatheringTypeDisplay(g.type, g.customReason)}</span>
-                      </span>
-                      <span className="flex items-center gap-2">
-                        <StatusBadge status={g.status} />
-                        <span className="rounded-full bg-emerald-50 px-3 py-1 text-xs font-bold text-emerald-700">
-                          {g.memberIds.size + g.guests.length} dumalo
-                        </span>
-                      </span>
-                    </summary>
-                    <div className="border-t border-gray-100 px-4 py-3">
-                      <TalaanTable
-                        gathering={g}
-                        memberName={memberName}
-                        localName={localName}
-                        activeLocalName={activeLocal.name}
-                      />
-                    </div>
-                  </details>
-                );
-              })}
-            </div>
-          )}
+        <Panel
+          title="Mga pagkakatipon"
+          subtitle="Lagyan ng tsek ang mga draft na isusubmit, tapos pindutin ang “I-submit ang napili sa Administrative Ministry”."
+        >
+          {(() => {
+            const views: GatheringView[] = gatheringList.map((g) => {
+              const memberRows = [...g.memberIds].map((id) => ({
+                name: memberName.get(id) ?? "(walang pangalan)",
+                kind: "Kaanib",
+                local: activeLocal.name,
+              }));
+              const guestRows = g.guests.map((gu) => ({
+                name: gu.name,
+                kind: gu.kind === "visitor" ? "Bisita" : "Ibang local",
+                local: gu.kind === "visitor" ? "—" : (localName.get(gu.homeLocalId ?? "") ?? ""),
+              }));
+              const rows = [...memberRows, ...guestRows];
+              const nKaanib = memberRows.length;
+              const nBisita = g.guests.filter((gu) => gu.kind === "visitor").length;
+              const nIbang = g.guests.filter((gu) => gu.kind === "other_local").length;
+              return {
+                key: `${g.date}|${g.type}`,
+                label: `${fmtDate(g.date)} · ${gatheringTypeDisplay(g.type, g.customReason)}`,
+                status: g.status,
+                countLabel: `${rows.length} dumalo`,
+                summary: `Kabuuan: ${rows.length} dumalo · ${nKaanib} kaanib${nBisita > 0 ? ` · ${nBisita} bisita` : ""}${nIbang > 0 ? ` · ${nIbang} galing ibang local` : ""}`,
+                rows,
+              };
+            });
+            return <AttendanceGatheringList gatherings={views} localId={activeLocal.id} />;
+          })()}
         </Panel>
       )}
 

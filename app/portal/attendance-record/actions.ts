@@ -54,7 +54,7 @@ export async function saveAttendanceRecord(fd: FormData) {
   }
   const backPath = `${path}?tab=magtala&local=${localId}&date=${date}&type=${encodeURIComponent(type)}`;
 
-  // Hindi na pwedeng baguhin ang na-submit na sa Finance Ministry
+  // Hindi na pwedeng baguhin ang na-submit na sa Administrative Ministry
   const { data: locked } = await supabase
     .from("attendance_records")
     .select("id")
@@ -64,7 +64,7 @@ export async function saveAttendanceRecord(fd: FormData) {
     .eq("status", "submitted")
     .limit(1);
   if ((locked ?? []).length > 0) {
-    back(backPath, "error", "Na-submit na ang pagtitipong ito sa Finance Ministry; hindi na pwedeng baguhin.");
+    back(backPath, "error", "Na-submit na ang pagtitipong ito sa Administrative Ministry; hindi na pwedeng baguhin.");
   }
 
   // Tiyaking kaanib ng roster ng local na ito ang mga tsinsek
@@ -179,61 +179,58 @@ export async function saveAttendanceRecord(fd: FormData) {
   );
 }
 
-// I-submit ang draft na pagdalo sa Finance Ministry.
+// I-submit ang mga napiling draft na pagdalo sa Administrative Ministry
+// (mula sa tab na "Mga dumalo"; may checkbox kung alin ang i-submit).
 // Pagka-submit ay naka-lock na (hindi na pwedeng baguhin).
-export async function submitAttendanceRecord(fd: FormData) {
+export async function submitManyAttendanceRecords(fd: FormData) {
   const { supabase, locals } = await getRosterContext();
   const localId = str(fd, "local_id");
   const local = locals.find((l) => l.id === localId);
-  const date = str(fd, "service_date");
-  const type = str(fd, "service_type");
-  const backPath = `${ATTENDANCE_RECORD_BASE}?tab=magtala&local=${localId}&date=${date}&type=${encodeURIComponent(type)}`;
-  const dateErr = dateErrorForType(date, type);
-  if (!local || !(SERVICE_TYPES as readonly string[]).includes(type) || dateErr) {
-    back(ATTENDANCE_RECORD_BASE, "error", dateErr ?? "Kumpletuhin ang local, petsa at uri ng pagkakatipon.");
+  const path = `${ATTENDANCE_RECORD_BASE}?tab=dumalo&local=${localId}`;
+  if (!local) {
+    back(ATTENDANCE_RECORD_BASE, "error", "Piliin ang local.");
   }
-  const [{ data: drafts }, { data: guestDrafts }] = await Promise.all([
-    supabase
-      .from("attendance_records")
-      .select("id, custom_reason")
-      .eq("local_id", localId)
-      .eq("service_date", date)
-      .eq("service_type", type)
-      .eq("status", "draft")
-      .limit(1),
-    supabase
-      .from("attendance_guests")
-      .select("id")
-      .eq("local_id", localId)
-      .eq("service_date", date)
-      .eq("service_type", type)
-      .eq("status", "draft")
-      .limit(1),
-  ]);
-  if ((drafts ?? []).length === 0 && (guestDrafts ?? []).length === 0) {
-    back(backPath, "error", "Walang draft na pagdalo na pwedeng i-submit para sa pagtitipong ito.");
+  const keys = [...new Set(fd.getAll("gatherings").map(String).filter(Boolean))];
+  if (keys.length === 0) {
+    back(path, "error", "Walang napiling pagdalo na i-submit.");
+  }
+  if (keys.length > 500) {
+    back(path, "error", "Masyadong marami ang napili (500 lang ang pinakamarami).");
   }
 
-  const { error: e1 } = await supabase
-    .from("attendance_records")
-    .update({ status: "submitted" })
-    .eq("local_id", localId)
-    .eq("service_date", date)
-    .eq("service_type", type)
-    .eq("status", "draft");
-  if (e1) back(backPath, "error", "Hindi na-submit ang pagdalo: " + e1.message);
-  const { error: e2 } = await supabase
-    .from("attendance_guests")
-    .update({ status: "submitted" })
-    .eq("local_id", localId)
-    .eq("service_date", date)
-    .eq("service_type", type)
-    .eq("status", "draft");
-  if (e2) back(backPath, "error", "Hindi na-submit ang pagdalo: " + e2.message);
+  let n = 0;
+  for (const key of keys) {
+    const [date, type] = key.split("|");
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(date ?? "") || !(SERVICE_TYPES as readonly string[]).includes(type ?? "")) {
+      continue;
+    }
+    if (dateErrorForType(date, type)) continue;
+    const { error: e1 } = await supabase
+      .from("attendance_records")
+      .update({ status: "submitted" })
+      .eq("local_id", localId)
+      .eq("service_date", date)
+      .eq("service_type", type)
+      .eq("status", "draft");
+    const { error: e2 } = await supabase
+      .from("attendance_guests")
+      .update({ status: "submitted" })
+      .eq("local_id", localId)
+      .eq("service_date", date)
+      .eq("service_type", type)
+      .eq("status", "draft");
+    if (!e1 && !e2) n++;
+  }
 
   revalidatePath(ATTENDANCE_RECORD_BASE, "layout");
-  const submitCustomReason = ((drafts ?? []) as any[]).find((r) => r.custom_reason)?.custom_reason ?? null;
-  back(backPath, "ok", `Na-submit ang pagdalo sa ${fmtDate(date)} (${gatheringTypeDisplay(type, submitCustomReason)}) sa Finance Ministry.`);
+  if (n === 0) {
+    back(path, "error", "Walang na-submit. Baka na-submit na ang mga napili.");
+  }
+  back(
+    path,
+    "ok",
+    `Na-submit ang ${n} pagdalo sa Administrative Ministry. Naka-lock na ang mga ito; hindi na pwedeng baguhin.`,
+  );
 }
 
 // ---------------------------------------------------------------
@@ -396,7 +393,7 @@ export async function importAttendanceCsv(fd: FormData) {
     .eq("status", "submitted")
     .limit(1);
   if ((locked ?? []).length > 0) {
-    back(backPath, "error", "Na-submit na ang pagtitipong ito sa Finance Ministry; hindi na pwedeng baguhin.");
+    back(backPath, "error", "Na-submit na ang pagtitipong ito sa Administrative Ministry; hindi na pwedeng baguhin.");
   }
   if (!csvText || csvText.length > 300_000) {
     back(backPath, "error", "Walang CSV na na-upload o masyadong malaki ang file (hanggang 300KB).");
