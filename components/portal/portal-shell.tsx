@@ -233,9 +233,6 @@ function ClassicShell({
             IDBCJ Connect
           </Link>
           <div className="flex items-center gap-3">
-            <Link href="/" className="text-sm font-medium text-gray-500 hover:text-emerald-700">
-              ← Website
-            </Link>
             <span className="hidden text-sm text-gray-500 sm:inline">{displayName}</span>
             <NotificationBell />
             {signOutClassic}
@@ -369,13 +366,6 @@ function SidebarShell({
             </div>
           </div>
           <div className="mt-3">{signOutDark}</div>
-          <Link
-            href="/"
-            onClick={closeDrawer}
-            className="mt-2 inline-block text-xs font-medium text-[#b7d2c4] transition hover:text-white"
-          >
-            ← Website
-          </Link>
         </div>
       </aside>
 
