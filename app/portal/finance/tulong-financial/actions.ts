@@ -77,6 +77,53 @@ export async function forwardLoanRequestToAdmin(fd: FormData): Promise<never> {
   back(ret, "ok", "Naipadala na sa admin ang kahilingan ng hiram.");
 }
 
+// Finance Ministry: lumikha ng bagong kahilingan ng hiram (may pirma ng nanghihiram).
+// Awtomatikong ipapadala sa admin — walang manual na "Ipadala sa admin" step.
+export async function createLoanRequest(fd: FormData): Promise<never> {
+  const { supabase } = await requireTulongFinancialAccess();
+  const ret = returnTo(fd);
+  const memberId = String(fd.get("member_id") ?? "").trim();
+  const amount = parseAmount(fd.get("amount"));
+  const notes = String(fd.get("notes") ?? "").trim() || null;
+  const targetDate = parseDate(fd.get("target_return_date"));
+  const signature = String(fd.get("signature") ?? "").trim();
+  if (!memberId) back(ret, "error", "Piliin ang kaanib na nanghihiram.");
+  if (amount === null) back(ret, "error", "Ilagay ang wastong halaga ng hihiramin.");
+  if (!signature || !signature.startsWith("data:image/")) back(ret, "error", "Kailangan ang pirma ng nanghihiram bilang katunayan ng pananagutan.");
+
+  const { data, error } = await supabase
+    .from("tulong_loan_requests")
+    .insert({
+      member_id: memberId,
+      amount,
+      notes,
+      target_return_date: targetDate,
+      signature,
+      status: "pending",
+    })
+    .select("id")
+    .single();
+  if (error || !data) back(ret, "error", "Hindi nalikha ang kahilingan: " + (error?.message ?? ""));
+
+  const { error: fwdError } = await supabase.rpc("tulong_forward_loan_request", { p_request_id: data.id });
+  if (fwdError) back(ret, "error", "Nalikha ang kahilingan pero hindi naipadala sa admin: " + fwdError.message);
+
+  const { data: loanReq } = await supabase
+    .from("tulong_loan_requests")
+    .select("amount, members(full_name)")
+    .eq("id", data.id)
+    .maybeSingle();
+
+  revalidatePath(ret);
+  revalidatePath("/portal/inbox", "layout");
+  await notifyTelegram({
+    kind: "loan",
+    member_name: (loanReq as any)?.members?.full_name ?? "isang kaanib",
+    amount: (loanReq as any)?.amount ?? null,
+  });
+  back(ret, "ok", "Naipadala na sa admin ang kahilingan ng hiram para sa apruba.");
+}
+
 // Admin: aprubahan o tanggihan ang kahilingan ng hiram (mula sa Inbox letter).
 // Pag-apruba: awtomatikong nalilikha ang loan record.
 export async function decideLoanRequest(fd: FormData): Promise<never> {
