@@ -1,7 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { requireTulongFinancialAccess, back } from "@/lib/portal";
+import { requirePortalAccess, requireTulongFinancialAccess, back } from "@/lib/portal";
 
 const BASE = "/portal/finance/tulong-financial";
 
@@ -23,42 +23,68 @@ function parseDate(raw: FormDataEntryValue | null): string | null {
   return /^\d{4}-\d{2}-\d{2}$/.test(s) ? s : null;
 }
 
-// Magtala ng bagong hiram (active member lang).
-export async function createTulongLoan(fd: FormData): Promise<never> {
-  const { supabase, profile } = await requireTulongFinancialAccess();
+// ---------------------------------------------------------------------------
+// Approval flow: mga kahilingan ng hiram at username.
+// Ang direktang pagtatala ng hiram ay tinanggal na — lahat ng hiram ay dadaan
+// sa: kaanib humiling -> Finance Ministry ipadala sa admin -> admin mag-apruba
+// (gamit ang pindutan sa loob ng Inbox letter). Hindi makakahiram ang walang username.
+// ---------------------------------------------------------------------------
+
+// Finance Ministry: ipadala ang kahilingan ng hiram sa admin (may Inbox letter).
+export async function forwardLoanRequestToAdmin(fd: FormData): Promise<never> {
+  const { supabase } = await requireTulongFinancialAccess();
   const ret = returnTo(fd);
-  const memberId = String(fd.get("member_id") ?? "").trim();
-  const amount = parseAmount(fd.get("amount"));
-  const dateBorrowed = parseDate(fd.get("date_borrowed"));
-  const targetReturn = parseDate(fd.get("target_return_date"));
-  const notes = String(fd.get("notes") ?? "").trim();
+  const requestId = String(fd.get("request_id") ?? "").trim();
+  if (!requestId) back(ret, "error", "Hindi nakita ang kahilingan.");
 
-  if (!memberId) back(ret, "error", "Pumili ng kaanib.");
-  if (amount === null) back(ret, "error", "Maglagay ng wastong halagang hiniram.");
-  if (!dateBorrowed) back(ret, "error", "Maglagay ng petsa ng paghiram.");
-
-  const { data: member } = await supabase
-    .from("members")
-    .select("id, local_id, status")
-    .eq("id", memberId)
-    .maybeSingle();
-  if (!member) back(ret, "error", "Hindi nakita ang kaanib.");
-  if ((member as any).status !== "Active")
-    back(ret, "error", "Active na kaanib lang ang maaaring humiram.");
-
-  const { error } = await supabase.from("tulong_financial_loans").insert({
-    member_id: memberId,
-    local_id: (member as any).local_id ?? null,
-    amount,
-    date_borrowed: dateBorrowed,
-    target_return_date: targetReturn,
-    notes: notes || null,
-    recorded_by: profile.id,
-  });
-  if (error) back(ret, "error", "Hindi naitala ang hiram. Subukan ulit.");
+  const { error } = await supabase.rpc("tulong_forward_loan_request", { p_request_id: requestId });
+  if (error) back(ret, "error", "Hindi naipadala sa admin: " + error.message);
 
   revalidatePath(ret);
-  back(ret, "ok", "Naitala ang hiram.");
+  revalidatePath("/portal/inbox", "layout");
+  back(ret, "ok", "Naipadala na sa admin ang kahilingan ng hiram.");
+}
+
+// Admin: aprubahan o tanggihan ang kahilingan ng hiram (mula sa Inbox letter).
+// Pag-apruba: awtomatikong nalilikha ang loan record.
+export async function decideLoanRequest(fd: FormData): Promise<never> {
+  const { supabase, profile } = await requirePortalAccess();
+  const letterId = String(fd.get("letter_id") ?? "").trim();
+  const ret = letterId ? `/portal/inbox/${letterId}` : "/portal/inbox";
+  if (profile.role !== "admin") back(ret, "error", "Admin lang ang maaaring mag-apruba.");
+  const requestId = String(fd.get("request_id") ?? "").trim();
+  const approve = String(fd.get("decision") ?? "") === "approve";
+  if (!requestId) back(ret, "error", "Hindi nakita ang kahilingan.");
+
+  const { error } = await supabase.rpc("tulong_decide_loan_request", {
+    p_request_id: requestId,
+    p_approve: approve,
+  });
+  if (error) back(ret, "error", "Hindi naitala ang desisyon: " + error.message);
+
+  revalidatePath(ret);
+  back(ret, "ok", approve ? "Aprubado na ang hiram. Nalikha na ang loan record." : "Tinanggihan ang kahilingan ng hiram.");
+}
+
+// Admin: aprubahan o tanggihan ang kahilingan ng username (mula sa Inbox letter).
+// Pag-apruba: awtomatikong nalilikha ang account (aktibo agad).
+export async function decideUsernameRequest(fd: FormData): Promise<never> {
+  const { supabase, profile } = await requirePortalAccess();
+  const letterId = String(fd.get("letter_id") ?? "").trim();
+  const ret = letterId ? `/portal/inbox/${letterId}` : "/portal/inbox";
+  if (profile.role !== "admin") back(ret, "error", "Admin lang ang maaaring mag-apruba.");
+  const requestId = String(fd.get("request_id") ?? "").trim();
+  const approve = String(fd.get("decision") ?? "") === "approve";
+  if (!requestId) back(ret, "error", "Hindi nakita ang kahilingan.");
+
+  const { error } = await supabase.rpc("tulong_decide_username_request", {
+    p_request_id: requestId,
+    p_approve: approve,
+  });
+  if (error) back(ret, "error", "Hindi naitala ang desisyon: " + error.message);
+
+  revalidatePath(ret);
+  back(ret, "ok", approve ? "Aprubado na ang username. Maaari nang mag-login ang kaanib." : "Tinanggihan ang kahilingan ng username.");
 }
 
 // Magtala ng bayad (installment) sa isang hiram.
@@ -117,8 +143,10 @@ async function hashPassword(supabase: any, password: string): Promise<string | n
   return data as string;
 }
 
-// Gumawa ng login para sa isang active member.
-export async function createBorrowerLogin(fd: FormData): Promise<never> {
+// Humiling ng username para sa isang active member (Finance Ministry ang gumagawa).
+// Hindi agad nalilikha ang account — magiging kahilingan muna para sa admin;
+// pag-apruba ng admin, saka lang malilikha ang account (aktibo agad).
+export async function requestTulongUsername(fd: FormData): Promise<never> {
   const { supabase, profile } = await requireTulongFinancialAccess();
   const ret = returnTo(fd);
   const memberId = String(fd.get("member_id") ?? "").trim();
@@ -132,33 +160,59 @@ export async function createBorrowerLogin(fd: FormData): Promise<never> {
 
   const { data: member } = await supabase
     .from("members")
-    .select("id, status")
+    .select("id, full_name, status")
     .eq("id", memberId)
     .maybeSingle();
   if (!member || (member as any).status !== "Active")
     back(ret, "error", "Active na kaanib lang ang maaaring bigyan ng login.");
 
-  const { data: existing } = await supabase
+  const { data: taken } = await supabase
     .from("tulong_financial_borrowers")
     .select("id")
     .or(`member_id.eq.${memberId},username.ilike.${username}`)
     .limit(1);
-  if ((existing ?? []).length > 0)
+  if ((taken ?? []).length > 0)
     back(ret, "error", "May login na ang kaanib na ito o gamit na ang username.");
+
+  const { data: pendingReq } = await supabase
+    .from("tulong_username_requests")
+    .select("id")
+    .eq("member_id", memberId)
+    .eq("status", "pending")
+    .limit(1);
+  if ((pendingReq ?? []).length > 0)
+    back(ret, "error", "May naghihintay nang kahilingan ng username para sa kaanib na ito.");
 
   const passwordHash = await hashPassword(supabase, password);
   if (!passwordHash) back(ret, "error", "Hindi nalikha ang password. Subukan ulit.");
 
-  const { error } = await supabase.from("tulong_financial_borrowers").insert({
-    member_id: memberId,
-    username,
-    password_hash: passwordHash,
-    created_by: profile.id,
+  const { data: req, error: e1 } = await supabase
+    .from("tulong_username_requests")
+    .insert({
+      member_id: memberId,
+      username,
+      password_hash: passwordHash,
+      requested_by: profile.id,
+    })
+    .select("id")
+    .single();
+  if (e1 || !req) back(ret, "error", "Hindi naipadala ang kahilingan. Subukan ulit.");
+
+  const { error: e2 } = await supabase.rpc("tulong_send_request_letter", {
+    p_kind: "username",
+    p_request_id: (req as any).id,
+    p_subject: `Kahilingan ng username — ${(member as any).full_name}`,
+    p_body:
+      `Humihiling ang Finance Ministry ng username para kay ${(member as any).full_name} ` +
+      `(iminungkahing username: ${username}). Pakitingnan sa ibaba: Aprubahan o Tanggihan. ` +
+      `Kapag na-aprubahan, malilikha ang account at maaari nang mag-login ang kaanib sa ` +
+      `idbcj.org/tulong-financial/login.`,
   });
-  if (error) back(ret, "error", "Hindi nalikha ang login. Subukan ulit.");
+  if (e2) back(ret, "error", "Nalikha ang kahilingan pero hindi naipadala ang letter: " + e2.message);
 
   revalidatePath(ret);
-  back(ret, "ok", `Nalikha ang login para sa kaanib (username: ${username}).`);
+  revalidatePath("/portal/inbox", "layout");
+  back(ret, "ok", "Naipadala na sa admin ang kahilingan ng username.");
 }
 
 // I-reset ang password ng isang borrower (pinapatay din ang lahat ng session niya).
