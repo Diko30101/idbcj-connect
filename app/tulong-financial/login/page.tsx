@@ -1,6 +1,6 @@
 import { borrowerLogin } from "../actions";
 import { inputCls, btnCls } from "@/components/portal/ui";
-import { isTulongFinancePortalUser } from "../finance-check";
+import { isTulongFinancePortalUser, isTulongMemberPortalUser } from "../finance-check";
 
 export const metadata = { title: "Tulong Financial — Login" };
 export const dynamic = "force-dynamic";
@@ -12,6 +12,7 @@ export default async function TulongLoginPage({
 }) {
   const { error } = await searchParams;
   const financeAuthed = await isTulongFinancePortalUser();
+  const memberAuthed = !financeAuthed && (await isTulongMemberPortalUser());
 
   return (
     <main className="mx-auto flex min-h-[70vh] w-full max-w-3xl items-center px-4 py-12">
@@ -19,7 +20,7 @@ export default async function TulongLoginPage({
         <div className="rounded-2xl border border-emerald-100 bg-white p-8 shadow-sm">
           <h1 className="text-xl font-bold text-emerald-900">Tulong Financial</h1>
           <p className="mt-1 text-sm text-gray-500">
-            <span className="font-semibold text-gray-700">Para sa mga pinahiram:</span> ilagay ang
+            <span className="font-semibold text-gray-700">Para sa mga pinahiram na walang portal account:</span> ilagay ang
             username at password na ibinigay ng Finance Ministry para makita ang iyong record.
           </p>
           {error && (
@@ -42,15 +43,20 @@ export default async function TulongLoginPage({
         </div>
 
         <div className="rounded-2xl border border-emerald-100 bg-white p-8 shadow-sm">
-          <h2 className="text-xl font-bold text-emerald-900">Finance Ministry</h2>
+          <h2 className="text-xl font-bold text-emerald-900">Portal Account</h2>
           <p className="mt-1 text-sm text-gray-500">
-            Gamitin ang iyong portal account para pamahalaan ang mga login ng pinahiram. Ang
-            pagtatala ng hiram at bayad ay nasa main portal pa rin.
+            Kung may portal account ka na at aprubado ka ng admin bilang kasapi ng Tulong Financial,
+            gamitin ang iyong portal account — hindi na kailangan ng bagong username/password.
+            Ang Finance Ministry ay dito rin pumapasok para pamahalaan ang mga login.
           </p>
           <div className="mt-6">
             {financeAuthed ? (
               <a href="/tulong-financial/finance" className={`${btnCls} inline-block text-center`}>
                 Magpatuloy sa portal
+              </a>
+            ) : memberAuthed ? (
+              <a href="/tulong-financial" className={`${btnCls} inline-block text-center`}>
+                Magpatuloy sa aking record
               </a>
             ) : (
               <>
