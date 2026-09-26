@@ -17,7 +17,7 @@ export default async function ResiboPage({
   searchParams,
 }: {
   searchParams: Promise<{ buwan?: string; local?: string; ok?: string; error?: string }>;
-) {
+}) {
   const { buwan: buwanParam, local: localParam, ok, error } = await searchParams;
   const ctx = await getAbuluyanContext();
   const wide = ctx.isChurch || ctx.isAdmin;
@@ -73,7 +73,7 @@ export default async function ResiboPage({
       <Notice ok={ok} error={error} />
 
             {/* Uri ng resibo: Per Local / Per Member (Kaanib) */}
-      {ctx.local && (}
+      {ctx.local && (
         <div className="no-print mt-4 flex flex-wrap gap-2">
           <span className="rounded-full border border-emerald-600 bg-emerald-50 px-3 py-1 text-sm font-medium text-emerald-800">
             Per Local
