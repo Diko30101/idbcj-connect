@@ -557,67 +557,6 @@ export default async function PortalHome({
         </section>
       )}
 
-      {tulongAccess && (
-        <section className="mb-6">
-          <Panel title="💰 Tulong Financial — Buod" subtitle="Pangkalahatang tanaw ng mga hiram at bayad">
-            <div className="mb-5 grid grid-cols-2 gap-3 lg:grid-cols-4">
-              <div className="rounded-xl border border-gray-200 bg-white p-4 text-center shadow-sm">
-                <div className="text-2xl font-bold text-amber-700">{fmtPeso(tulongTotalLent)}</div>
-                <div className="text-xs font-medium uppercase tracking-wide text-gray-500">Kabuuang Ipinahiram</div>
-              </div>
-              <div className="rounded-xl border border-gray-200 bg-white p-4 text-center shadow-sm">
-                <div className="text-2xl font-bold text-emerald-700">{fmtPeso(tulongTotalPaid)}</div>
-                <div className="text-xs font-medium uppercase tracking-wide text-gray-500">Kabuuang Nabayaran</div>
-              </div>
-              <div className="rounded-xl border border-gray-200 bg-white p-4 text-center shadow-sm">
-                <div className="text-2xl font-bold text-red-700">{fmtPeso(tulongTotalLent - tulongTotalPaid)}</div>
-                <div className="text-xs font-medium uppercase tracking-wide text-gray-500">Balanseng Natitira</div>
-              </div>
-              <div className="rounded-xl border border-gray-200 bg-white p-4 text-center shadow-sm">
-                <div className="text-2xl font-bold text-blue-700">{tulongActiveBorrowers}</div>
-                <div className="text-xs font-medium uppercase tracking-wide text-gray-500">May Hiram Pa</div>
-              </div>
-            </div>
-            <h3 className="mb-2 text-sm font-bold text-gray-900">Huling mga transaksyon</h3>
-            {tulongRecent.length === 0 ? (
-              <Empty>Wala pang transaksyon.</Empty>
-            ) : (
-              <div className="overflow-x-auto rounded-xl border border-gray-200">
-                <table className="w-full text-sm">
-                  <thead>
-                    <tr className="bg-gray-50 text-left text-xs uppercase tracking-wide text-gray-500">
-                      <th className="px-4 py-2">Petsa</th>
-                      <th className="px-4 py-2">Kaanib</th>
-                      <th className="px-4 py-2">Uri</th>
-                      <th className="px-4 py-2 text-right">Halaga</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-gray-100">
-                    {tulongRecent.map((t, i) => (
-                      <tr key={i}>
-                        <td className="px-4 py-2 text-gray-700">{fmtDate(t.date)}</td>
-                        <td className="px-4 py-2 font-medium text-gray-900">{t.name}</td>
-                        <td className="px-4 py-2">
-                          <span className={`rounded-full px-2 py-0.5 text-xs font-semibold ${t.kind === "hiram" ? "bg-amber-100 text-amber-800" : "bg-emerald-100 text-emerald-800"}`}>
-                            {t.kind === "hiram" ? "Hiram" : "Bayad"}
-                          </span>
-                        </td>
-                        <td className="px-4 py-2 text-right font-semibold text-gray-900">{fmtPeso(t.amount)}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            )}
-            <div className="mt-4 text-right">
-              <Link href="/portal/finance/tulong-financial" className="text-sm font-semibold text-emerald-700 hover:underline">
-                Buksan ang Tulong Financial →
-              </Link>
-            </div>
-          </Panel>
-        </section>
-      )}
-
       {isAdmin && attMaxDate && (
         <section className="mb-6">
           <Panel title="Attendance — Huling Pagtitipon" subtitle={fmtDate(attMaxDate)}>
@@ -842,6 +781,67 @@ export default async function PortalHome({
           )}
           </Panel>
       </div>
+
+      {tulongAccess && (
+        <section className="mb-6">
+          <Panel title="💰 Tulong Financial — Buod" subtitle="Pangkalahatang tanaw ng mga hiram at bayad">
+            <div className="mb-5 grid grid-cols-2 gap-3 lg:grid-cols-4">
+              <div className="rounded-xl border border-gray-200 bg-white p-4 text-center shadow-sm">
+                <div className="text-2xl font-bold text-amber-700">{fmtPeso(tulongTotalLent)}</div>
+                <div className="text-xs font-medium uppercase tracking-wide text-gray-500">Kabuuang Ipinahiram</div>
+              </div>
+              <div className="rounded-xl border border-gray-200 bg-white p-4 text-center shadow-sm">
+                <div className="text-2xl font-bold text-emerald-700">{fmtPeso(tulongTotalPaid)}</div>
+                <div className="text-xs font-medium uppercase tracking-wide text-gray-500">Kabuuang Nabayaran</div>
+              </div>
+              <div className="rounded-xl border border-gray-200 bg-white p-4 text-center shadow-sm">
+                <div className="text-2xl font-bold text-red-700">{fmtPeso(tulongTotalLent - tulongTotalPaid)}</div>
+                <div className="text-xs font-medium uppercase tracking-wide text-gray-500">Balanseng Natitira</div>
+              </div>
+              <div className="rounded-xl border border-gray-200 bg-white p-4 text-center shadow-sm">
+                <div className="text-2xl font-bold text-blue-700">{tulongActiveBorrowers}</div>
+                <div className="text-xs font-medium uppercase tracking-wide text-gray-500">May Hiram Pa</div>
+              </div>
+            </div>
+            <h3 className="mb-2 text-sm font-bold text-gray-900">Huling mga transaksyon</h3>
+            {tulongRecent.length === 0 ? (
+              <Empty>Wala pang transaksyon.</Empty>
+            ) : (
+              <div className="overflow-x-auto rounded-xl border border-gray-200">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="bg-gray-50 text-left text-xs uppercase tracking-wide text-gray-500">
+                      <th className="px-4 py-2">Petsa</th>
+                      <th className="px-4 py-2">Kaanib</th>
+                      <th className="px-4 py-2">Uri</th>
+                      <th className="px-4 py-2 text-right">Halaga</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-100">
+                    {tulongRecent.map((t, i) => (
+                      <tr key={i}>
+                        <td className="px-4 py-2 text-gray-700">{fmtDate(t.date)}</td>
+                        <td className="px-4 py-2 font-medium text-gray-900">{t.name}</td>
+                        <td className="px-4 py-2">
+                          <span className={`rounded-full px-2 py-0.5 text-xs font-semibold ${t.kind === "hiram" ? "bg-amber-100 text-amber-800" : "bg-emerald-100 text-emerald-800"}`}>
+                            {t.kind === "hiram" ? "Hiram" : "Bayad"}
+                          </span>
+                        </td>
+                        <td className="px-4 py-2 text-right font-semibold text-gray-900">{fmtPeso(t.amount)}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+            <div className="mt-4 text-right">
+              <Link href="/portal/finance/tulong-financial" className="text-sm font-semibold text-emerald-700 hover:underline">
+                Buksan ang Tulong Financial →
+              </Link>
+            </div>
+          </Panel>
+        </section>
+      )}
     </>
   );
 }
