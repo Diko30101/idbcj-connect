@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { requestTulongUsername, type UsernameRequestResult } from "@/app/portal/finance/tulong-financial/actions";
-import { inputCls, btnGhostCls } from "@/components/portal/ui";
+import { inputCls, btnGhostCls } from "@/components/portal/form-bits";
 
 type Member = { id: string; full_name: string };
 
