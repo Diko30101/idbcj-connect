@@ -36,10 +36,14 @@ export default async function PortalLayout({ children }: { children: React.React
     { href: "/portal", label: "Home" },
     { href: "/portal/inbox", label: "Inbox" },
     { href: "/portal/announcements", label: "Announcements" },
-    { href: "/portal/ministries", label: "Ministries" },
     { href: "/portal/prayer", label: "Prayer" },
     { href: "/portal/profile", label: "My Profile" },
   ];
+  // Ang "Ministries" na menu ay para LANG sa Admin -- hindi ito makikita
+  // ng kahit anong ibang role o ministry (kasama ang Administrative Ministry).
+  if (profile.role === "admin") {
+    items.push({ href: "/portal/ministries", label: "Ministries" });
+  }
   if (isStaff(profile.role)) {
     items.push({ href: "/portal/attendance", label: "Attendance" });
     items.push({ href: "/portal/members", label: "Users" });
