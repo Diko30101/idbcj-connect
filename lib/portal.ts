@@ -291,8 +291,10 @@ export function denyAbuluyan(): never {
   redirect("/portal?error=" + encodeURIComponent("Wala kang access sa pahinang iyon."));
 }
 
-// Buong Finance section (Financial Management, Audit Report, Expenses):
+// Buong Finance section (Financial Management, Audit Report, Expenses, Tulong Financial):
 // Admin/Secretary/Treasurer, o kasapi ng "Finance Ministry" (parehong rights)
+// Tandaan: ang Tulong Financial page mismo ay mas mahigpit -- Admin o Finance Ministry lang
+// (tingnan ang requireTulongFinancialAccess).
 export async function requireFinanceSectionAccess() {
   const ctx = await requirePortalAccess();
   const { supabase, profile } = ctx;
@@ -306,6 +308,18 @@ export async function requireFinanceSectionAccess() {
 
 // Alias para sa dating pangalan (Expenses page lang gumagamit nito dati)
 export const requireExpenseAccess = requireFinanceSectionAccess;
+
+// Tulong Financial: Admin lang o kasapi ng "Finance Ministry" (buong iglesia, hindi per-local)
+export async function requireTulongFinancialAccess() {
+  const ctx = await requirePortalAccess();
+  const { supabase, profile } = ctx;
+  if (profile.role === "admin") return ctx;
+  const { data } = await supabase.from("ministry_members").select("ministries(name)").eq("profile_id", profile.id);
+  const ministryNames = ((data ?? []) as any[]).map((m) => m.ministries?.name).filter(Boolean);
+  if (!ministryNames.includes(FINANCE_MINISTRY_NAME))
+    redirect("/portal?error=" + encodeURIComponent("Wala kang access sa pahinang iyon."));
+  return ctx;
+}
 
 // Ministry na ang mga miyembro ay may access sa Bible Study Courses
 // (parehong view at edit -- walang ibang audience)
