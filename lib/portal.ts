@@ -99,6 +99,22 @@ export async function getFinanceMinistryRecipientIds(supabase: SupabaseClient): 
   return [...new Set(((data ?? []) as { profile_id: string }[]).map((m) => m.profile_id))];
 }
 
+// Ang tumatanggap ng Ulat ng Pagdalo: mga miyembro ng Administrative Ministry
+// (hindi ang mga profile na role='admin'). Ibinabalik ang mga profile id.
+// Tatanggap ng Ulat ng Pagdalo: ang LEADER ng Administrative Ministry
+// (is_leader = true). Kung walang leader na nakatalaga, fallback sa lahat ng
+// miyembro ng Administrative Ministry para maihatid pa rin ang ulat.
+export async function getAdministrativeMinistryRecipientIds(supabase: SupabaseClient): Promise<string[]> {
+  const { data } = await supabase
+    .from("ministry_members")
+    .select("profile_id, is_leader, ministries!inner(name)")
+    .eq("ministries.name", "Administrative Ministry");
+  const rows = ((data ?? []) as { profile_id: string; is_leader: boolean }[]);
+  const leaders = rows.filter((m) => m.is_leader);
+  const chosen = leaders.length > 0 ? leaders : rows;
+  return [...new Set(chosen.map((m) => m.profile_id))];
+}
+
 // Mga ministry na nagma-manage ng roster (public.members) ng sariling local (kasama ang Admin, na lahat ng local)
 export const ROSTER_MINISTRY_NAMES = ["Administrative Ministry", "Local Admin Ministry"];
 
