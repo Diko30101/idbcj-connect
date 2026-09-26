@@ -3,7 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { cookies } from "next/headers";
 import { fmtPeso } from "@/lib/finance";
 import { Empty, Notice, Panel, btnGhostCls, inputCls } from "@/components/portal/ui";
-import { borrowerLogout, getBorrowerSessionToken, submitLoanRequest } from "./actions";
+import { borrowerLogout, getBorrowerSessionToken, submitLoanRequest, changeBorrowerPassword } from "./actions";
 import { isTulongFinancePortalUser } from "./finance-check";
 
 export const metadata = { title: "Tulong Financial — Aking Record" };
@@ -50,7 +50,7 @@ export default async function TulongBorrowerPage({
     supabase.rpc("tulong_borrower_record", { p_token: token }),
     supabase.rpc("tulong_my_loan_requests", { p_token: token }),
   ]);
-  const record = data as { member_name: string; loans: Loan[] } | null;
+  const record = data as { member_name: string; loans: Loan[]; password_is_temporary?: boolean } | null;
   if (!record) {
     const cs = await cookies();
     cs.delete("tulong_session");
@@ -72,6 +72,13 @@ export default async function TulongBorrowerPage({
   return (
     <main className="mx-auto w-full max-w-4xl px-4 py-10">
       <Notice ok={ok} error={error} />
+      {record.password_is_temporary && (
+        <div className="mb-4 rounded-xl border border-amber-200 bg-amber-50 p-4">
+          <p className="text-sm font-bold text-amber-900">
+            Temporary password pa ang gamit mo. Palitan ito ngayon sa &ldquo;Palitan ang password&rdquo; sa ibaba.
+          </p>
+        </div>
+      )}
       <div className="flex items-start justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-emerald-900">Aking Record — Tulong Financial</h1>
@@ -214,6 +221,28 @@ export default async function TulongBorrowerPage({
       <p className="mt-6 text-xs text-gray-400">
         Kung may tanong sa record na ito, makipag-ugnayan sa Finance Ministry.
       </p>
+
+      <div className="mt-6">
+        <Panel title="Palitan ang password">
+          <form action={changeBorrowerPassword} className="grid gap-3 sm:grid-cols-3">
+            <label className="grid gap-1.5">
+              <span className="text-sm font-medium text-gray-700">Kasalukuyang password</span>
+              <input name="current_password" type="password" required className={inputCls} />
+            </label>
+            <label className="grid gap-1.5">
+              <span className="text-sm font-medium text-gray-700">Bagong password (min. 6)</span>
+              <input name="new_password" type="password" required minLength={6} className={inputCls} />
+            </label>
+            <label className="grid gap-1.5">
+              <span className="text-sm font-medium text-gray-700">Kumpirmahin ang bagong password</span>
+              <input name="confirm_password" type="password" required minLength={6} className={inputCls} />
+            </label>
+            <div className="sm:col-span-3">
+              <button className={btnGhostCls}>Palitan ang password</button>
+            </div>
+          </form>
+        </Panel>
+      </div>
     </main>
   );
 }

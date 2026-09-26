@@ -78,3 +78,28 @@ export async function submitLoanRequest(fd: FormData): Promise<never> {
     );
   redirect(`${BASE}?ok=` + encodeURIComponent("Naipadala na ang iyong kahilingan ng hiram. Hintayin ang apruba ng admin."));
 }
+
+// Borrower: palitan ang sariling password (kailangan ang kasalukuyang password).
+// Ginagamit ito pagkatapos ng unang login gamit ang temporary password.
+export async function changeBorrowerPassword(fd: FormData): Promise<never> {
+  const token = await getBorrowerSessionToken();
+  if (!token) redirect(`${BASE}/login`);
+
+  const current = String(fd.get("current_password") ?? "");
+  const next = String(fd.get("new_password") ?? "");
+  const confirm = String(fd.get("confirm_password") ?? "");
+  if (next.length < 6)
+    redirect(`${BASE}?error=` + encodeURIComponent("Ang bagong password ay hindi bababa sa 6 na characters."));
+  if (next !== confirm)
+    redirect(`${BASE}?error=` + encodeURIComponent("Hindi magkatugma ang bagong password at ang kumpirmasyon."));
+
+  const supabase = await supa();
+  const { error } = await supabase.rpc("tulong_borrower_change_password", {
+    p_token: token,
+    p_current: current,
+    p_new: next,
+  });
+  if (error)
+    redirect(`${BASE}?error=` + encodeURIComponent("Hindi napalitan ang password: " + error.message));
+  redirect(`${BASE}?ok=` + encodeURIComponent("Napalitan na ang iyong password."));
+}
