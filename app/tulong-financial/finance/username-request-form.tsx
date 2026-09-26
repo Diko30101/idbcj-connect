@@ -39,7 +39,6 @@ export default function UsernameRequestForm({ members }: { members: Member[] }) 
   const [result, setResult] = useState<UsernameRequestResult | null>(null);
   const [selectedId, setSelectedId] = useState("");
   const [portalAccount, setPortalAccount] = useState<PortalAccount | null>(null);
-  const [usePortal, setUsePortal] = useState(true);
 
   const selected = members.find((m) => m.id === selectedId) ?? null;
 
@@ -47,7 +46,6 @@ export default function UsernameRequestForm({ members }: { members: Member[] }) 
     setSelectedId(memberId);
     setResult(null);
     setPortalAccount(null);
-    setUsePortal(true);
     if (!memberId) return;
     setLooking(true);
     try {
@@ -66,7 +64,9 @@ export default function UsernameRequestForm({ members }: { members: Member[] }) 
     setResult(null);
     try {
       const fd = new FormData(e.currentTarget);
-      fd.set("use_portal", portalAccount && usePortal ? "1" : "");
+      // Kung may portal account ang kaanib: laging gamitin ito —
+      // walang bagong username/password (ayon sa utos ng user).
+      fd.set("use_portal", portalAccount ? "1" : "");
       const res = await requestTulongUsername(fd);
       setResult(res);
     } catch {
@@ -80,7 +80,6 @@ export default function UsernameRequestForm({ members }: { members: Member[] }) 
     setResult(null);
     setSelectedId("");
     setPortalAccount(null);
-    setUsePortal(true);
   }
 
   if (result?.ok && result.portalUser) {
@@ -169,7 +168,7 @@ export default function UsernameRequestForm({ members }: { members: Member[] }) 
       </label>
       <div>
         <button className={btnGhostCls} disabled={busy || looking || !selectedId}>
-          {busy ? "Ipinapadala…" : portalAccount && usePortal ? "Ipadala ang kahilingan ng pag-apruba" : "Ipadala sa admin"}
+          {busy ? "Ipinapadala…" : portalAccount ? "Ipadala ang kahilingan ng pag-apruba" : "Ipadala sa admin"}
         </button>
       </div>
       {looking && (
@@ -184,19 +183,11 @@ export default function UsernameRequestForm({ members }: { members: Member[] }) 
             {portalAccount.full_name}
             {portalAccount.email ? ` · ${portalAccount.email}` : ""}
           </p>
-          <label className="mt-2 flex cursor-pointer items-start gap-2 text-sm text-blue-900">
-            <input
-              type="checkbox"
-              checked={usePortal}
-              onChange={(e) => setUsePortal(e.target.checked)}
-              className="mt-1"
-            />
-            <span>
-              Gamitin ang portal account na ito — <strong>approval letter lang</strong> ang kailangan;
-              walang bagong username/password na lilikhain. Pagkatapos ma-aprubahan, makikita niya ang
-              Tulong Financial sa kanyang menu.
-            </span>
-          </label>
+          <p className="mt-2 text-sm text-blue-900">
+            Gagamitin ang portal account na ito — <strong>approval letter lang</strong> ang kailangan;
+            walang bagong username/password na lilikhain. Pagkatapos ma-aprubahan, makikita niya ang
+            Tulong Financial sa kanyang menu.
+          </p>
         </div>
       )}
       {!looking && !portalAccount && selected && (
