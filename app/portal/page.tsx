@@ -64,6 +64,8 @@ export default async function PortalHome({
 
   const myMinistryNames = ((mine.data ?? []) as any[]).map((m) => m.ministries?.name).filter(Boolean);
   const financeAccess = isFinanceMember(profile.role, myMinistryNames);
+  // Tulong Financial buod: Admin o kasapi ng Finance Ministry (buong iglesia).
+  const tulongAccess = isAdmin || myMinistryNames.includes(FINANCE_MINISTRY_NAME);
   const financeYear = today.slice(0, 4);
   let financeIncome = 0;
   let financeExpense = 0;
@@ -91,6 +93,47 @@ export default async function PortalHome({
     }
   }
 
+  // ---- Tulong Financial buod (Admin + Finance Ministry) ----
+  let tulongTotalLent = 0;
+  let tulongTotalPaid = 0;
+  let tulongActiveBorrowers = 0;
+  let tulongRecent: { date: string; name: string; kind: "hiram" | "bayad"; amount: number }[] = [];
+  if (tulongAccess) {
+    const [tLoansRes, tPaymentsRes] = await Promise.all([
+      supabase.from("tulong_financial_loans").select("id, member_id, amount, date_borrowed, members(full_name)"),
+      supabase.from("tulong_financial_payments").select("id, amount, date_paid, loan"),
+    ]);
+    const tLoans = (tLoansRes.data ?? []) as any[];
+    const tPayments = (tPaymentsRes.data ?? []) as any[];
+    const loanMember = new Map<string, { memberId: string; name: string }>();
+    const tBalances = new Map<string, { name: string; bal: number }>();
+    const txs: { date: string; name: string; kind: "hiram" | "bayad"; amount: number }[] = [];
+    for (const l of tLoans) {
+      const amt = Number(l.amount) || 0;
+      tulongTotalLent += amt;
+      const mid = String(l.member_id ?? "");
+      const name = l.members?.full_name ?? "—";
+      if (mid) {
+        loanMember.set(String(l.id), { memberId: mid, name });
+        const e = tBalances.get(mid) ?? { name, bal: 0 };
+        e.bal += amt;
+        tBalances.set(mid, e);
+      }
+      txs.push({ date: String(l.date_borrowed ?? ""), name, kind: "hiram", amount: amt });
+    }
+    for (const p of tPayments) {
+      const amt = Number(p.amount) || 0;
+      tulongTotalPaid += amt;
+      const lm = loanMember.get(String(p.loan));
+      if (lm) {
+        const e = tBalances.get(lm.memberId);
+        if (e) e.bal -= amt;
+      }
+      txs.push({ date: String(p.date_paid ?? ""), name: lm?.name ?? "—", kind: "bayad", amount: amt });
+    }
+    tulongActiveBorrowers = [...tBalances.values()].filter((e) => e.bal > 0.005).length;
+    tulongRecent = txs.filter((t) => t.date).sort((a, b) => b.date.localeCompare(a.date)).slice(0, 8);
+  }
   // Buong Sistema dashboard (Admin lang): koleksyon ayon sa kategorya at local.
   const catTotals = new Map<FinanceCategory, number>();
   const localTotals = new Map<string, { name: string; cats: Map<FinanceCategory, number>; total: number }>();
@@ -505,6 +548,66 @@ export default async function PortalHome({
         </section>
       )}
 
+      {tulongAccess && (
+        <section className="mb-6">
+          <Panel title="💰 Tulong Financial — Buod" subtitle="Pangkalahatang tanaw ng mga hiram at bayad">
+            <div className="mb-5 grid grid-cols-2 gap-3 lg:grid-cols-4">
+              <div className="rounded-xl border border-gray-200 bg-white p-4 text-center shadow-sm">
+                <div className="text-2xl font-bold text-amber-700">{fmtPeso(tulongTotalLent)}</div>
+                <div className="text-xs font-medium uppercase tracking-wide text-gray-500">Kabuuang Ipinahiram</div>
+              </div>
+              <div className="rounded-xl border border-gray-200 bg-white p-4 text-center shadow-sm">
+                <div className="text-2xl font-bold text-emerald-700">{fmtPeso(tulongTotalPaid)}</div>
+                <div className="text-xs font-medium uppercase tracking-wide text-gray-500">Kabuuang Nabayaran</div>
+              </div>
+              <div className="rounded-xl border border-gray-200 bg-white p-4 text-center shadow-sm">
+                <div className="text-2xl font-bold text-red-700">{fmtPeso(tulongTotalLent - tulongTotalPaid)}</div>
+                <div className="text-xs font-medium uppercase tracking-wide text-gray-500">Balanseng Natitira</div>
+              </div>
+              <div className="rounded-xl border border-gray-200 bg-white p-4 text-center shadow-sm">
+                <div className="text-2xl font-bold text-blue-700">{tulongActiveBorrowers}</div>
+                <div className="text-xs font-medium uppercase tracking-wide text-gray-500">May Hiram Pa</div>
+              </div>
+            </div>
+            <h3 className="mb-2 text-sm font-bold text-gray-900">Huling mga transaksyon</h3>
+            {tulongRecent.length === 0 ? (
+              <Empty>Wala pang transaksyon.</Empty>
+            ) : (
+              <div className="overflow-x-auto rounded-xl border border-gray-200">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="bg-gray-50 text-left text-xs uppercase tracking-wide text-gray-500">
+                      <th className="px-4 py-2">Petsa</th>
+                      <th className="px-4 py-2">Kaanib</th>
+                      <th className="px-4 py-2">Uri</th>
+                      <th className="px-4 py-2 text-right">Halaga</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-100">
+                    {tulongRecent.map((t, i) => (
+                      <tr key={i}>
+                        <td className="px-4 py-2 text-gray-700">{fmtDate(t.date)}</td>
+                        <td className="px-4 py-2 font-medium text-gray-900">{t.name}</td>
+                        <td className="px-4 py-2">
+                          <span className={`rounded-full px-2 py-0.5 text-xs font-semibold ${t.kind === "hiram" ? "bg-amber-100 text-amber-800" : "bg-emerald-100 text-emerald-800"}`}>
+                            {t.kind === "hiram" ? "Hiram" : "Bayad"}
+                          </span>
+                        </td>
+                        <td className="px-4 py-2 text-right font-semibold text-gray-900">{fmtPeso(t.amount)}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+            <div className="mt-4 text-right">
+              <Link href="/portal/finance/tulong-financial" className="text-sm font-semibold text-emerald-700 hover:underline">
+                Buksan ang Tulong Financial →
+              </Link>
+            </div>
+          </Panel>
+        </section>
+      )}
       {isAdmin && attMaxDate && (
         <section className="mb-6">
           <Panel title="Attendance — Huling Pagtitipon" subtitle={fmtDate(attMaxDate)}>
