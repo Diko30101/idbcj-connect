@@ -123,7 +123,7 @@ export default async function LetterThreadPage({
 
       {approval && (
         <Panel
-          title={approval.kind === "loan" ? "Kahilingan ng hiram — desisyon ng admin" : "Kahilingan ng username — desisyon ng admin"}
+          title={approval.kind === "loan" ? "Humihingi ng Tulong Financial — desisyon ng admin" : "Kahilingan ng username — desisyon ng admin"}
         >
           <div className="text-sm text-gray-700">
             <p>
