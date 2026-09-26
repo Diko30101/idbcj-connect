@@ -64,7 +64,7 @@ export function Footer() {
           <h2 className={headCls}>Connect</h2>
           <ul className="space-y-2.5">
             <li><Link href="/contact" className={linkCls}>Contact Us</Link></li>
-            <li><Link href="/auth/login" className={linkCls}>Members Login</Link></li>
+            <li><Link href="/auth/login?next=/" className={linkCls}>Members Login</Link></li>
           </ul>
         </div>
       </div>
