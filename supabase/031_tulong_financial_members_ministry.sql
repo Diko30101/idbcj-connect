@@ -21,7 +21,8 @@ insert into public.ministries (name, name_tl, description, is_borrower_ministry)
 values (
   'Tulong Financial Members',
   'Mga Miyembro ng Tulong Financial',
-  'Awtomatikong kasapi ang lahat ng kaanib na may hiram o may account sa Tulong Financial. Ang membership ay hindi manual na idinaragdag o inaalis.'
+  'Awtomatikong kasapi ang lahat ng kaanib na may hiram o may account sa Tulong Financial. Ang membership ay hindi manual na idinaragdag o inaalis.',
+  true
 )
 on conflict (name) do update set
   is_borrower_ministry = true,
