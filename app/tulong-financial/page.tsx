@@ -3,7 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { cookies } from "next/headers";
 import { fmtPeso } from "@/lib/finance";
 import { Empty, Notice, Panel, btnGhostCls, inputCls } from "@/components/portal/ui";
-import { borrowerLogout, getBorrowerSessionToken, submitLoanRequest, changeBorrowerPassword } from "./actions";
+import { borrowerLogout, getBorrowerSessionToken, submitLoanRequest, submitLoanRequestAsPortalUser, changeBorrowerPassword } from "./actions";
 import { isTulongFinancePortalUser } from "./finance-check";
 
 export const metadata = { title: "Tulong Financial — Aking Record" };
@@ -31,32 +31,25 @@ const REQUEST_STATUS: Record<string, { label: string; cls: string }> = {
   rejected: { label: "Tinanggihan", cls: "bg-red-100 text-red-700" },
 };
 
-export default async function TulongBorrowerPage({
-  searchParams,
+type BorrowerRecord = {
+  member_name: string;
+  loans: Loan[];
+  password_is_temporary?: boolean;
+};
+
+function BorrowerRecordView({
+  record,
+  requests,
+  ok,
+  error,
+  isPortalUser,
 }: {
-  searchParams: Promise<{ ok?: string; error?: string }>;
+  record: BorrowerRecord;
+  requests: { id: string; amount: number; target_return_date: string | null; notes: string | null; status: string; requested_at: string }[];
+  ok?: string;
+  error?: string;
+  isPortalUser: boolean;
 }) {
-  const { ok, error } = await searchParams;
-  const token = await getBorrowerSessionToken();
-  if (!token) {
-    // Ang Finance Ministry ay may sariling workspace sa bagong portal.
-    if (await isTulongFinancePortalUser()) redirect("/tulong-financial/finance");
-    redirect("/tulong-financial/login");
-  }
-
-  const cookieStore = cookies();
-  const supabase = createClient(cookieStore);
-  const [{ data }, { data: myRequests }] = await Promise.all([
-    supabase.rpc("tulong_borrower_record", { p_token: token }),
-    supabase.rpc("tulong_my_loan_requests", { p_token: token }),
-  ]);
-  const record = data as { member_name: string; loans: Loan[]; password_is_temporary?: boolean } | null;
-  if (!record) {
-    const cs = await cookies();
-    cs.delete("tulong_session");
-    redirect("/tulong-financial/login?error=" + encodeURIComponent("Paso na ang session. Mag-login ulit."));
-  }
-
   const loans = (record.loans ?? []).map((l) => {
     const amount = Number(l.amount);
     const paid = l.payments.reduce((s, p) => s + Number(p.amount), 0);
@@ -65,14 +58,12 @@ export default async function TulongBorrowerPage({
   const totalBorrowed = loans.reduce((s, l) => s + l.amount, 0);
   const totalPaid = loans.reduce((s, l) => s + l.paid, 0);
   const totalBalance = Math.round(loans.reduce((s, l) => s + Math.max(l.balance, 0), 0) * 100) / 100;
-
-  const requests = ((myRequests ?? []) as any[]).map((r) => ({ ...r, amount: Number(r.amount) }));
   const hasPendingRequest = requests.some((r) => r.status === "pending" || r.status === "sent");
 
   return (
     <main className="mx-auto w-full max-w-4xl px-4 py-10">
       <Notice ok={ok} error={error} />
-      {record.password_is_temporary && (
+      {!isPortalUser && record.password_is_temporary && (
         <div className="mb-4 rounded-xl border border-amber-200 bg-amber-50 p-4">
           <p className="text-sm font-bold text-amber-900">
             Temporary password pa ang gamit mo. Palitan ito ngayon sa &ldquo;Palitan ang password&rdquo; sa ibaba.
@@ -86,11 +77,13 @@ export default async function TulongBorrowerPage({
             {record.member_name} · Ito ang talaan ng iyong mga hiram at bayad.
           </p>
         </div>
-        <form action={borrowerLogout}>
-          <button className="rounded-lg border border-gray-200 px-4 py-2 text-sm font-medium text-gray-600 hover:bg-gray-50">
-            Mag-logout
-          </button>
-        </form>
+        {!isPortalUser && (
+          <form action={borrowerLogout}>
+            <button className="rounded-lg border border-gray-200 px-4 py-2 text-sm font-medium text-gray-600 hover:bg-gray-50">
+              Mag-logout
+            </button>
+          </form>
+        )}
       </div>
 
       <div className="mt-6 grid gap-4 sm:grid-cols-3">
@@ -112,7 +105,7 @@ export default async function TulongBorrowerPage({
               May naghihintay ka pang kahilingan sa ibaba. Hintayin muna ang desisyon bago humiling ulit.
             </p>
           ) : (
-            <form action={submitLoanRequest} className="grid gap-3 sm:grid-cols-2">
+            <form action={isPortalUser ? submitLoanRequestAsPortalUser : submitLoanRequest} className="grid gap-3 sm:grid-cols-2">
               <label className="grid gap-1.5">
                 <span className="text-sm font-medium text-gray-700">Halagang hihiramin (₱)</span>
                 <input name="amount" type="number" min="1" step="0.01" required className={inputCls} />
@@ -222,27 +215,79 @@ export default async function TulongBorrowerPage({
         Kung may tanong sa record na ito, makipag-ugnayan sa Finance Ministry.
       </p>
 
-      <div className="mt-6">
-        <Panel title="Palitan ang password">
-          <form action={changeBorrowerPassword} className="grid gap-3 sm:grid-cols-3">
-            <label className="grid gap-1.5">
-              <span className="text-sm font-medium text-gray-700">Kasalukuyang password</span>
-              <input name="current_password" type="password" required className={inputCls} />
-            </label>
-            <label className="grid gap-1.5">
-              <span className="text-sm font-medium text-gray-700">Bagong password (min. 6)</span>
-              <input name="new_password" type="password" required minLength={6} className={inputCls} />
-            </label>
-            <label className="grid gap-1.5">
-              <span className="text-sm font-medium text-gray-700">Kumpirmahin ang bagong password</span>
-              <input name="confirm_password" type="password" required minLength={6} className={inputCls} />
-            </label>
-            <div className="sm:col-span-3">
-              <button className={btnGhostCls}>Palitan ang password</button>
-            </div>
-          </form>
-        </Panel>
-      </div>
+      {!isPortalUser && (
+        <div className="mt-6">
+          <Panel title="Palitan ang password">
+            <form action={changeBorrowerPassword} className="grid gap-3 sm:grid-cols-3">
+              <label className="grid gap-1.5">
+                <span className="text-sm font-medium text-gray-700">Kasalukuyang password</span>
+                <input name="current_password" type="password" required className={inputCls} />
+              </label>
+              <label className="grid gap-1.5">
+                <span className="text-sm font-medium text-gray-700">Bagong password (min. 6)</span>
+                <input name="new_password" type="password" required minLength={6} className={inputCls} />
+              </label>
+              <label className="grid gap-1.5">
+                <span className="text-sm font-medium text-gray-700">Kumpirmahin ang bagong password</span>
+                <input name="confirm_password" type="password" required minLength={6} className={inputCls} />
+              </label>
+              <div className="sm:col-span-3">
+                <button className={btnGhostCls}>Palitan ang password</button>
+              </div>
+            </form>
+          </Panel>
+        </div>
+      )}
     </main>
   );
+}
+
+export default async function TulongBorrowerPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ ok?: string; error?: string }>;
+}) {
+  const { ok, error } = await searchParams;
+  const token = await getBorrowerSessionToken();
+  const cookieStore = cookies();
+  const supabase = createClient(cookieStore);
+
+  // 1) Borrower token (walang portal account): dati nang daloy.
+  if (token) {
+    const [{ data }, { data: myRequests }] = await Promise.all([
+      supabase.rpc("tulong_borrower_record", { p_token: token }),
+      supabase.rpc("tulong_my_loan_requests", { p_token: token }),
+    ]);
+    const record = data as BorrowerRecord | null;
+    if (!record) {
+      const cs = await cookies();
+      cs.delete("tulong_session");
+      redirect("/tulong-financial/login?error=" + encodeURIComponent("Paso na ang session. Mag-login ulit."));
+    }
+    const requests = ((myRequests ?? []) as any[]).map((r) => ({ ...r, amount: Number(r.amount) }));
+    return <BorrowerRecordView record={record} requests={requests} ok={ok} error={error} isPortalUser={false} />;
+  }
+
+  // 2) Walang token: Finance Ministry ay may sariling workspace.
+  if (await isTulongFinancePortalUser()) redirect("/tulong-financial/finance");
+
+  // 3) Portal user na aprubadong Tulong Financial member: gamitin ang portal login.
+  const [{ data: portalRecord }, { data: portalRequests }] = await Promise.all([
+    supabase.rpc("tulong_borrower_record_by_profile"),
+    supabase.rpc("tulong_my_loan_requests_by_profile"),
+  ]);
+  if (portalRecord) {
+    const requests = ((portalRequests ?? []) as any[]).map((r) => ({ ...r, amount: Number(r.amount) }));
+    return (
+      <BorrowerRecordView
+        record={portalRecord as BorrowerRecord}
+        requests={requests}
+        ok={ok}
+        error={error}
+        isPortalUser={true}
+      />
+    );
+  }
+
+  redirect("/tulong-financial/login");
 }

@@ -21,3 +21,15 @@ export async function isTulongFinancePortalUser(): Promise<boolean> {
     .eq("profile_id", (profile as any).id);
   return ((mm ?? []) as any[]).some((m) => m.ministries?.name === FINANCE_MINISTRY_NAME);
 }
+
+// Kung ang kasalukuyang portal session ay isang aprubadong Tulong Financial
+// member na gumagamit ng kanyang portal login (hindi borrower token).
+export async function isTulongMemberPortalUser(): Promise<boolean> {
+  const supabase = await getSupabase();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return false;
+  const { data } = await supabase.rpc("tulong_borrower_record_by_profile");
+  return !!data;
+}
