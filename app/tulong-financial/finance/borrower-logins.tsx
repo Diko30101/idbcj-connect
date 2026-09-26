@@ -28,19 +28,16 @@ export async function BorrowerLoginsPanel({ returnTo }: { returnTo: string }) {
   ]);
 
   const memberById = new Map(((memberRows ?? []) as any[]).map((m) => [m.id, m]));
-  // Sa dropdown: Active members na WALA PANG account lang (para sa unang account).
-  // Hindi kasama ang may borrower login na, may naghihintay pang kahilingan, o
-  // na-aprubahan na — pagka-approve ng admin, automatic na silang kasapi ng
-  // Tulong Financial Members.
+  // Lahat ng active members ay nasa dropdown (buong roster, hindi lang local).
+  // Ang may username/account na ay may notification kapag pinili.
   const borrowerMemberIds = new Set(((borrowerRows ?? []) as any[]).map((b) => b.member_id));
   const decidedMemberIds = new Set(
     ((usernameRequests ?? []) as any[])
       .filter((r) => r.status === "pending" || r.status === "approved")
       .map((r) => r.member_id),
   );
-  const eligibleMembers = ((memberRows ?? []) as any[]).filter(
-    (m) => !borrowerMemberIds.has(m.id) && !decidedMemberIds.has(m.id),
-  );
+  // Mga member na may account na (para sa notification)
+  const hasAccountMemberIds = new Set([...borrowerMemberIds, ...decidedMemberIds]);
   const borrowers = ((borrowerRows ?? []) as any[]).map((b) => ({
     ...b,
     memberName: memberById.get(b.member_id)?.full_name ?? "—",
@@ -58,7 +55,7 @@ export async function BorrowerLoginsPanel({ returnTo }: { returnTo: string }) {
         username (mula sa pangalan) at temporary password. Ang kahilingan ay ipapadala sa admin —
         pag-apruba ng admin sa Inbox letter, saka lang magiging kasapi ng Tulong Financial.
       </p>
-      <UsernameRequestForm members={eligibleMembers} />
+      <UsernameRequestForm members={(memberRows ?? []) as any[]} hasAccountMemberIds={hasAccountMemberIds} />
 
       <div className="mt-6">
         <h3 className="mb-2 text-sm font-semibold text-gray-700">Mga kahilingan ng username</h3>

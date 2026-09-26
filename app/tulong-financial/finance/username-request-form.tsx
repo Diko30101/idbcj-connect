@@ -33,7 +33,7 @@ function CopyButton({ text, label }: { text: string; label: string }) {
 //   portal login (approval letter lang, walang bagong username/password).
 // - Kung wala: awtomatikong malilikha ang username at temporary password
 //   (isang beses lang ipapakita ang password).
-export default function UsernameRequestForm({ members }: { members: Member[] }) {
+export default function UsernameRequestForm({ members, hasAccountMemberIds }: { members: Member[]; hasAccountMemberIds: Set<string> }) {
   const [busy, setBusy] = useState(false);
   const [looking, setLooking] = useState(false);
   const [result, setResult] = useState<UsernameRequestResult | null>(null);
@@ -41,6 +41,7 @@ export default function UsernameRequestForm({ members }: { members: Member[] }) 
   const [portalAccount, setPortalAccount] = useState<PortalAccount | null>(null);
 
   const selected = members.find((m) => m.id === selectedId) ?? null;
+  const selectedHasAccount = selectedId ? hasAccountMemberIds.has(selectedId) : false;
 
   async function onSelect(memberId: string) {
     setSelectedId(memberId);
@@ -148,7 +149,7 @@ export default function UsernameRequestForm({ members }: { members: Member[] }) 
   return (
     <form onSubmit={onSubmit} className="grid gap-3 sm:grid-cols-[1fr_auto] sm:items-end">
       <label className="grid gap-1.5">
-        <span className="text-sm font-medium text-gray-700">Kaanib (Active, walang account)</span>
+        <span className="text-sm font-medium text-gray-700">Kaanib (Active)</span>
         <select
           name="member_id"
           required
@@ -162,19 +163,30 @@ export default function UsernameRequestForm({ members }: { members: Member[] }) 
           {members.map((m) => (
             <option key={m.id} value={m.id}>
               {m.full_name}
+              {hasAccountMemberIds.has(m.id) ? " ✓ (may account na)" : ""}
             </option>
           ))}
         </select>
       </label>
       <div>
-        <button className={btnGhostCls} disabled={busy || looking || !selectedId}>
+        <button className={btnGhostCls} disabled={busy || looking || !selectedId || selectedHasAccount}>
           {busy ? "Ipinapadala…" : portalAccount ? "Ipadala ang kahilingan ng pag-apruba" : "Ipadala sa admin"}
         </button>
       </div>
-      {looking && (
+      {selectedHasAccount && selected && (
+        <div className="rounded-lg border border-emerald-200 bg-emerald-50 p-3 sm:col-span-2">
+          <p className="text-sm font-bold text-emerald-900">
+            Si {selected.full_name} ay may username na at kasapi na ng Tulong Financial.
+          </p>
+          <p className="mt-1 text-sm text-emerald-800">
+            Hindi na kailangan gumawa ng bagong account para sa kaanib na ito.
+          </p>
+        </div>
+      )}
+      {!selectedHasAccount && looking && (
         <p className="text-xs text-gray-400 sm:col-span-2">Tinitiyak kung may portal account na ang kaanib…</p>
       )}
-      {!looking && portalAccount && selected && (
+      {!selectedHasAccount && !looking && portalAccount && selected && (
         <div className="rounded-lg border border-blue-200 bg-blue-50 p-3 sm:col-span-2">
           <p className="text-sm font-bold text-blue-900">
             May portal account na si {selected.full_name}:
@@ -190,7 +202,7 @@ export default function UsernameRequestForm({ members }: { members: Member[] }) 
           </p>
         </div>
       )}
-      {!looking && !portalAccount && selected && (
+      {!selectedHasAccount && !looking && !portalAccount && selected && (
         <p className="text-xs text-gray-400 sm:col-span-2">
           Walang nakitang portal account — awtomatikong malilikha ang username (mula sa pangalan) at
           temporary password.
