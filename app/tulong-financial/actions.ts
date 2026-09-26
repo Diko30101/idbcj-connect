@@ -51,3 +51,30 @@ export async function getBorrowerSessionToken(): Promise<string | null> {
   const cookieStore = await cookies();
   return cookieStore.get(COOKIE_NAME)?.value ?? null;
 }
+
+// Borrower: humiling ng hiram (kailangan aktibo ang account; walang username = walang hiram).
+// Ang kahilingan ay makikita ng Finance Ministry at ipapadala sa admin para sa apruba.
+export async function submitLoanRequest(fd: FormData): Promise<never> {
+  const token = await getBorrowerSessionToken();
+  if (!token) redirect(`${BASE}/login`);
+
+  const amount = Number(String(fd.get("amount") ?? "").replace(/,/g, ""));
+  const target = String(fd.get("target_return_date") ?? "").trim();
+  const notes = String(fd.get("notes") ?? "").trim();
+  if (!Number.isFinite(amount) || amount <= 0)
+    redirect(`${BASE}?error=` + encodeURIComponent("Maglagay ng wastong halaga."));
+
+  const supabase = await supa();
+  const { data, error } = await supabase.rpc("tulong_create_loan_request", {
+    p_token: token,
+    p_amount: Math.round(amount * 100) / 100,
+    p_target_return_date: /^\d{4}-\d{2}-\d{2}$/.test(target) ? target : null,
+    p_notes: notes || null,
+  });
+  if (error || !data)
+    redirect(
+      `${BASE}?error=` +
+        encodeURIComponent("Hindi naipadala ang kahilingan. Maaaring may naghihintay ka pang kahilingan."),
+    );
+  redirect(`${BASE}?ok=` + encodeURIComponent("Naipadala na ang iyong kahilingan ng hiram. Hintayin ang apruba ng admin."));
+}
