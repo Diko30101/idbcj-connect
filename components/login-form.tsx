@@ -11,8 +11,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { useRouter } from "next/navigation";
+
 import { useState } from "react";
 import Link from "next/link"; // Import Link for the redirect
 import { loginToEmail } from "@/lib/username";
@@ -25,7 +24,7 @@ export function LoginForm({
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-  const router = useRouter();
+
 
   // 1. Function to handle Logging In
   const handleLogin = async (e: React.FormEvent) => {
@@ -50,8 +49,8 @@ export function LoginForm({
         raw && raw.startsWith("/") && !raw.startsWith("//") && !raw.startsWith("/\\") && !raw.startsWith("/auth")
           ? raw
           : "/portal";
-      router.push(dest);
-      router.refresh();
+      window.location.assign(dest);
+      return;
     } catch (error: unknown) {
       const msg = error instanceof Error ? error.message : "";
       setError(/invalid login credentials/i.test(msg) ? "Mali ang username o password." : msg || "May problema sa pag-login. Subukan ulit.");
