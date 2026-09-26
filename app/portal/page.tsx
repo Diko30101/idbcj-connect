@@ -545,170 +545,171 @@ export default async function PortalHome({
         </div>
       )}
 
-      <div className="grid gap-6 lg:grid-cols-3">
-        <Panel title="Announcements / Mga Anunsyo" className="lg:col-span-2">
-          {(ann.data ?? []).length === 0 ? (
-            <Empty>Wala pang anunsyo.</Empty>
+      {/* Announcement — full width sa itaas ng main column; walang right sidebar.
+          Mga card nasa 2-column grid sa ibaba para hindi mahaba ang scroll. */}
+      <Panel title="Announcements / Mga Anunsyo" className="mb-6">
+        {(ann.data ?? []).length === 0 ? (
+          <Empty>Wala pang anunsyo.</Empty>
+        ) : (
+          <ul className="divide-y divide-gray-100">
+            {(ann.data as any[]).map((a) => (
+              <li key={a.id} className="py-3 first:pt-0 last:pb-0">
+                <div className="flex items-center justify-between gap-2">
+                  <h3 className="font-semibold text-gray-900">{a.title}</h3>
+                  <span className="shrink-0 text-xs text-gray-400">{fmtDate(a.publish_at)}</span>
+                </div>
+                {a.ministries?.name && (
+                  <span className="text-xs font-medium text-purple-700">{a.ministries.name}</span>
+                )}
+                <p className="mt-1 whitespace-pre-line text-sm text-gray-600 line-clamp-4">{a.body}</p>
+              </li>
+            ))}
+          </ul>
+        )}
+        <div className="mt-4 text-right">
+          <Link href="/portal/announcements" className="text-sm font-semibold text-emerald-700 hover:underline">
+            Lahat ng anunsyo →
+          </Link>
+        </div>
+      </Panel>
+
+      {/* Mga card sa ibaba ng announcement, sa iisang main column — 2 column sa desktop, 1 sa mobile */}
+      <div className="grid gap-6 md:grid-cols-2">
+        {financeAccess && !isAdmin && (
+          <Panel title="Financial Report — Buod" subtitle={financePeriodLabel}>
+            <FinanceSummaryPie year={financeYear} income={financeIncome} expense={financeExpense} />
+          </Panel>
+        )}
+
+        {isAdmin && auditItems.length > 0 && (
+          <Panel title="Kamakailang Aktibidad">
+            <ul className="space-y-2 text-sm">
+              {auditItems.map((a, i) => (
+                <li key={i} className="flex items-start justify-between gap-2">
+                  <span className="text-gray-700">
+                    <span className="font-medium text-gray-900">{a.actor}</span> {a.text}
+                  </span>
+                  <span className="shrink-0 text-xs text-gray-400">{fmtDate(a.at)}</span>
+                </li>
+              ))}
+            </ul>
+            <div className="mt-3 text-right">
+              <Link href="/portal/audit" className="text-sm font-semibold text-emerald-700 hover:underline">
+                Buksan ang Audit Log →
+              </Link>
+            </div>
+          </Panel>
+        )}
+
+        {isAdmin && (
+          <Panel title="Mabilisang Link">
+            <div className="grid grid-cols-2 gap-2">
+              {quickLinks.map(([label, href]) => (
+                <Link
+                  key={href}
+                  href={href}
+                  className="rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-center text-sm font-medium text-emerald-800 hover:border-emerald-300 hover:bg-emerald-50"
+                >
+                  {label}
+                </Link>
+              ))}
+            </div>
+          </Panel>
+        )}
+
+        <Panel title={`🎂 Kaarawan ngayong ${monthName}`}>
+          {birthdaysThisMonth.length === 0 ? (
+            <Empty>Walang may kaarawan ngayong buwan.</Empty>
           ) : (
-            <ul className="divide-y divide-gray-100">
-              {(ann.data as any[]).map((a) => (
-                <li key={a.id} className="py-3 first:pt-0 last:pb-0">
-                  <div className="flex items-center justify-between gap-2">
-                    <h3 className="font-semibold text-gray-900">{a.title}</h3>
-                    <span className="shrink-0 text-xs text-gray-400">{fmtDate(a.publish_at)}</span>
-                  </div>
-                  {a.ministries?.name && (
-                    <span className="text-xs font-medium text-purple-700">{a.ministries.name}</span>
-                  )}
-                  <p className="mt-1 whitespace-pre-line text-sm text-gray-600 line-clamp-4">{a.body}</p>
+            <ul className="space-y-2 text-sm">
+              {birthdaysThisMonth.map((p) => {
+                const isToday = p.birthday.slice(8, 10) === todayDay;
+                const day = new Date(p.birthday.slice(0, 10) + "T00:00:00Z").toLocaleDateString("en-US", {
+                  month: "short",
+                  day: "numeric",
+                  timeZone: "UTC",
+                });
+                return (
+                  <li key={p.id} className="flex items-center justify-between gap-2">
+                    <span className={isToday ? "font-semibold text-emerald-800" : "text-gray-700"}>
+                      {p.full_name || "Member"}
+                    </span>
+                    <span className={isToday ? "font-semibold text-emerald-700" : "text-gray-400"}>
+                      {isToday ? "Ngayon! 🎉" : day}
+                    </span>
+                  </li>
+                );
+              })}
+            </ul>
+          )}
+        </Panel>
+
+        {isAdmin && (
+          <Panel title="Paalala sa Seguridad">
+            <ul className="list-disc space-y-1 pl-5 text-sm text-gray-600">
+              <li>Huwag ibahagi ang iyong login kahit kanino.</li>
+              <li>Ang mga resibo at talaan ng kaloob ay para sa Finance Ministry lamang.</li>
+              <li>Iulat agad kung may kahina-hinalang aktibidad sa Audit Log.</li>
+            </ul>
+          </Panel>
+        )}
+
+        <Panel title="Ang aking mga Ministry">
+          {(mine.data ?? []).length === 0 ? (
+            <Empty>Wala ka pang ministry.</Empty>
+          ) : (
+            <ul className="space-y-2 text-sm">
+              {(mine.data as any[]).map((m) => (
+                <li key={m.ministries?.id} className="flex items-center justify-between">
+                  <Link href={`/portal/ministries/${m.ministries?.id}`} className="font-medium text-emerald-800 hover:underline">
+                    {m.ministries?.name}
+                  </Link>
+                  {m.is_leader && <span className="text-xs text-purple-700">Leader</span>}
                 </li>
               ))}
             </ul>
           )}
-          <div className="mt-4 text-right">
-            <Link href="/portal/announcements" className="text-sm font-semibold text-emerald-700 hover:underline">
-              Lahat ng anunsyo →
-            </Link>
-          </div>
         </Panel>
 
-        <div className="space-y-6">
-          {financeAccess && !isAdmin && (
-            <Panel title="Financial Report — Buod" subtitle={financePeriodLabel}>
-              <FinanceSummaryPie year={financeYear} income={financeIncome} expense={financeExpense} />
-            </Panel>
+        <Panel title="Susunod na iskedyul ng paglilingkod">
+          {(sched.data ?? []).length === 0 ? (
+            <Empty>Walang nakatakda.</Empty>
+          ) : (
+            <ul className="space-y-2 text-sm">
+              {(sched.data as any[]).map((s) => (
+                <li key={s.id}>
+                  <span className="font-medium text-gray-900">{fmtDate(s.service_date)}</span>
+                  <span className="text-gray-600"> · {s.title}</span>
+                  <div className="text-xs text-gray-400">{s.ministries?.name}</div>
+                </li>
+              ))}
+            </ul>
           )}
+        </Panel>
 
-          {isAdmin && auditItems.length > 0 && (
-            <Panel title="Kamakailang Aktibidad">
-              <ul className="space-y-2 text-sm">
-                {auditItems.map((a, i) => (
-                  <li key={i} className="flex items-start justify-between gap-2">
-                    <span className="text-gray-700">
-                      <span className="font-medium text-gray-900">{a.actor}</span> {a.text}
+        <Panel title="Ang aking attendance">
+          {myAtt.length === 0 ? (
+            <Empty>Wala pang naka-tala.</Empty>
+          ) : (
+            <>
+              <p className="mb-2 text-sm text-gray-600">
+                Dumalo ka sa {presentCount} sa huling {myAtt.length} na naka-tala.
+              </p>
+              <ul className="space-y-1 text-sm">
+                {myAtt.map((a, i) => (
+                  <li key={i} className="flex justify-between">
+                    <span className="text-gray-600">
+                      {fmtDate(a.services.service_date)} · {KIND_LABEL[a.services.kind] ?? a.services.kind}
                     </span>
-                    <span className="shrink-0 text-xs text-gray-400">{fmtDate(a.at)}</span>
+                    <span className={a.present ? "font-semibold text-emerald-700" : "text-gray-400"}>
+                      {a.present ? "Dumalo" : "Wala"}
+                    </span>
                   </li>
                 ))}
               </ul>
-              <div className="mt-3 text-right">
-                <Link href="/portal/audit" className="text-sm font-semibold text-emerald-700 hover:underline">
-                  Buksan ang Audit Log →
-                </Link>
-              </div>
-            </Panel>
+            </>
           )}
-
-          {isAdmin && (
-            <Panel title="Mabilisang Link">
-              <div className="grid grid-cols-2 gap-2">
-                {quickLinks.map(([label, href]) => (
-                  <Link
-                    key={href}
-                    href={href}
-                    className="rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-center text-sm font-medium text-emerald-800 hover:border-emerald-300 hover:bg-emerald-50"
-                  >
-                    {label}
-                  </Link>
-                ))}
-              </div>
-            </Panel>
-          )}
-
-          <Panel title={`🎂 Kaarawan ngayong ${monthName}`}>
-            {birthdaysThisMonth.length === 0 ? (
-              <Empty>Walang may kaarawan ngayong buwan.</Empty>
-            ) : (
-              <ul className="space-y-2 text-sm">
-                {birthdaysThisMonth.map((p) => {
-                  const isToday = p.birthday.slice(8, 10) === todayDay;
-                  const day = new Date(p.birthday.slice(0, 10) + "T00:00:00Z").toLocaleDateString("en-US", {
-                    month: "short",
-                    day: "numeric",
-                    timeZone: "UTC",
-                  });
-                  return (
-                    <li key={p.id} className="flex items-center justify-between gap-2">
-                      <span className={isToday ? "font-semibold text-emerald-800" : "text-gray-700"}>
-                        {p.full_name || "Member"}
-                      </span>
-                      <span className={isToday ? "font-semibold text-emerald-700" : "text-gray-400"}>
-                        {isToday ? "Ngayon! 🎉" : day}
-                      </span>
-                    </li>
-                  );
-                })}
-              </ul>
-            )}
           </Panel>
-
-          {isAdmin && (
-            <Panel title="Paalala sa Seguridad">
-              <ul className="list-disc space-y-1 pl-5 text-sm text-gray-600">
-                <li>Huwag ibahagi ang iyong login kahit kanino.</li>
-                <li>Ang mga resibo at talaan ng kaloob ay para sa Finance Ministry lamang.</li>
-                <li>Iulat agad kung may kahina-hinalang aktibidad sa Audit Log.</li>
-              </ul>
-            </Panel>
-          )}
-
-          <Panel title="Ang aking mga Ministry">
-            {(mine.data ?? []).length === 0 ? (
-              <Empty>Wala ka pang ministry.</Empty>
-            ) : (
-              <ul className="space-y-2 text-sm">
-                {(mine.data as any[]).map((m) => (
-                  <li key={m.ministries?.id} className="flex items-center justify-between">
-                    <Link href={`/portal/ministries/${m.ministries?.id}`} className="font-medium text-emerald-800 hover:underline">
-                      {m.ministries?.name}
-                    </Link>
-                    {m.is_leader && <span className="text-xs text-purple-700">Leader</span>}
-                  </li>
-                ))}
-              </ul>
-            )}
-          </Panel>
-
-          <Panel title="Susunod na iskedyul ng paglilingkod">
-            {(sched.data ?? []).length === 0 ? (
-              <Empty>Walang nakatakda.</Empty>
-            ) : (
-              <ul className="space-y-2 text-sm">
-                {(sched.data as any[]).map((s) => (
-                  <li key={s.id}>
-                    <span className="font-medium text-gray-900">{fmtDate(s.service_date)}</span>
-                    <span className="text-gray-600"> · {s.title}</span>
-                    <div className="text-xs text-gray-400">{s.ministries?.name}</div>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </Panel>
-
-          <Panel title="Ang aking attendance">
-            {myAtt.length === 0 ? (
-              <Empty>Wala pang naka-tala.</Empty>
-            ) : (
-              <>
-                <p className="mb-2 text-sm text-gray-600">
-                  Dumalo ka sa {presentCount} sa huling {myAtt.length} na naka-tala.
-                </p>
-                <ul className="space-y-1 text-sm">
-                  {myAtt.map((a, i) => (
-                    <li key={i} className="flex justify-between">
-                      <span className="text-gray-600">
-                        {fmtDate(a.services.service_date)} · {KIND_LABEL[a.services.kind] ?? a.services.kind}
-                      </span>
-                      <span className={a.present ? "font-semibold text-emerald-700" : "text-gray-400"}>
-                        {a.present ? "Dumalo" : "Wala"}
-                      </span>
-                    </li>
-                  ))}
-                </ul>
-              </>
-            )}
-          </Panel>
-        </div>
       </div>
     </>
   );
