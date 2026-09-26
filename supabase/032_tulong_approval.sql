@@ -4,8 +4,10 @@
 --  1. Ang Finance Ministry ang gumagawa ng account (username/password) ng active
 --     member na magre-request ng Tulong Financial. Hindi ito nalilikha agad:
 --     nagiging KAHILINGAN muna (tulong_username_requests, status 'pending').
---  2. Ang kaanib na may username ay humihiling ng hiram sa /tulong-financial portal
---     (tulong_loan_requests, status 'pending'). Hindi makakahiram ang walang username.
+--  2. Ang kaanib ay humihiling ng hiram sa /tulong-financial portal
+--     (tulong_loan_requests, status 'pending'):
+--       - kung may DEDICATED username: borrower login ang gamit;
+--       - kung may PORTAL account: portal login ang gamit (borrower_id NULL).
 --  3. Ang Finance Ministry ay nagpapadala ng kahilingan ng hiram sa admin
 --     ("Ipadala sa admin"): status 'sent', at may Inbox letter sa mga admin.
 --  4. Ang admin ay nag-aapruba o tumatanggi SA LOOB MISMO ng letter (may pindutan):
@@ -24,7 +26,9 @@
 -- ---------------------------------------------------------------------------
 create table if not exists public.tulong_loan_requests (
   id uuid primary key default gen_random_uuid(),
-  borrower_id uuid not null references public.tulong_financial_borrowers(id) on delete cascade,
+  -- Maaaring NULL para sa kaanib na gumagamit ng kanyang portal login
+  -- (walang dedicated borrower account).
+  borrower_id uuid references public.tulong_financial_borrowers(id) on delete cascade,
   member_id uuid not null references public.members(id),
   amount numeric(12,2) not null check (amount > 0),
   target_return_date date,
@@ -40,6 +44,10 @@ create table if not exists public.tulong_loan_requests (
 
 create index if not exists tulong_loan_requests_borrower_idx on public.tulong_loan_requests(borrower_id);
 create index if not exists tulong_loan_requests_status_idx on public.tulong_loan_requests(status);
+
+-- Kung ang migration ay tumakbo na sa lumang hugis (hindi pa sa production),
+-- tiyaking nullable ang borrower_id para sa mga portal-login na kahilingan.
+alter table public.tulong_loan_requests alter column borrower_id drop not null;
 
 -- ---------------------------------------------------------------------------
 -- 2) Mga kahilingan ng username (account)
@@ -534,6 +542,13 @@ begin
   if v_profile is null then return '[]'::jsonb; end if;
 
   select m.id into v_member_id from public.members m where m.profile_id = v_profile;
+  if v_member_id is null then
+    -- Fallback: kaanib na na-link sa pamamagitan ng pangalan (walang members.profile_id).
+    select r.member_id into v_member_id
+    from public.tulong_username_requests r
+    where r.profile_id = v_profile and r.status = 'approved'
+    order by r.decided_at desc nulls last limit 1;
+  end if;
   if v_member_id is null then return '[]'::jsonb; end if;
 
   select coalesce(jsonb_agg(jsonb_build_object(
@@ -572,6 +587,13 @@ begin
   if p_amount is null or p_amount <= 0 then return null; end if;
 
   select m.id into v_member_id from public.members m where m.profile_id = v_profile;
+  if v_member_id is null then
+    -- Fallback: kaanib na na-link sa pamamagitan ng pangalan (walang members.profile_id).
+    select r.member_id into v_member_id
+    from public.tulong_username_requests r
+    where r.profile_id = v_profile and r.status = 'approved'
+    order by r.decided_at desc nulls last limit 1;
+  end if;
   if v_member_id is null then return null; end if;
 
   if not exists (
@@ -616,6 +638,9 @@ declare
   v_profile_id uuid;
   v_out jsonb;
 begin
+  -- Tanging Admin/Finance Ministry lang ang makakagamit nito (privacy:
+  -- nagbabalik ito ng pangalan/email ng profile).
+  if not public.is_tulong_financial() then return null; end if;
   if p_member_id is null then return null; end if;
 
   select m.full_name, m.profile_id into v_member_name, v_profile_id
