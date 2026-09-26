@@ -101,7 +101,7 @@ export default async function PortalHome({
   if (tulongAccess) {
     const [tLoansRes, tPaymentsRes] = await Promise.all([
       supabase.from("tulong_financial_loans").select("id, member_id, amount, date_borrowed"),
-      supabase.from("tulong_financial_payments").select("id, amount, date_paid, loan"),
+      supabase.from("tulong_financial_payments").select("id, amount, date_paid, loan_id"),
     ]);
     const tLoans = (tLoansRes.data ?? []) as any[];
     const tPayments = (tPaymentsRes.data ?? []) as any[];
@@ -132,7 +132,7 @@ export default async function PortalHome({
     for (const p of tPayments) {
       const amt = Number(p.amount) || 0;
       tulongTotalPaid += amt;
-      const lm = loanMember.get(String(p.loan));
+      const lm = loanMember.get(String(p.loan_id));
       if (lm) {
         const e = tBalances.get(lm.memberId);
         if (e) e.bal -= amt;
