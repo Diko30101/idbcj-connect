@@ -211,7 +211,7 @@ export function Navbar() {
                 </>
               ) : (
                 <Link
-                  href="/auth/login"
+                  href="/auth/login?next=/"
                   className="font-display rounded-full border border-emerald-600 px-5 py-2 text-sm font-semibold text-emerald-800 transition hover:bg-emerald-600 hover:text-white"
                 >
                   Members
@@ -296,7 +296,7 @@ export function Navbar() {
                 </>
               ) : (
                 <Link
-                  href="/auth/login"
+                  href="/auth/login?next=/"
                   onClick={closeAll}
                   className="font-display rounded-full border border-emerald-600 px-5 py-3 text-center text-base font-semibold text-emerald-800 hover:bg-emerald-600 hover:text-white"
                 >
