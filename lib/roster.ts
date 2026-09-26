@@ -1,8 +1,8 @@
 // Mga tipo at helper ng roster (public.members). Pure at walang import (kaya ligtas sa client at masusubok
 // nang direkta sa Node). Ang database (013/016) ang huling harang; ang mga pagsusuri rito ay para sa maayos na preview.
 
-export type MemberStatus = "Active" | "Inactive" | "Pagtitiwalag";
-export const MEMBER_STATUSES: MemberStatus[] = ["Active", "Inactive", "Pagtitiwalag"];
+export type MemberStatus = "Active" | "Inactive" | "Tiwalag";
+export const MEMBER_STATUSES: MemberStatus[] = ["Active", "Inactive", "Tiwalag"];
 
 export type RosterMember = {
   id: string;
