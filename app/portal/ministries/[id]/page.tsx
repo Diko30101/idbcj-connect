@@ -33,7 +33,10 @@ export default async function MinistryDetail({
   const canManageMembers = !isBorrowerMinistry && staff && (profile.role === "admin" || !protectedMinistry);
 
   // Ang listahan ng mga pinahiram ay para sa Finance Ministry at Admin lang.
-  const canSeeBorrowers = isBorrowerMinistry ? await isTulongFinancePortalUser() : false;
+  // Direktang tingnan ang profile role para sa admin (hindi umaasa lang sa isTulongFinancePortalUser).
+  const canSeeBorrowers = isBorrowerMinistry
+    ? (profile.role === "admin" || (await isTulongFinancePortalUser()))
+    : false;
 
   const [mine, roster, sched] = await Promise.all([
     supabase.from("ministry_members").select("is_leader").eq("ministry_id", id).eq("profile_id", profile.id).maybeSingle(),
