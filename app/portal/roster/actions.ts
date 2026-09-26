@@ -37,8 +37,18 @@ export async function addMember(fd: FormData) {
   if (bad) back(path, "error", bad);
   if (!ctx.locals.some((l) => l.id === localId)) back(path, "error", "Pumili ng local na sakop mo.");
 
-  const { error } = await ctx.supabase.from("members").insert({ local_id: localId, full_name: name });
+  const { data, error } = await ctx.supabase
+    .from("members")
+    .insert({ local_id: localId, full_name: name })
+    .select("id")
+    .single();
   if (error) back(path, "error", rosterErrorMessage(error, "Hindi na-save. Subukan ulit."));
+
+  // Kung hindi Admin ang nagdagdag: magpadala ng notification sa Inbox ng Admin.
+  if (!ctx.isAdmin && data?.id) {
+    await ctx.supabase.rpc("notify_admin_new_member", { p_member_id: data.id });
+  }
+
   revalidatePath(ROSTER_BASE, "layout");
   back(
     path,
@@ -170,5 +180,31 @@ export async function importMembers(fd: FormData) {
   }
   revalidatePath(ROSTER_BASE, "layout");
   if (total === 0) back(path, "error", "Walang nabasang row sa CSV.");
+
+  // Kung hindi Admin at may naidagdag: isang summary notification sa Inbox ng Admin.
+  if (!ctx.isAdmin && added > 0) {
+    const { data: adminProfiles } = await ctx.supabase.from("profiles").select("id").eq("role", "admin");
+    if (adminProfiles && adminProfiles.length > 0) {
+      const { data: letter } = await ctx.supabase
+        .from("letters")
+        .insert({
+          subject: `Bulk import: ${added} bagong kaanib na naghihintay ng kumpirmasyon`,
+          created_by: (await ctx.supabase.auth.getUser()).data.user?.id,
+        })
+        .select("id")
+        .single();
+      if (letter?.id) {
+        await ctx.supabase.from("letter_recipients").insert(
+          adminProfiles.map((p: any) => ({ letter_id: letter.id, profile_id: p.id }))
+        );
+        await ctx.supabase.from("letter_messages").insert({
+          letter_id: letter.id,
+          author_id: (await ctx.supabase.auth.getUser()).data.user?.id,
+          body: `Nag-import ng ${added} bagong kaanib sa pamamagitan ng CSV. Pakitingnan sa Mga Miyembro para kumpirmahin.`,
+        });
+      }
+    }
+  }
+
   back(path, "ok", `Na-import ang ${added} sa ${total} na row; ${skipped} nilaktawan.`);
 }
