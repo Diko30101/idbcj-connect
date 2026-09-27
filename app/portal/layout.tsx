@@ -122,7 +122,23 @@ export default async function PortalLayout({ children }: { children: React.React
       // Ipakita ang "My Tulong Financial" sa LAHAT ng members ng
       // Tulong Financial Members ministry (hindi lang kay Elyzah).
       // Gumagamit ng SECURITY DEFINER function para gumana kahit naka-RLS.
-      const { data: isTulongMember } = await supabase.rpc("is_tulong_financial_member");
+      // Fallback: direktang query sa view kung mag-fail ang RPC.
+      let isTulongMember = false;
+      try {
+        const { data } = await supabase.rpc("is_tulong_financial_member");
+        isTulongMember = !!data;
+      } catch {}
+      if (!isTulongMember) {
+        // Fallback: tingnan kung may approved username request ang profile
+        const { data: req } = await supabase
+          .from("tulong_username_requests")
+          .select("id")
+          .eq("profile_id", profile.id)
+          .eq("status", "approved")
+          .limit(1)
+          .maybeSingle();
+        isTulongMember = !!req;
+      }
       if (isTulongMember) {
         items.push({ href: "/portal/tulong-financial", label: "My Tulong Financial" });
       }
