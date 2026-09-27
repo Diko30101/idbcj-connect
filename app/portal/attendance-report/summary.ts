@@ -91,7 +91,7 @@ export async function getAttendanceReportSummary(
   const [recordsRes, guestsRes] = await Promise.all([
     supabase
       .from("attendance_records")
-      .select("member_id, service_date, service_type, custom_reason")
+      .select("member_id, service_date, service_type, custom_reason, members!attendance_records_member_id_fkey(full_name)")
       .eq("local_id", localId)
       .eq("status", "submitted")
       .gte("service_date", first)
@@ -111,16 +111,16 @@ export async function getAttendanceReportSummary(
     date: string;
     type: string;
     customReason: string | null;
-    memberIds: Set<string>;
-    visitors: number;
-    otherLocal: number;
+    memberNames: Map<string, string>; // member_id -> full_name
+    visitorNames: string[];
+    otherLocalNames: string[];
   };
   const gatherings = new Map<string, Gathering>();
   const get = (date: string, type: string, customReason: string | null) => {
     const key = `${date}|${type}`;
     let g = gatherings.get(key);
     if (!g) {
-      g = { date, type, customReason: null, memberIds: new Set(), visitors: 0, otherLocal: 0 };
+      g = { date, type, customReason: null, memberNames: new Map(), visitorNames: [], otherLocalNames: [] };
       gatherings.set(key, g);
     }
     if (!g.customReason && customReason) g.customReason = customReason;
@@ -129,27 +129,37 @@ export async function getAttendanceReportSummary(
 
   for (const r of ((recordsRes.data ?? []) as any[])) {
     const g = get(r.service_date, r.service_type, r.custom_reason ?? null);
-    g.memberIds.add(String(r.member_id));
+    const name = (r.members as any)?.full_name ?? "(walang pangalan)";
+    g.memberNames.set(String(r.member_id), name);
   }
   for (const gu of ((guestsRes.data ?? []) as any[])) {
     const g = get(gu.service_date, gu.service_type, gu.custom_reason ?? null);
-    if (gu.kind === "visitor") g.visitors += 1;
-    else g.otherLocal += 1;
+    const name = gu.name ?? "(walang pangalan)";
+    if (gu.kind === "visitor") g.visitorNames.push(name);
+    else g.otherLocalNames.push(name);
   }
 
   const rows = [...gatherings.values()]
     .sort((a, b) => (a.date < b.date ? -1 : a.date > b.date ? 1 : a.type < b.type ? -1 : 1))
     .map((g) => {
-      const members = g.memberIds.size;
-      const total = members + g.visitors + g.otherLocal;
+      const memberNames = [...g.memberNames.values()].sort((a, b) => a.localeCompare(b));
+      const visitorNames = [...g.visitorNames].sort((a, b) => a.localeCompare(b));
+      const otherLocalNames = [...g.otherLocalNames].sort((a, b) => a.localeCompare(b));
+      const members = memberNames.length;
+      const visitors = visitorNames.length;
+      const otherLocal = otherLocalNames.length;
+      const total = members + visitors + otherLocal;
       return {
         serviceDate: g.date,
         serviceType: g.type,
         typeLabel: gatheringTypeDisplay(g.type, g.customReason),
         members,
-        visitors: g.visitors,
-        otherLocal: g.otherLocal,
+        visitors,
+        otherLocal,
         total,
+        memberNames,
+        visitorNames,
+        otherLocalNames,
       };
     });
 

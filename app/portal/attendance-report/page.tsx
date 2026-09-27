@@ -100,37 +100,84 @@ export default async function AttendanceReportPage({
           {summary.gatheringCount === 0 ? (
             <Empty>Walang naisumiteng pagdalo para sa buwang ito sa lokal na ito.</Empty>
           ) : (
-            <table className="mt-2 w-full border-collapse text-sm">
-              <thead>
-                <tr>
-                  <th className={th}>Petsa</th>
-                  <th className={th}>Uri ng Pagkakatipon</th>
-                  <th className={thRight}>Mga Kaanib</th>
-                  <th className={thRight}>Bisita</th>
-                  <th className={thRight}>Ibang Lokal</th>
-                  <th className={thRight}>Kabuuan</th>
-                </tr>
-              </thead>
-              <tbody>
-                {summary.rows.map((r) => (
-                  <tr key={`${r.serviceDate}|${r.serviceType}`}>
-                    <td className={td}>{r.serviceDate}</td>
-                    <td className={td}>{r.typeLabel}</td>
-                    <td className={tdRight}>{r.members}</td>
-                    <td className={tdRight}>{r.visitors}</td>
-                    <td className={tdRight}>{r.otherLocal}</td>
-                    <td className={tdRight}>{r.total}</td>
+            <>
+              <table className="mt-2 w-full border-collapse text-sm">
+                <thead>
+                  <tr>
+                    <th className={th}>Petsa</th>
+                    <th className={th}>Uri ng Pagkakatipon</th>
+                    <th className={thRight}>Mga Kaanib</th>
+                    <th className={thRight}>Bisita</th>
+                    <th className={thRight}>Ibang Lokal</th>
+                    <th className={thRight}>Kabuuan</th>
                   </tr>
+                </thead>
+                <tbody>
+                  {summary.rows.map((r) => (
+                    <tr key={`${r.serviceDate}|${r.serviceType}`}>
+                      <td className={td}>{r.serviceDate}</td>
+                      <td className={td}>{r.typeLabel}</td>
+                      <td className={tdRight}>{r.members}</td>
+                      <td className={tdRight}>{r.visitors}</td>
+                      <td className={tdRight}>{r.otherLocal}</td>
+                      <td className={tdRight}>{r.total}</td>
+                    </tr>
+                  ))}
+                  <tr>
+                    <td className={totalTd} colSpan={2}>Kabuuan sa buwan</td>
+                    <td className={totalTdRight}>{summary.membersTotal}</td>
+                    <td className={totalTdRight}>{summary.visitorsTotal}</td>
+                    <td className={totalTdRight}>{summary.otherLocalTotal}</td>
+                    <td className={totalTdRight}>{summary.grandTotal}</td>
+                  </tr>
+                </tbody>
+              </table>
+
+              {/* Detalyadong talaan ng mga pangalan bawat pagkakatipon */}
+              <div className="mt-6 space-y-4">
+                <h3 className="text-base font-semibold text-gray-800">Buong Tala ng mga Dumalo</h3>
+                {summary.rows.map((r) => (
+                  <div key={`detail-${r.serviceDate}|${r.serviceType}`} className="rounded-lg border border-gray-200 p-4">
+                    <p className="font-semibold text-gray-800">
+                      {r.serviceDate} — {r.typeLabel}
+                    </p>
+                    <p className="text-xs text-gray-500">
+                      Local: {summary.localName} · Bilang ng dumalo: {r.total}
+                    </p>
+                    {r.memberNames.length > 0 && (
+                      <div className="mt-2">
+                        <p className="text-xs font-semibold text-gray-600">Mga Kaanib ({r.members}):</p>
+                        <ul className="ml-4 list-disc text-sm text-gray-700">
+                          {r.memberNames.map((n) => (
+                            <li key={n}>{n}</li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+                    {r.visitorNames.length > 0 && (
+                      <div className="mt-2">
+                        <p className="text-xs font-semibold text-gray-600">Mga Bisita ({r.visitors}):</p>
+                        <ul className="ml-4 list-disc text-sm text-gray-700">
+                          {r.visitorNames.map((n) => (
+                            <li key={n}>{n}</li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+                    {r.otherLocalNames.length > 0 && (
+                      <div className="mt-2">
+                        <p className="text-xs font-semibold text-gray-600">Mula sa Ibang Lokal ({r.otherLocal}):</p>
+                        <ul className="ml-4 list-disc text-sm text-gray-700">
+                          {r.otherLocalNames.map((n) => (
+                            <li key={n}>{n}</li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+                  </div>
                 ))}
-                <tr>
-                  <td className={totalTd} colSpan={2}>Kabuuan sa buwan</td>
-                  <td className={totalTdRight}>{summary.membersTotal}</td>
-                  <td className={totalTdRight}>{summary.visitorsTotal}</td>
-                  <td className={totalTdRight}>{summary.otherLocalTotal}</td>
-                  <td className={totalTdRight}>{summary.grandTotal}</td>
-                </tr>
-              </tbody>
-            </table>
+              </div>
+            </>
           )}
         </Panel>
       </div>
