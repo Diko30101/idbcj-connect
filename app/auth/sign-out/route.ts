@@ -1,10 +1,8 @@
 import { createClient } from "@/lib/supabase/server";
-import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 
 export async function POST(request: Request) {
-  const cookieStore = await cookies();
-  const supabase = createClient(cookieStore as any);
+  const supabase = await createClient();
 
   // Check if user is actually logged in
   const { data: { session } } = await supabase.auth.getSession();
