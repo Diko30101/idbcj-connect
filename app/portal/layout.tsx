@@ -116,19 +116,23 @@ export default async function PortalLayout({ children }: { children: React.React
     // Aprubadong Tulong Financial member na gumagamit ng portal login:
     // makikita sa kanyang menu ang "Tulong Financial" — sariling record,
     // history ng bawat transaction, at balanse, sa LOOB ng portal.
-    // (Ang Finance Ministry at Admin ay may sariling item sa ilalim ng Finance menu.)
-    if (!isFinanceMinistryMember && profile.role !== "admin") {
+    // Kahit Finance Ministry member o Admin, kung borrower din siya
+    // (kasapi ng Tulong Financial Members), makikita niya ang menu na ito.
+    {
       // Ipakita ang "My Tulong Financial" sa LAHAT ng members ng
       // Tulong Financial Members ministry (hindi lang kay Elyzah).
       // Gumagamit ng SECURITY DEFINER function na tumatanggap ng profile_id
       // bilang parameter (hindi umaasa sa auth.uid()).
       let isTulongMember = false;
       try {
-        const { data } = await (supabase.rpc as any)("is_tulong_financial_member_by_profile", {
+        const { data, error } = await (supabase.rpc as any)("is_tulong_financial_member_by_profile", {
           p_profile_id: profile.id,
         });
+        if (error) console.error("[MyTulongMenu] RPC error:", error.message);
         isTulongMember = !!data;
-      } catch {}
+      } catch (e) {
+        console.error("[MyTulongMenu] RPC exception:", e);
+      }
       if (isTulongMember) {
         items.push({ href: "/portal/tulong-financial", label: "My Tulong Financial" });
       }
