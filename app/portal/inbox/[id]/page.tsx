@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { revalidatePath } from "next/cache";
 import { requirePortalAccess, isStaff, fmtDate } from "@/lib/portal";
 import { fmtPeso } from "@/lib/finance";
 import { Empty, Notice, PageHeader, Panel, btnGhostCls } from "@/components/portal/ui";
@@ -44,6 +45,8 @@ export default async function LetterThreadPage({
   // I-mark na nabasa kapag binuksan ng tatanggap
   if (myRecipient.data && !myRecipient.data.read_at) {
     await supabase.from("letter_recipients").update({ read_at: new Date().toISOString() }).eq("id", myRecipient.data.id);
+    // I-refresh ang layout para mawala ang bell notification badge sa sidebar.
+    revalidatePath("/portal", "layout");
   }
 
   const thread = (messages.data ?? []) as any[];
