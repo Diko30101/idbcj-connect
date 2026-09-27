@@ -32,7 +32,9 @@ export type AttendanceReportSummary = {
   gatheringCount: number; // bilang ng mga pagkakatipon sa buwan
 };
 
-// Plain-text na katawan ng liham na ipapadala sa Administrative Ministry.
+// Katawan ng liham na ipapadala sa Administrative Ministry — naka table sheet
+// (rows = pangalan, columns = petsa), gaya ng nasa web page. Ang LetterBody
+// ay nagre-render ng mga pipe-table bilang totoong table.
 export function attendanceReportText(s: AttendanceReportSummary): string {
   const lines = [
     `ULAT NG PAGDALO — ${s.localName}`,
@@ -41,25 +43,43 @@ export function attendanceReportText(s: AttendanceReportSummary): string {
   ];
   if (s.rows.length === 0) {
     lines.push("(walang naitalang pagdalo para sa buwang ito)");
-  } else {
-    for (const r of s.rows) {
-      lines.push(`Petsa: ${r.serviceDate} — ${r.typeLabel} (Local: ${s.localName})`);
-      lines.push(`Bilang ng dumalo: ${r.total} (Mga Kaanib: ${r.members}, Bisita: ${r.visitors}, Ibang Lokal: ${r.otherLocal})`);
-      if (r.memberNames.length > 0) {
-        lines.push("Mga Kaanib:");
-        for (const n of r.memberNames) lines.push(`  - ${n}`);
-      }
-      if (r.visitorNames.length > 0) {
-        lines.push("Mga Bisita:");
-        for (const n of r.visitorNames) lines.push(`  - ${n}`);
-      }
-      if (r.otherLocalNames.length > 0) {
-        lines.push("Mula sa Ibang Lokal:");
-        for (const n of r.otherLocalNames) lines.push(`  - ${n}`);
-      }
-      lines.push("");
-    }
-    lines.push(`Kabuuan sa buwan: ${s.grandTotal} na dumalo sa ${s.gatheringCount} na pagkakatipon`);
+    return lines.join("\n");
   }
+
+  // Bumuo ng sheet: bawat seksyon (kaanib/bisita/ibang lokal) ay may listahan
+  // ng mga pangalan at kung saang gathering index sila dumalo.
+  const gatherings = s.rows.map((r) => ({ date: r.serviceDate, type: r.typeLabel }));
+  const buildSection = (getNames: (r: (typeof s.rows)[number]) => string[]) => {
+    const map = new Map<string, Set<number>>();
+    s.rows.forEach((r, gi) => {
+      for (const n of getNames(r)) {
+        if (!map.has(n)) map.set(n, new Set());
+        map.get(n)!.add(gi);
+      }
+    });
+    const names = [...map.keys()].sort((a, b) => a.localeCompare(b));
+    return { names, att: names.map((n) => map.get(n)!) };
+  };
+  const sections: { title: string; sec: { names: string[]; att: Set<number>[] } }[] = [
+    { title: "Mga Kaanib", sec: buildSection((r) => r.memberNames) },
+    { title: "Mga Bisita", sec: buildSection((r) => r.visitorNames) },
+    { title: "Mula sa Ibang Lokal", sec: buildSection((r) => r.otherLocalNames) },
+  ];
+
+  const dateHeader = gatherings.map((g) => g.date.slice(5)).join(" | ");
+  for (const { title, sec } of sections) {
+    if (sec.names.length === 0) continue;
+    lines.push(title);
+    lines.push(`| Pangalan | ${dateHeader} | Bilang |`);
+    sec.names.forEach((name, ni) => {
+      const marks = gatherings.map((_, gi) => (sec.att[ni].has(gi) ? "✓" : "")).join(" | ");
+      lines.push(`| ${name} | ${marks} | ${sec.att[ni].size} |`);
+    });
+    const totals = gatherings.map((_, gi) => String(sec.att.filter((a) => a.has(gi)).length)).join(" | ");
+    const grand = sec.att.reduce((t, a) => t + a.size, 0);
+    lines.push(`| Kabuuan | ${totals} | ${grand} |`);
+    lines.push("");
+  }
+  lines.push(`Kabuuan sa buwan: ${s.grandTotal} na dumalo sa ${s.gatheringCount} na pagkakatipon`);
   return lines.join("\n");
 }
