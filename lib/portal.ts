@@ -1,5 +1,4 @@
 import { cache } from "react";
-import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { createClient } from "@/lib/supabase/server";
@@ -151,8 +150,7 @@ export function fmtDate(iso: string | null | undefined): string {
 // Sesyon at profile ng naka-login (isang beses lang bawat request)
 // ---------------------------------------------------------------
 export const getSupabase = cache(async () => {
-  const cookieStore = await cookies();
-  return createClient(cookieStore as any);
+  return createClient();
 });
 
 export const getPortalContext = cache(async () => {
