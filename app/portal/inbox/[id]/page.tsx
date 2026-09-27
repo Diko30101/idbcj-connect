@@ -63,6 +63,7 @@ export default async function LetterThreadPage({
     detail: string;
     status: string;
     awaiting: boolean;
+    signature: string | null;
   } | null = null;
 
   if (reqLink) {
@@ -71,7 +72,7 @@ export default async function LetterThreadPage({
     if (kind === "loan") {
       const { data: r } = await supabase
         .from("tulong_loan_requests")
-        .select("id, amount, target_return_date, notes, status, member_id")
+        .select("id, amount, target_return_date, notes, status, member_id, signature")
         .eq("id", requestId)
         .maybeSingle();
       if (r) {
@@ -83,6 +84,7 @@ export default async function LetterThreadPage({
           detail: `${fmtPeso(Number((r as any).amount))}${(r as any).target_return_date ? ` · target balik ${(r as any).target_return_date}` : ""}${(r as any).notes ? ` · ${(r as any).notes}` : ""}`,
           status: (r as any).status,
           awaiting: (r as any).status === "sent",
+          signature: (r as any).signature ?? null,
         };
       }
     } else if (kind === "username") {
@@ -100,6 +102,7 @@ export default async function LetterThreadPage({
           detail: `Iminungkahing username: @${(r as any).username}`,
           status: (r as any).status,
           awaiting: (r as any).status === "pending",
+          signature: null,
         };
       }
     }
@@ -140,6 +143,16 @@ export default async function LetterThreadPage({
                     : "Naghihintay ng apruba ng admin"}
             </p>
           </div>
+          {approval.signature && (
+            <div className="mt-3">
+              <p className="text-xs font-semibold text-gray-600">Lagda ng nanghihiram:</p>
+              <img
+                src={approval.signature}
+                alt="Lagda ng nanghihiram"
+                className="mt-1 max-h-32 rounded-md border border-gray-200 bg-white"
+              />
+            </div>
+          )}
           {approval.awaiting && isAdmin && (
             <div className="mt-3 flex flex-wrap gap-2">
               <form action={decideAction}>
