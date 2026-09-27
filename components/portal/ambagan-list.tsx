@@ -4,6 +4,7 @@ import { useEffect, useState, type FormEvent } from "react";
 import { AmbaganForm } from "./ambagan-form";
 import { btnCls, btnGhostCls } from "./form-bits";
 import { updateAmbagan } from "@/app/portal/finance/ambagan/actions";
+import { DecideButtons, NeedsFixBanner } from "./decide-buttons";
 import { fmtPeso, monthLabel } from "@/lib/finance";
 import { GIVING_STATUS_LABEL, type AmbaganRecord, type GivingStatus } from "@/lib/giving";
 
@@ -16,8 +17,10 @@ function StatusPill({ status }: { status: GivingStatus }) {
     status === "draft"
       ? "bg-amber-50 text-amber-700 border-amber-100"
       : status === "submitted"
-        ? "bg-emerald-50 text-emerald-700 border-emerald-100"
-        : "bg-red-50 text-red-700 border-red-100";
+        ? "bg-blue-50 text-blue-700 border-blue-100"
+        : status === "approved"
+          ? "bg-emerald-50 text-emerald-700 border-emerald-100"
+          : "bg-red-50 text-red-700 border-red-100";
   return <span className={`inline-block rounded-full border px-2.5 py-0.5 text-xs font-semibold ${cls}`}>{GIVING_STATUS_LABEL[status]}</span>;
 }
 
@@ -43,7 +46,7 @@ export function AmbaganList({
   timezone: string;
   path: string;
   mode: "local" | "church";
-  actions?: { update: ActionFn; submit?: ActionFn };
+  actions?: { update: ActionFn; submit?: ActionFn; decide?: ActionFn };
   labels?: { monthPhrase: string; empty: string; periodLabel?: string };
   submitMany?: { action: ActionFn };
   bulkItemLabel?: string;
@@ -140,9 +143,13 @@ export function AmbaganList({
                     {fmtPeso(r.amount)} · {L.monthPhrase} {monthLabel(r.period_month.slice(0, 7))} · Natanggap noong {fmtDatePH(r.date_received)}
                   </p>
                   {r.notes && <p className="text-sm text-gray-500">Tala: {r.notes}</p>}
+                  {r.status === "draft" && r.decision_notes && <NeedsFixBanner notes={r.decision_notes} />}
                 </div>
                 <div className="flex flex-wrap items-center gap-2">
                   <StatusPill status={r.status} />
+                  {mode === "church" && r.status === "submitted" && act.decide && (
+                    <DecideButtons id={r.id} path={path} action={act.decide} />
+                  )}
                   {canEdit && (
                     <button type="button" className={btnGhostCls} onClick={() => setEditingId(r.id)}>
                       Edit

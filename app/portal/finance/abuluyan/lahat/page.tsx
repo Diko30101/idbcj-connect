@@ -32,7 +32,7 @@ export default async function AbuluyanChurchPage({
   const { data } = selected
     ? await supabase
         .from("abuluyan_totals")
-        .select("id, local_id, service_date, total_amount, status, void_reason, replaces_id")
+        .select("id, local_id, service_date, total_amount, status, void_reason, replaces_id, decision_notes")
         .eq("local_id", selected.id)
         .order("service_date", { ascending: false })
     : { data: [] };

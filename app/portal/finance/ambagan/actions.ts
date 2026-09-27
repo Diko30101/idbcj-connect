@@ -113,6 +113,22 @@ export async function submitAmbagan(fd: FormData) {
   back(path, "ok", "Naipadala ang Ambagan. Church-wide Finance na lang ang makapagbabago nito.");
 }
 
+// Desisyon ng church-wide Finance sa naisumiteng Ambagan: "approved" (pinal) o "needs_fix"
+// (ibinabalik sa draft para ayusin ng Local, may tala kung bakit). Ang function sa database
+// (decide_ambagan) ang huling harang sa pahintulot, at siya rin ang nagpapadala ng liham pabalik sa Local.
+export async function decideAmbagan(fd: FormData) {
+  const ctx = await requireGiving();
+  const path = target(fd);
+  const id = str(fd, "id");
+  const decision = str(fd, "decision");
+  const notes = strOrNull(fd, "notes");
+
+  const { error } = await ctx.supabase.rpc("decide_ambagan", { p_id: id, p_decision: decision, p_notes: notes });
+  if (error) back(path, "error", givingErrorMessage(error, "Hindi naiproseso ang desisyon."));
+  revalidatePath(GIVING_BASE, "layout");
+  back(path, "ok", decision === "approved" ? "Aprubado ang Ambagan." : "Ibinalik sa Local ang Ambagan para ayusin.");
+}
+
 // Ipadala ang napili: mga draft lang ang naipapadala; ang database (RLS) pa rin ang huling harang.
 export async function submitManyAmbagan(fd: FormData) {
   const ctx = await requireGiving();

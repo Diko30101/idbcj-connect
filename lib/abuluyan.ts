@@ -1,7 +1,7 @@
 // Mga tipo at helper ng Abuluyan (schema 010 + 019). Walang server-only na import: ligtas gamitin sa client.
 import { fmtPeso, monthLabel } from "./finance";
 
-export type AbuluyanStatus = "draft" | "submitted" | "void";
+export type AbuluyanStatus = "draft" | "submitted" | "approved" | "void";
 
 export type AbuluyanRecord = {
   id: string;
@@ -11,11 +11,13 @@ export type AbuluyanRecord = {
   status: AbuluyanStatus;
   void_reason: string | null;
   replaces_id: string | null;
+  decision_notes?: string | null;
 };
 
 export const ABULUYAN_STATUS_LABEL: Record<AbuluyanStatus, string> = {
   draft: "Draft",
   submitted: "Naipadala",
+  approved: "Aprubado",
   void: "Void",
 };
 

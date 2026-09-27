@@ -4,11 +4,12 @@
 // Doktrina (spec seksyon 1): malaya ang halaga (walang default, suggested o expected; ang tanging patakaran ay > 0);
 // ang kawalan ng record ay hindi paglabag (walang wika, ulat o paalala tungkol dito); walang tinatanggap mula sa hindi kaanib.
 
-export type GivingStatus = "draft" | "submitted" | "void";
+export type GivingStatus = "draft" | "submitted" | "approved" | "void";
 
 export const GIVING_STATUS_LABEL: Record<GivingStatus, string> = {
   draft: "Draft",
   submitted: "Naipadala",
+  approved: "Aprubado",
   void: "Void",
 };
 
@@ -21,6 +22,7 @@ export type AmbaganRecord = {
   date_received: string; // YYYY-MM-DD
   notes: string | null;
   status: GivingStatus;
+  decision_notes?: string | null;
 };
 
 export type MemberChoice = { id: string; full_name: string; local_name: string; status: string };
@@ -118,6 +120,7 @@ export type PasalamatRecord = {
   amount: number;
   notes: string | null;
   status: GivingStatus;
+  decision_notes?: string | null;
 };
 
 // ---------------------------------------------------------------------------

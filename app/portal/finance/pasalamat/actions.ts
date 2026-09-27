@@ -118,6 +118,22 @@ export async function submitPasalamat(fd: FormData) {
   back(path, "ok", "Naipadala ang Pasalamat. Church-wide Finance na lang ang makapagbabago nito.");
 }
 
+// Desisyon ng church-wide Finance sa naisumiteng Pasalamat: "approved" (pinal) o "needs_fix"
+// (ibinabalik sa draft para ayusin ng Local, may tala kung bakit). Ang function sa database
+// (decide_pasalamat) ang huling harang sa pahintulot, at siya rin ang nagpapadala ng liham pabalik sa Local.
+export async function decidePasalamat(fd: FormData) {
+  const ctx = await requireGiving();
+  const path = target(fd);
+  const id = str(fd, "id");
+  const decision = str(fd, "decision");
+  const notes = strOrNull(fd, "notes");
+
+  const { error } = await ctx.supabase.rpc("decide_pasalamat", { p_id: id, p_decision: decision, p_notes: notes });
+  if (error) back(path, "error", givingErrorMessage(error, "Hindi naiproseso ang desisyon."));
+  revalidatePath(GIVING_BASE, "layout");
+  back(path, "ok", decision === "approved" ? "Aprubado ang Pasalamat." : "Ibinalik sa Local ang Pasalamat para ayusin.");
+}
+
 // Ipadala lahat ng napili: mga draft lang ang naipapadala; ang database (RLS) pa rin ang huling harang.
 export async function submitManyPasalamat(fd: FormData) {
   const ctx = await requireGiving();

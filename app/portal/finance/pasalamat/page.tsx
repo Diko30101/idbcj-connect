@@ -34,7 +34,7 @@ export default async function PasalamatPage({
   if (selected) {
     const { data } = await supabase
       .from("pasalamat_records")
-      .select("id, local_id, member_id, type, date, amount, notes, status")
+      .select("id, local_id, member_id, type, date, amount, notes, status, decision_notes")
       .eq("local_id", selected.id)
       .order("date", { ascending: false })
       .order("created_at", { ascending: false })

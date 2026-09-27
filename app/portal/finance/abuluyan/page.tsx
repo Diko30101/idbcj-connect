@@ -28,7 +28,7 @@ export default async function AbuluyanPage({
 
   const { data } = await supabase
     .from("abuluyan_totals")
-    .select("id, local_id, service_date, total_amount, status, void_reason, replaces_id")
+    .select("id, local_id, service_date, total_amount, status, void_reason, replaces_id, decision_notes")
     .eq("local_id", local.id)
     .order("service_date", { ascending: false });
 

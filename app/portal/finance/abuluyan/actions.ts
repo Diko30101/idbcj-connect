@@ -160,6 +160,22 @@ export async function deleteAbuluyanDraft(fd: FormData) {
   back(path, "ok", "Nabura ang draft na Abuluyan record.");
 }
 
+// Desisyon ng church-wide Finance sa naisumiteng record: "approved" (pinal) o "needs_fix"
+// (ibinabalik sa draft para ayusin ng Local, may tala kung bakit). Ang function sa database
+// (decide_abuluyan) ang huling harang sa pahintulot, at siya rin ang nagpapadala ng liham pabalik sa Local.
+export async function decideAbuluyan(fd: FormData) {
+  const ctx = await getAbuluyanContext();
+  const path = target(fd);
+  const id = str(fd, "id");
+  const decision = str(fd, "decision");
+  const notes = strOrNull(fd, "notes");
+
+  const { error } = await ctx.supabase.rpc("decide_abuluyan", { p_id: id, p_decision: decision, p_notes: notes });
+  if (error) back(path, "error", abuluyanErrorMessage(error, "Hindi naiproseso ang desisyon."));
+  revalidatePath(ABULUYAN_BASE, "layout");
+  back(path, "ok", decision === "approved" ? "Aprubado ang Abuluyan record." : "Ibinalik sa Local ang record para ayusin.");
+}
+
 // Buwanang Ulat ng Abuluyan: ipadala bilang liham sa mga miyembro ng Finance Ministry.
 // Church-wide Finance at Admin: lahat ng local. Local Finance: sariling local lang.
 // Ang padron ng pag-insert ng liham ay gaya ng createLetter (letters -> letter_recipients -> letter_messages).

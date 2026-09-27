@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { getAbuluyanContext, denyAbuluyan } from "@/lib/portal";
-import { createTulong, updateTulong, submitTulong, submitManyTulong, searchMembers } from "./actions";
+import { createTulong, updateTulong, submitTulong, submitManyTulong, decideTulong, searchMembers } from "./actions";
 import { Notice, PageHeader, Panel } from "@/components/portal/ui";
 import { AmbaganForm } from "@/components/portal/ambagan-form";
 import { AmbaganList } from "@/components/portal/ambagan-list";
@@ -34,7 +34,7 @@ export default async function TulongPage({
   if (selected) {
     const { data } = await supabase
       .from("tulong_klase_records")
-      .select("id, local_id, member_id, period_month, amount, date_received, notes, status")
+      .select("id, local_id, member_id, period_month, amount, date_received, notes, status, decision_notes")
       .eq("local_id", selected.id)
       .order("date_received", { ascending: false })
       .order("created_at", { ascending: false })
@@ -98,7 +98,7 @@ export default async function TulongPage({
                 path={path}
                 mode={ctx.isChurch ? "church" : "local"}
                 labels={{ monthPhrase: "Tulong para sa", empty: "Wala pang naitatalang Tulong sa Klase Ministeryal.", periodLabel: "Buwan ng tulong" }}
-                actions={{ update: updateTulong, submit: submitTulong }}
+                actions={{ update: updateTulong, submit: submitTulong, decide: decideTulong }}
                 submitMany={{ action: submitManyTulong }}
                 bulkItemLabel="Tulong sa Klase Ministeryal"
               />

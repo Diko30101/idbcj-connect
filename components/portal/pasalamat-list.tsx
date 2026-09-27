@@ -3,7 +3,8 @@
 import { useEffect, useState, type FormEvent } from "react";
 import { PasalamatForm } from "./pasalamat-form";
 import { btnCls, btnGhostCls } from "./form-bits";
-import { updatePasalamat, submitPasalamat, submitManyPasalamat } from "@/app/portal/finance/pasalamat/actions";
+import { updatePasalamat, submitPasalamat, submitManyPasalamat, decidePasalamat } from "@/app/portal/finance/pasalamat/actions";
+import { DecideButtons, NeedsFixBanner } from "./decide-buttons";
 import { fmtPeso } from "@/lib/finance";
 import { GIVING_STATUS_LABEL, pasalamatTypeLabel, type GivingStatus, type PasalamatRecord } from "@/lib/giving";
 
@@ -16,8 +17,10 @@ function StatusPill({ status }: { status: GivingStatus }) {
     status === "draft"
       ? "bg-amber-50 text-amber-700 border-amber-100"
       : status === "submitted"
-        ? "bg-emerald-50 text-emerald-700 border-emerald-100"
-        : "bg-red-50 text-red-700 border-red-100";
+        ? "bg-blue-50 text-blue-700 border-blue-100"
+        : status === "approved"
+          ? "bg-emerald-50 text-emerald-700 border-emerald-100"
+          : "bg-red-50 text-red-700 border-red-100";
   return <span className={`inline-block rounded-full border px-2.5 py-0.5 text-xs font-semibold ${cls}`}>{GIVING_STATUS_LABEL[status]}</span>;
 }
 
@@ -126,9 +129,13 @@ export function PasalamatList({
                     {fmtPeso(r.amount)} · {pasalamatTypeLabel(r.type)} · Ibinigay noong {fmtDatePH(r.date)}
                   </p>
                   {r.notes && <p className="text-sm text-gray-500">Tala: {r.notes}</p>}
+                  {r.status === "draft" && r.decision_notes && <NeedsFixBanner notes={r.decision_notes} />}
                 </div>
                 <div className="flex flex-wrap items-center gap-2">
                   <StatusPill status={r.status} />
+                  {mode === "church" && r.status === "submitted" && (
+                    <DecideButtons id={r.id} path={path} action={decidePasalamat} />
+                  )}
                   {canEdit && (
                     <button type="button" className={btnGhostCls} onClick={() => setEditingId(r.id)}>
                       Edit
