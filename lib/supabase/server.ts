@@ -1,7 +1,10 @@
 import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
 
-export const createClient = (cookieStore: ReturnType<typeof cookies>) => {
+// Sa Next.js 15+, ang cookies() ay nagbabalik ng Promise — kaya async ang
+// createClient at hindi na kailangan ng parameter.
+export async function createClient() {
+    const cookieStore = await cookies();
     return createServerClient(
         process.env.NEXT_PUBLIC_SUPABASE_URL!,
         process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
@@ -24,4 +27,4 @@ export const createClient = (cookieStore: ReturnType<typeof cookies>) => {
             },
         },
     );
-};
+}
