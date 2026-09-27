@@ -9,7 +9,7 @@ const BASE = "/tulong-financial";
 const SEVEN_DAYS = 60 * 60 * 24 * 7;
 
 async function supa() {
-  return createClient(cookies());
+  return createClient();
 }
 
 // Abisuhan ang admin sa Telegram via n8n webhook (fire-and-forget).
