@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { requirePortalAccess, isStaff, fmtDate, todayPH, isProtectedMinistryName } from "@/lib/portal";
 import { isTulongFinancePortalUser } from "@/app/tulong-financial/finance-check";
 import { MSG_PROTECTED_MEMBERS } from "@/lib/ministry-ops";
@@ -23,6 +23,18 @@ export default async function MinistryDetail({
   const { id } = await params;
   const { ok, error } = await searchParams;
   const { supabase, profile } = await requirePortalAccess();
+  // Guard: Admin role o Administrative Ministry members lang ang may access.
+  // Ang iba ay nire-redirect sa /portal (kahit via direct URL).
+  if (profile.role !== "admin") {
+    const { data: mm } = await supabase
+      .from("ministry_members")
+      .select("ministries(name)")
+      .eq("profile_id", profile.id);
+    const isAdminMinistry = ((mm ?? []) as any[]).some(
+      (m) => m.ministries?.name === "Administrative Ministry"
+    );
+    if (!isAdminMinistry) redirect("/portal");
+  }
   const staff = isStaff(profile.role);
 
   const { data: ministry } = await supabase.from("ministries").select("*").eq("id", id).maybeSingle();
