@@ -4,6 +4,9 @@ const nextConfig: NextConfig = {
   // 1. Existing settings
   experimental: {
     ppr: false,
+    // Iwasan ang Turbopack font issue sa Vercel build (next/font/google
+    // "Module not found" error) — gumamit ng Webpack sa production build.
+    turbo: false,
   },
   typescript: {
     ignoreBuildErrors: true,
