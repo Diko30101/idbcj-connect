@@ -292,15 +292,12 @@ function SidebarShell({
         }`}
       >
         <div className="flex items-center gap-3 border-b border-white/10 px-5 py-5">
-          <Link href="/portal" onClick={closeDrawer} className="flex min-w-0 items-center gap-3">
+          <Link href="/portal" onClick={closeDrawer} className="flex items-center gap-3">
             <span className="relative h-10 w-10 shrink-0 overflow-hidden rounded-full border border-white/20">
               <Image src="/logo.png" alt="IDBCJ Logo" fill sizes="40px" className="object-cover" />
             </span>
-            <span className="truncate text-lg font-bold text-white">IDBCJ Connect</span>
+            <span className="whitespace-nowrap text-lg font-bold text-white">IDBCJ Connect</span>
           </Link>
-          <div className="ml-auto flex shrink-0 items-center">
-            <NotificationBell dark />
-          </div>
           <button
             type="button"
             onClick={closeDrawer}
@@ -341,6 +338,13 @@ function SidebarShell({
           <div className="mt-3">{signOutDark}</div>
         </div>
       </aside>
+
+      {/* Desktop top bar — bell nasa kanang dulo (mobile: nasa mobile top bar na) */}
+      <header className="sticky top-0 z-30 hidden h-14 items-center border-b border-gray-200 bg-white px-6 lg:flex">
+        <div className="ml-auto">
+          <NotificationBell />
+        </div>
+      </header>
 
       {/* Content */}
       <main className="mx-auto w-full max-w-6xl px-4 py-6 sm:px-6 lg:px-8 lg:py-8">{children}</main>
