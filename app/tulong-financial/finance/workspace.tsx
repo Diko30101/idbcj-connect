@@ -5,6 +5,7 @@ import {
   forwardLoanRequestToAdmin,
   addTulongPayment,
   createLoanRequest,
+  confirmDisbursement,
 } from "@/app/portal/finance/tulong-financial/actions";
 import { SignaturePad } from "./signature-pad";
 
@@ -63,7 +64,7 @@ export async function TulongFinanceWorkspace({
   ] = await Promise.all([
     supabase
       .from("tulong_financial_loans")
-      .select("id, member_id, local_id, amount, date_borrowed, target_return_date, notes")
+      .select("id, member_id, local_id, amount, date_borrowed, date_disbursed, target_return_date, notes")
       .order("date_borrowed", { ascending: false })
       .limit(2000),
     supabase.from("tulong_financial_payments").select("loan_id, amount, date_paid").limit(10000),
@@ -304,8 +305,10 @@ export async function TulongFinanceWorkspace({
                     <th className="py-2 pr-3 text-right">Nabayaran</th>
                     <th className="py-2 pr-3 text-right">Balanse</th>
                     <th className="py-2 pr-3">Hiniram noong</th>
+                    <th className="py-2 pr-3">Naiabot noong</th>
                     <th className="py-2 pr-3">Target balik</th>
                     <th className="py-2 pr-3">Katayuan</th>
+                    <th className="py-2 pr-3">Aksyon</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -317,11 +320,34 @@ export async function TulongFinanceWorkspace({
                       <td className="py-2 pr-3 text-right text-gray-700">{fmtPeso(l.paid)}</td>
                       <td className="py-2 pr-3 text-right font-semibold text-gray-900">{fmtPeso(Math.max(l.balance, 0))}</td>
                       <td className="py-2 pr-3 text-gray-600">{l.date_borrowed}</td>
+                      <td className="py-2 pr-3 text-gray-600">
+                        {l.date_disbursed ?? <span className="text-amber-600">Hindi pa</span>}
+                      </td>
                       <td className="py-2 pr-3 text-gray-600">{l.target_return_date ?? "—"}</td>
                       <td className="py-2 pr-3">
                         <span className={`inline-block rounded-full px-2.5 py-0.5 text-xs font-semibold ${STATUS_BADGE[l.status.key]}`}>
                           {l.status.label}
                         </span>
+                      </td>
+                      <td className="py-2 pr-3">
+                        {!l.date_disbursed ? (
+                          <form action={confirmDisbursement} className="flex items-center gap-1.5">
+                            <input type="hidden" name="return_to" value={returnTo} />
+                            <input type="hidden" name="loan_id" value={l.id} />
+                            <input
+                              type="date"
+                              name="date_disbursed"
+                              required
+                              className="rounded-md border border-gray-300 px-2 py-1 text-xs"
+                              title="Petsa ng aktwal na pag-abot ng pera"
+                            />
+                            <button className="rounded-md bg-emerald-600 px-2.5 py-1 text-xs font-semibold text-white hover:bg-emerald-700">
+                              Naiabot na ang pera
+                            </button>
+                          </form>
+                        ) : (
+                          <span className="text-xs text-gray-400">—</span>
+                        )}
                       </td>
                     </tr>
                   ))}
