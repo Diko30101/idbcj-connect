@@ -128,7 +128,8 @@ export default async function PortalLayout({ children }: { children: React.React
         const { data, error } = await (supabase.rpc as any)("is_tulong_financial_member_by_profile", {
           p_profile_id: profile.id,
         });
-        if (error) console.error("[MyTulongMenu] RPC error:", error.message);
+                console.log("[MyTulongMenu] profile.id:", profile.id, "data:", data, "error:", error?.message); 
+          if (error) console.error("[MyTulongMenu] RPC error:", error.message);
         isTulongMember = !!data;
       } catch (e) {
         console.error("[MyTulongMenu] RPC exception:", e);
