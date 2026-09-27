@@ -2,6 +2,7 @@ import Link from "next/link";import { requirePortalAccess, isStaff, isFinanceMem
 import { yearToDateLabel, fmtPeso, monthLabel, FINANCE_CATEGORIES, FINANCE_CATEGORY_LABEL, type FinanceCategory } from "@/lib/finance";
 import { getYearlyCollections, summarizeCollections, type CollectionRow } from "@/lib/finance-collections";
 import { Empty, Notice, Panel, RoleBadge, StatusBadge } from "@/components/portal/ui";
+import { NotificationBell } from "@/components/portal/notification-bell";
 import { FinanceSummaryPie } from "@/components/portal/finance-summary-pie";
 import { FinanceCategoryPie, buildCategorySlices } from "@/components/portal/finance-category-pie";
 import { auditTableLabel } from "@/lib/audit";
@@ -401,7 +402,8 @@ export default async function PortalHome({
           </h1>
           <p className="mt-1 text-[15px] text-gray-500">Maligayang pagdating sa IDBCJ Connect.</p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex items-center gap-2">
+          <NotificationBell />
           <RoleBadge role={profile.role} />
           <StatusBadge status={profile.status} />
         </div>
