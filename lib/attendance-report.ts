@@ -14,6 +14,9 @@ export type AttendanceReportRow = {
   visitors: number; // mga bisita
   otherLocal: number; // mga kaanib mula sa ibang lokal
   total: number;
+  memberNames: string[]; // buong tala ng mga pangalan ng kaanib
+  visitorNames: string[]; // mga pangalan ng bisita
+  otherLocalNames: string[]; // mga pangalan ng taga-ibang lokal
 };
 
 export type AttendanceReportSummary = {
@@ -39,11 +42,23 @@ export function attendanceReportText(s: AttendanceReportSummary): string {
   if (s.rows.length === 0) {
     lines.push("(walang naitalang pagdalo para sa buwang ito)");
   } else {
-    lines.push("| Petsa | Uri | Mga Kaanib | Bisita | Ibang Lokal | Kabuuan |");
     for (const r of s.rows) {
-      lines.push(`| ${r.serviceDate} | ${r.typeLabel} | ${r.members} | ${r.visitors} | ${r.otherLocal} | ${r.total} |`);
+      lines.push(`Petsa: ${r.serviceDate} — ${r.typeLabel} (Local: ${s.localName})`);
+      lines.push(`Bilang ng dumalo: ${r.total} (Mga Kaanib: ${r.members}, Bisita: ${r.visitors}, Ibang Lokal: ${r.otherLocal})`);
+      if (r.memberNames.length > 0) {
+        lines.push("Mga Kaanib:");
+        for (const n of r.memberNames) lines.push(`  - ${n}`);
+      }
+      if (r.visitorNames.length > 0) {
+        lines.push("Mga Bisita:");
+        for (const n of r.visitorNames) lines.push(`  - ${n}`);
+      }
+      if (r.otherLocalNames.length > 0) {
+        lines.push("Mula sa Ibang Lokal:");
+        for (const n of r.otherLocalNames) lines.push(`  - ${n}`);
+      }
+      lines.push("");
     }
-    lines.push("");
     lines.push(`Kabuuan sa buwan: ${s.grandTotal} na dumalo sa ${s.gatheringCount} na pagkakatipon`);
   }
   return lines.join("\n");
