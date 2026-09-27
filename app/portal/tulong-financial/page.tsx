@@ -1,5 +1,4 @@
 import { createClient } from "@/lib/supabase/server";
-import { cookies } from "next/headers";
 import { fmtPeso } from "@/lib/finance";
 import { Empty, Notice, Panel, btnGhostCls, inputCls } from "@/components/portal/ui";
 import { submitLoanRequestAsPortalUser } from "@/app/tulong-financial/actions";
@@ -35,8 +34,7 @@ export default async function PortalTulongFinancialPage({
   searchParams: Promise<{ ok?: string; error?: string }>;
 }) {
   const { ok, error } = await searchParams;
-  const cookieStore = cookies();
-  const supabase = createClient(cookieStore);
+  const supabase = await createClient();
 
   const [{ data: portalRecord }, { data: portalRequests }] = await Promise.all([
     supabase.rpc("tulong_borrower_record_by_profile"),
