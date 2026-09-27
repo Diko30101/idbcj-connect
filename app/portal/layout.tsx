@@ -125,7 +125,7 @@ export default async function PortalLayout({ children }: { children: React.React
       // bilang parameter (hindi umaasa sa auth.uid()).
       let isTulongMember = false;
       try {
-        const { data } = await supabase.rpc("is_tulong_financial_member_by_profile", {
+        const { data } = await (supabase.rpc as any)("is_tulong_financial_member_by_profile", {
           p_profile_id: profile.id,
         });
         isTulongMember = !!data;
