@@ -180,3 +180,45 @@ export async function getAttendanceReportSummary(
     gatheringCount: rows.length,
   };
 }
+
+// Table sheet format: rows = mga pangalan, columns = mga petsa ng pagkakatipon.
+// Bawat seksyon (kaanib, bisita, ibang lokal) ay may sariling table.
+export type AttendanceSheetSection = {
+  names: string[]; // naka-alphabetical
+  // attendance[i] = Set ng gathering index na dinaluhan ng names[i]
+  attendance: Set<number>[];
+};
+
+export type AttendanceSheet = {
+  gatherings: { serviceDate: string; typeLabel: string }[];
+  members: AttendanceSheetSection;
+  visitors: AttendanceSheetSection;
+  otherLocal: AttendanceSheetSection;
+};
+
+export function buildAttendanceSheet(summary: AttendanceReportSummary): AttendanceSheet {
+  const gatherings = summary.rows.map((r) => ({
+    serviceDate: r.serviceDate,
+    typeLabel: r.typeLabel,
+  }));
+
+  const buildSection = (getNames: (r: (typeof summary.rows)[number]) => string[]): AttendanceSheetSection => {
+    const nameToIndexes = new Map<string, Set<number>>();
+    summary.rows.forEach((r, gi) => {
+      for (const n of getNames(r)) {
+        if (!nameToIndexes.has(n)) nameToIndexes.set(n, new Set());
+        nameToIndexes.get(n)!.add(gi);
+      }
+    });
+    const names = [...nameToIndexes.keys()].sort((a, b) => a.localeCompare(b));
+    const attendance = names.map((n) => nameToIndexes.get(n)!);
+    return { names, attendance };
+  };
+
+  return {
+    gatherings,
+    members: buildSection((r) => r.memberNames),
+    visitors: buildSection((r) => r.visitorNames),
+    otherLocal: buildSection((r) => r.otherLocalNames),
+  };
+}

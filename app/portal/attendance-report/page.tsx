@@ -5,7 +5,7 @@ import { Empty, Notice, PageHeader, Panel, btnCls, btnGhostCls } from "@/compone
 import { isValidMonth, nextMonth, prevMonth } from "@/lib/abuluyan";
 import { currentMonthPH } from "@/lib/finance";
 import { ATTENDANCE_REPORT_BASE } from "@/lib/attendance-report";
-import { getAttendanceReportSummary, getDraftAttendanceGatherings } from "./summary";
+import { getAttendanceReportSummary, getDraftAttendanceGatherings, buildAttendanceSheet } from "./summary";
 import { PrintButton } from "./print-button";
 
 // Attendance Report: buwanang ulat ng pagdalo per lokal — talaan ng bawat
@@ -41,6 +41,62 @@ export default async function AttendanceReportPage({
   const drafts = isAdmin
     ? await getDraftAttendanceGatherings(supabase, selected.id, buwan)
     : [];
+  const sheet = buildAttendanceSheet(summary);
+
+  // Helper para mag-render ng isang table sheet section (rows = pangalan, columns = petsa).
+  const renderSheetSection = (
+    title: string,
+    section: { names: string[]; attendance: Set<number>[] },
+  ) => {
+    if (section.names.length === 0) return null;
+    return (
+      <div className="mt-6 overflow-x-auto">
+        <h3 className="mb-2 text-base font-semibold text-gray-800">{title}</h3>
+        <table className="w-full border-collapse text-sm">
+          <thead>
+            <tr>
+              <th className={th}>Pangalan</th>
+              {sheet.gatherings.map((g) => (
+                <th key={g.serviceDate} className={`${th} text-center`}>
+                  {g.serviceDate.slice(5)}
+                  <br />
+                  <span className="font-normal text-xs">{g.typeLabel}</span>
+                </th>
+              ))}
+              <th className={`${thRight} bg-emerald-800`}>Bilang</th>
+            </tr>
+          </thead>
+          <tbody>
+            {section.names.map((name, ni) => {
+              const attended = section.attendance[ni];
+              return (
+                <tr key={name}>
+                  <td className={td}>{name}</td>
+                  {sheet.gatherings.map((g, gi) => (
+                    <td key={g.serviceDate} className={`${td} text-center`}>
+                      {attended.has(gi) ? <span className="font-bold text-emerald-700">✓</span> : ""}
+                    </td>
+                  ))}
+                  <td className={`${tdRight} font-bold`}>{attended.size}</td>
+                </tr>
+              );
+            })}
+            <tr>
+              <td className={totalTd}>Kabuuan</td>
+              {sheet.gatherings.map((g, gi) => (
+                <td key={g.serviceDate} className={`${totalTd} text-center`}>
+                  {section.attendance.filter((a) => a.has(gi)).length}
+                </td>
+              ))}
+              <td className={totalTdRight}>
+                {section.attendance.reduce((s, a) => s + a.size, 0)}
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    );
+  };
 
   const th = "border border-gray-400 bg-emerald-700 px-2 py-1.5 text-left font-semibold text-white";
   const thRight = "border border-gray-400 bg-emerald-700 px-2 py-1.5 text-right font-semibold text-white";
@@ -101,82 +157,12 @@ export default async function AttendanceReportPage({
             <Empty>Walang naisumiteng pagdalo para sa buwang ito sa lokal na ito.</Empty>
           ) : (
             <>
-              <table className="mt-2 w-full border-collapse text-sm">
-                <thead>
-                  <tr>
-                    <th className={th}>Petsa</th>
-                    <th className={th}>Uri ng Pagkakatipon</th>
-                    <th className={thRight}>Mga Kaanib</th>
-                    <th className={thRight}>Bisita</th>
-                    <th className={thRight}>Ibang Lokal</th>
-                    <th className={thRight}>Kabuuan</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {summary.rows.map((r) => (
-                    <tr key={`${r.serviceDate}|${r.serviceType}`}>
-                      <td className={td}>{r.serviceDate}</td>
-                      <td className={td}>{r.typeLabel}</td>
-                      <td className={tdRight}>{r.members}</td>
-                      <td className={tdRight}>{r.visitors}</td>
-                      <td className={tdRight}>{r.otherLocal}</td>
-                      <td className={tdRight}>{r.total}</td>
-                    </tr>
-                  ))}
-                  <tr>
-                    <td className={totalTd} colSpan={2}>Kabuuan sa buwan</td>
-                    <td className={totalTdRight}>{summary.membersTotal}</td>
-                    <td className={totalTdRight}>{summary.visitorsTotal}</td>
-                    <td className={totalTdRight}>{summary.otherLocalTotal}</td>
-                    <td className={totalTdRight}>{summary.grandTotal}</td>
-                  </tr>
-                </tbody>
-              </table>
-
-              {/* Detalyadong talaan ng mga pangalan bawat pagkakatipon */}
-              <div className="mt-6 space-y-4">
-                <h3 className="text-base font-semibold text-gray-800">Buong Tala ng mga Dumalo</h3>
-                {summary.rows.map((r) => (
-                  <div key={`detail-${r.serviceDate}|${r.serviceType}`} className="rounded-lg border border-gray-200 p-4">
-                    <p className="font-semibold text-gray-800">
-                      {r.serviceDate} — {r.typeLabel}
-                    </p>
-                    <p className="text-xs text-gray-500">
-                      Local: {summary.localName} · Bilang ng dumalo: {r.total}
-                    </p>
-                    {r.memberNames.length > 0 && (
-                      <div className="mt-2">
-                        <p className="text-xs font-semibold text-gray-600">Mga Kaanib ({r.members}):</p>
-                        <ul className="ml-4 list-disc text-sm text-gray-700">
-                          {r.memberNames.map((n) => (
-                            <li key={n}>{n}</li>
-                          ))}
-                        </ul>
-                      </div>
-                    )}
-                    {r.visitorNames.length > 0 && (
-                      <div className="mt-2">
-                        <p className="text-xs font-semibold text-gray-600">Mga Bisita ({r.visitors}):</p>
-                        <ul className="ml-4 list-disc text-sm text-gray-700">
-                          {r.visitorNames.map((n) => (
-                            <li key={n}>{n}</li>
-                          ))}
-                        </ul>
-                      </div>
-                    )}
-                    {r.otherLocalNames.length > 0 && (
-                      <div className="mt-2">
-                        <p className="text-xs font-semibold text-gray-600">Mula sa Ibang Lokal ({r.otherLocal}):</p>
-                        <ul className="ml-4 list-disc text-sm text-gray-700">
-                          {r.otherLocalNames.map((n) => (
-                            <li key={n}>{n}</li>
-                          ))}
-                        </ul>
-                      </div>
-                    )}
-                  </div>
-                ))}
-              </div>
+              {renderSheetSection("Mga Kaanib", sheet.members)}
+              {renderSheetSection("Mga Bisita", sheet.visitors)}
+              {renderSheetSection("Mula sa Ibang Lokal", sheet.otherLocal)}
+              <p className="mt-4 text-sm text-gray-600">
+                Kabuuan sa buwan: {summary.grandTotal} na dumalo sa {summary.gatheringCount} na pagkakatipon.
+              </p>
             </>
           )}
         </Panel>
