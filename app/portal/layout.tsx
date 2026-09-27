@@ -119,35 +119,12 @@ export default async function PortalLayout({ children }: { children: React.React
     // history ng bawat transaction, at balanse, sa LOOB ng portal.
     // (Ang Finance Ministry at Admin ay may sariling item sa ilalim ng Finance menu.)
     if (!isFinanceMinistryMember && profile.role !== "admin") {
-      // Direktang tingnan kung may approved Tulong Financial account ang user.
-      const { data: tulongApproval } = await supabase
-        .from("tulong_username_requests")
-        .select("id")
-        .eq("profile_id", profile.id)
-        .eq("status", "approved")
-        .limit(1)
-        .maybeSingle();
-      if (tulongApproval) {
+      // Ipakita ang "My Tulong Financial" sa LAHAT ng members ng
+      // Tulong Financial Members ministry (hindi lang kay Elyzah).
+      // Gumagamit ng SECURITY DEFINER function para gumana kahit naka-RLS.
+      const { data: isTulongMember } = await supabase.rpc("is_tulong_financial_member");
+      if (isTulongMember) {
         items.push({ href: "/portal/tulong-financial", label: "My Tulong Financial" });
-      } else {
-        // Fallback: tingnan din kung may loan record (kung sakaling hindi dumaan sa username request).
-        const { data: tulongMember } = await supabase
-          .from("members")
-          .select("id")
-          .eq("profile_id", profile.id)
-          .limit(1)
-          .maybeSingle();
-        if (tulongMember) {
-          const { data: tulongLoan } = await supabase
-            .from("tulong_financial_loans")
-            .select("id")
-            .eq("member_id", tulongMember.id)
-            .limit(1)
-            .maybeSingle();
-          if (tulongLoan) {
-            items.push({ href: "/portal/tulong-financial", label: "My Tulong Financial" });
-          }
-        }
       }
     }
 
