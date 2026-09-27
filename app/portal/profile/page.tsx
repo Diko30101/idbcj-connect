@@ -2,6 +2,7 @@ import Link from "next/link";
 import { requirePortalAccess, fmtDate, DPO_CONTACT } from "@/lib/portal";
 import { updateMyProfile } from "../actions";
 import { Field, Notice, Panel, PageHeader, RoleBadge, StatusBadge, btnCls, btnGhostCls, inputCls } from "@/components/portal/ui";
+import { NotificationBell } from "@/components/portal/notification-bell";
 
 export default async function ProfilePage({
   searchParams,
@@ -55,7 +56,8 @@ export default async function ProfilePage({
                 <dt className="text-xs font-semibold uppercase tracking-wide text-gray-400">Email</dt>
                 <dd className="break-all text-gray-800">{p.email}</dd>
               </div>
-              <div className="flex flex-wrap gap-2">
+              <div className="flex flex-wrap items-center gap-2">
+                <NotificationBell />
                 <RoleBadge role={p.role} />
                 <StatusBadge status={p.status} />
               </div>
