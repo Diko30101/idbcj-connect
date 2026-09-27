@@ -128,8 +128,7 @@ export default async function PortalLayout({ children }: { children: React.React
         const { data, error } = await (supabase.rpc as any)("is_tulong_financial_member_by_profile", {
           p_profile_id: profile.id,
         });
-                console.log("[MyTulongMenu] profile.id:", profile.id, "data:", data, "error:", error?.message); 
-          if (error) console.error("[MyTulongMenu] RPC error:", error.message);
+        if (error) console.error("[MyTulongMenu] RPC error:", error.message);
         isTulongMember = !!data;
       } catch (e) {
         console.error("[MyTulongMenu] RPC exception:", e);
@@ -175,6 +174,7 @@ export default async function PortalLayout({ children }: { children: React.React
     "/portal/courses",
     "/portal/profile",
     "/tulong-financial",
+    "/portal/tulong-financial",
   ]);
   type SubGroupDef = { label: string; hrefs: string[]; after?: string };
   const GROUP_DEFS: { label: string; hrefs: string[]; subgroups?: SubGroupDef[] }[] = [
