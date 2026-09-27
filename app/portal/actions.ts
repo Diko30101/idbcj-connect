@@ -1123,3 +1123,20 @@ export async function submitQuizAttempt(fd: FormData) {
   );
 }
 
+// Bilang ng hindi pa nababasang inbox letters (para sa bell notification).
+// Pareho ang bilang sa sidebar Inbox badge.
+export async function getUnreadInboxCount(): Promise<{ count: number }> {
+  const { supabase, profile } = await requirePortalAccess();
+  const { data: unreadRecipients } = await supabase
+    .from("letter_recipients")
+    .select("letter_id")
+    .eq("profile_id", profile.id)
+    .is("read_at", null);
+  const { data: deletedLetters } = await supabase
+    .from("letter_deletions")
+    .select("letter_id")
+    .eq("profile_id", profile.id);
+  const deletedIds = new Set(((deletedLetters ?? []) as any[]).map((d) => d.letter_id));
+  const count = ((unreadRecipients ?? []) as any[]).filter((r) => !deletedIds.has(r.letter_id)).length;
+  return { count };
+}
