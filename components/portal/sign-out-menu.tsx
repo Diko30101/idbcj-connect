@@ -12,8 +12,8 @@ export function SignOutMenu({ dark = false }: { dark?: boolean }) {
     ? "flex w-full items-center justify-center gap-2 rounded-lg border border-white/20 px-3 py-2 text-sm font-medium text-[#dceae4] transition hover:bg-white/10 hover:text-white"
     : "rounded-md border border-gray-300 px-3 py-1.5 text-sm font-medium text-gray-600 hover:bg-gray-50";
   const menuCls = dark
-    ? "absolute right-0 z-50 mt-1 w-52 overflow-hidden rounded-lg border border-white/20 bg-[#0b3d2e] shadow-lg"
-    : "absolute right-0 z-50 mt-1 w-52 overflow-hidden rounded-lg border border-gray-200 bg-white shadow-lg";
+    ? "absolute bottom-full right-0 z-50 mb-2 w-52 overflow-hidden rounded-lg border border-white/20 bg-[#0b3d2e] shadow-lg"
+    : "absolute bottom-full right-0 z-50 mb-2 w-52 overflow-hidden rounded-lg border border-gray-200 bg-white shadow-lg";
   const itemCls = dark
     ? "block w-full px-4 py-2 text-left text-sm text-[#dceae4] hover:bg-white/10 hover:text-white"
     : "block w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50";

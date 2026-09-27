@@ -32,8 +32,9 @@ import {
   X,
   type LucideIcon,
 } from "lucide-react";
-import { PortalNav, type NavItem } from "./portal-nav";
 import { NotificationBell } from "./notification-bell";
+
+export type NavItem = { href: string; label: string; children?: NavItem[]; badge?: number };
 
 // Lokal na kopya ng role labels — hindi ini-import ang @/lib/portal dito
 // dahil may server-only code ito (next/headers).
@@ -212,43 +213,7 @@ function initialsOf(name: string) {
 
 import { SignOutMenu } from "./sign-out-menu";
 
-const signOutClassic = <SignOutMenu />;
-
 const signOutDark = <SignOutMenu dark />;
-
-// Klasikong shell — eksaktong kapareho ng dating layout para sa lahat ng
-// portal page maliban sa home.
-function ClassicShell({
-  navItems,
-  displayName,
-  children,
-}: {
-  navItems: NavItem[];
-  displayName: string;
-  children: React.ReactNode;
-}) {
-  return (
-    <div className="min-h-screen bg-slate-50 pb-16">
-      <header className="border-b border-emerald-100 bg-white shadow-sm">
-        <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-3">
-          <Link href="/portal" className="flex items-center gap-3 text-lg font-bold text-emerald-900">
-            <span className="relative h-10 w-10 shrink-0 overflow-hidden rounded-full border-2 border-emerald-100 shadow-sm">
-              <Image src="/logo.png" alt="IDBCJ Logo" fill sizes="40px" className="object-cover" />
-            </span>
-            IDBCJ Connect
-          </Link>
-          <div className="flex items-center gap-3">
-            <span className="hidden text-sm text-gray-500 sm:inline">{displayName}</span>
-            <NotificationBell />
-            {signOutClassic}
-          </div>
-        </div>
-      </header>
-      <PortalNav items={navItems} />
-      <main className="mx-auto max-w-6xl px-4 py-8">{children}</main>
-    </div>
-  );
-}
 
 // Bagong emerald sidebar shell — para lang sa portal home (/portal).
 function SidebarShell({
@@ -333,11 +298,14 @@ function SidebarShell({
             </span>
             <span className="truncate text-lg font-bold text-white">IDBCJ Connect</span>
           </Link>
+          <div className="ml-auto flex shrink-0 items-center">
+            <NotificationBell dark />
+          </div>
           <button
             type="button"
             onClick={closeDrawer}
             aria-label="Isara ang menu"
-            className="ml-auto shrink-0 rounded-lg p-2 text-[#b7d2c4] transition hover:bg-white/10 hover:text-white lg:hidden"
+            className="shrink-0 rounded-lg p-2 text-[#b7d2c4] transition hover:bg-white/10 hover:text-white lg:hidden"
           >
             <X className="h-5 w-5" aria-hidden="true" />
           </button>
@@ -392,20 +360,11 @@ export function PortalShell({
   status: string;
   children: React.ReactNode;
 }) {
-  const pathname = usePathname();
-
-  // Ang sidebar theme ay para lang sa portal home (/portal); lahat ng ibang
-  // portal page ay nananatili sa klasikong header + pill nav shell.
-  if (pathname === "/portal") {
-    return (
-      <SidebarShell navItems={navItems} displayName={displayName} role={role}>
-        {children}
-      </SidebarShell>
-    );
-  }
+  // Iisang emerald sidebar para sa LAHAT ng portal pages (testing):
+  // tinanggal ang klasikong header + pill nav (top menu).
   return (
-    <ClassicShell navItems={navItems} displayName={displayName}>
+    <SidebarShell navItems={navItems} displayName={displayName} role={role}>
       {children}
-    </ClassicShell>
+    </SidebarShell>
   );
 }

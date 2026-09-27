@@ -7,7 +7,7 @@ import { getUnreadInboxCount } from "@/app/portal/actions";
 
 // Simple bell notification: nagpapakita ng bilang ng hindi pa nababasang
 // inbox letters (pareho sa sidebar badge). Pag-click, diretso sa /portal/inbox.
-export function NotificationBell() {
+export function NotificationBell({ dark = false }: { dark?: boolean }) {
   const [unread, setUnread] = useState(0);
 
   const load = useCallback(async () => {
@@ -29,7 +29,11 @@ export function NotificationBell() {
     <Link
       href="/portal/inbox"
       aria-label="Inbox"
-      className="relative rounded-full p-2 text-gray-500 transition hover:bg-emerald-50 hover:text-emerald-700"
+      className={`relative rounded-full p-2 transition ${
+        dark
+          ? "text-[#b7d2c4] hover:bg-white/10 hover:text-white"
+          : "text-gray-500 hover:bg-emerald-50 hover:text-emerald-700"
+      }`}
     >
       <Bell className="h-5 w-5" />
       {unread > 0 && (
