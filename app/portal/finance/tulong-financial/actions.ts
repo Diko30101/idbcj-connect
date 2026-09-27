@@ -208,6 +208,29 @@ export async function addTulongPayment(fd: FormData): Promise<never> {
   back(ret, "ok", "Naitala ang bayad.");
 }
 
+// Finance Ministry: itala ang pag-abot ng pera sa nanghihiram.
+// Tinatawag ang tulong_confirm_disbursement na awtomatikong nagpapadala
+// ng confirmation letters (sa nanghihiram at sa Admin).
+export async function confirmDisbursement(fd: FormData): Promise<never> {
+  const { supabase } = await requireTulongFinancialAccess();
+  const ret = returnTo(fd);
+  const loanId = String(fd.get("loan_id") ?? "").trim();
+  const dateDisbursed = parseDate(fd.get("date_disbursed"));
+
+  if (!loanId) back(ret, "error", "Hindi nakita ang hiram.");
+  if (!dateDisbursed) back(ret, "error", "Ilagay ang petsa ng aktwal na pag-abot ng pera.");
+
+  const { error } = await supabase.rpc("tulong_confirm_disbursement", {
+    p_loan_id: loanId,
+    p_date_disbursed: dateDisbursed,
+  });
+  if (error) back(ret, "error", "Hindi naitala ang pag-abot: " + error.message);
+
+  revalidatePath(ret);
+  revalidatePath("/portal/inbox", "layout");
+  back(ret, "ok", "Naitala ang pag-abot ng pera. Naipadala ang confirmation.");
+}
+
 // ---------------------------------------------------------------------------
 // Borrower logins (username/password) -- hinahawakan ng Finance Ministry.
 // ---------------------------------------------------------------------------
