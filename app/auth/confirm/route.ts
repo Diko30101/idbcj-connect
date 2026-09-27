@@ -1,7 +1,6 @@
 import { type EmailOtpType } from "@supabase/supabase-js";
 import { type NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
-import { cookies } from "next/headers";
 
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
@@ -13,8 +12,7 @@ export async function GET(request: NextRequest) {
   
   const next = searchParams.get("next") ?? "/dashboard";
 
-  const cookieStore = cookies();
-  const supabase = createClient(cookieStore);
+  const supabase = await createClient();
 
   // CASE A: It is a PKCE Code (Most likely what you are getting)
   if (code) {
