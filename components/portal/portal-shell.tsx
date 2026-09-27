@@ -339,13 +339,6 @@ function SidebarShell({
         </div>
       </aside>
 
-      {/* Desktop top bar — bell nasa kanang dulo (mobile: nasa mobile top bar na) */}
-      <header className="sticky top-0 z-30 hidden h-14 items-center border-b border-gray-200 bg-white px-6 lg:flex">
-        <div className="ml-auto">
-          <NotificationBell />
-        </div>
-      </header>
-
       {/* Content */}
       <main className="mx-auto w-full max-w-6xl px-4 py-6 sm:px-6 lg:px-8 lg:py-8">{children}</main>
     </div>
