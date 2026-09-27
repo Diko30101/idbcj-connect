@@ -128,7 +128,7 @@ export default async function PortalLayout({ children }: { children: React.React
         .limit(1)
         .maybeSingle();
       if (tulongApproval) {
-        items.push({ href: "/portal/tulong-financial", label: "Tulong Financial" });
+        items.push({ href: "/portal/tulong-financial", label: "My Tulong Financial" });
       } else {
         // Fallback: tingnan din kung may loan record (kung sakaling hindi dumaan sa username request).
         const { data: tulongMember } = await supabase
@@ -145,7 +145,7 @@ export default async function PortalLayout({ children }: { children: React.React
             .limit(1)
             .maybeSingle();
           if (tulongLoan) {
-            items.push({ href: "/portal/tulong-financial", label: "Tulong Financial" });
+            items.push({ href: "/portal/tulong-financial", label: "My Tulong Financial" });
           }
         }
       }
