@@ -70,7 +70,7 @@ export default async function PortalHome({
   if (isTulongMember) {
     const { data: tulongMinistry } = await supabase
       .from("ministries")
-      .select("id, name")
+      .select("id, name, is_borrower_ministry")
       .eq("is_borrower_ministry", true)
       .limit(1)
       .maybeSingle();
@@ -744,14 +744,22 @@ export default async function PortalHome({
             <Empty>Wala ka pang ministry.</Empty>
           ) : (
             <ul className="space-y-2 text-sm">
-              {myMinistries.map((m) => (
-                <li key={m.ministries?.id} className="flex items-center justify-between">
-                  <Link href={`/portal/ministries/${m.ministries?.id}`} className="font-medium text-emerald-800 hover:underline">
-                    {m.ministries?.name}
-                  </Link>
-                  {m.is_leader && <span className="text-xs text-purple-700">Leader</span>}
-                </li>
-              ))}
+              {myMinistries.map((m) => {
+                // Ang Tulong Financial Members ay i-link sa transactions page
+                // para makita ng member ang kanyang mga transaksyon.
+                const isTulong = (m.ministries as any)?.is_borrower_ministry === true;
+                const href = isTulong
+                  ? "/portal/tulong-financial"
+                  : `/portal/ministries/${m.ministries?.id}`;
+                return (
+                  <li key={m.ministries?.id} className="flex items-center justify-between">
+                    <Link href={href} className="font-medium text-emerald-800 hover:underline">
+                      {m.ministries?.name}
+                    </Link>
+                    {m.is_leader && <span className="text-xs text-purple-700">Leader</span>}
+                  </li>
+                );
+              })}
             </ul>
           )}
         </Panel>
