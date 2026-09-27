@@ -63,6 +63,21 @@ export default async function PortalHome({
   const stat = (s: string) => (counts.data ?? []).filter((p) => p.status === s).length;
 
   const myMinistryNames = ((mine.data ?? []) as any[]).map((m) => m.ministries?.name).filter(Boolean);
+  // Idagdag ang Tulong Financial Members kung kasapi ang user (automatic membership,
+  // hindi via ministry_members table).
+  const { data: isTulongMember } = await supabase.rpc("is_tulong_financial_member");
+  let myMinistries = (mine.data ?? []) as any[];
+  if (isTulongMember) {
+    const { data: tulongMinistry } = await supabase
+      .from("ministries")
+      .select("id, name")
+      .eq("is_borrower_ministry", true)
+      .limit(1)
+      .maybeSingle();
+    if (tulongMinistry && !myMinistries.some((m) => m.ministries?.id === (tulongMinistry as any).id)) {
+      myMinistries = [...myMinistries, { is_leader: false, ministries: tulongMinistry }];
+    }
+  }
   const financeAccess = isFinanceMember(profile.role, myMinistryNames);
   // Tulong Financial buod: Admin o kasapi ng Finance Ministry (buong iglesia).
   const tulongAccess = isAdmin || myMinistryNames.includes(FINANCE_MINISTRY_NAME);
@@ -725,11 +740,11 @@ export default async function PortalHome({
         )}
 
         <Panel title="Ang aking mga Ministry">
-          {(mine.data ?? []).length === 0 ? (
+          {myMinistries.length === 0 ? (
             <Empty>Wala ka pang ministry.</Empty>
           ) : (
             <ul className="space-y-2 text-sm">
-              {(mine.data as any[]).map((m) => (
+              {myMinistries.map((m) => (
                 <li key={m.ministries?.id} className="flex items-center justify-between">
                   <Link href={`/portal/ministries/${m.ministries?.id}`} className="font-medium text-emerald-800 hover:underline">
                     {m.ministries?.name}
