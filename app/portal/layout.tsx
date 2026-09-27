@@ -1,7 +1,6 @@
 import { redirect } from "next/navigation";
 import { getPortalContext, isStaff, isFinance, LOCAL_FINANCE_MINISTRY_NAME, FINANCE_MINISTRY_NAME, PASTORAL_MINISTRY_NAME, ROSTER_MINISTRY_NAMES, LOCAL_ADMIN_MINISTRY_NAME } from "@/lib/portal";
-import { PortalShell } from "@/components/portal/portal-shell";
-import type { NavItem } from "@/components/portal/portal-nav";
+import { PortalShell, type NavItem } from "@/components/portal/portal-shell";
 import { shownEmail } from "@/lib/username";
 
 export const metadata = { title: "IDBCJ Connect", robots: { index: false, follow: false } };
@@ -238,8 +237,8 @@ export default async function PortalLayout({ children }: { children: React.React
     else navItems.push({ href: allChildren[0].href, label: def.label, children: allChildren });
   }
 
-  // Ang PortalShell (client) ang nagpapasya ng shell base sa pathname:
-  // sidebar theme para lang sa /portal, klasikong header + pill nav sa iba.
+  // Ang PortalShell ay iisang emerald sidebar para sa lahat ng portal pages
+  // (testing) -- tinanggal ang klasikong header + pill nav (top menu).
   const displayName = profile.full_name || profile.username || shownEmail(profile.email) || "Kapatid";
 
   return (
