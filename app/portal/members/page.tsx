@@ -9,7 +9,7 @@ export default async function MembersPage({
   searchParams: Promise<{ q?: string; status?: string; role?: string; category?: string; locality?: string; ok?: string; error?: string }>;
 }) {
   const { q = "", status = "", role = "", category = "", locality = "", ok, error } = await searchParams;
-  const { supabase, profile } = await requireRoles(["admin", "secretary"]);
+  const { supabase, profile } = await requireRoles(["admin", "secretary", "local_secretary"]);
 
   let query = supabase
     .from("profiles")
@@ -70,7 +70,7 @@ export default async function MembersPage({
         <select name="role" defaultValue={role} className={inputCls}>
           <option value="">Lahat ng role</option>
           <option value="admin">Admin</option>
-          <option value="secretary">Secretary</option>
+          <option value="secretary">General Secretary</option>
           <option value="leader">Leader</option>
           <option value="local_secretary">Local Secretary</option>
           <option value="member">Member</option>

@@ -45,7 +45,7 @@ export type Profile = {
 
 export const ROLE_LABEL: Record<Role, string> = {
   admin: "Admin (Presiding Minister)",
-  secretary: "Secretary",
+  secretary: "General Secretary",
   leader: "Ministry Leader",
   member: "Member",
   treasurer: "Treasurer",
@@ -69,10 +69,10 @@ export const KIND_LABEL: Record<string, string> = {
 
 export const KINDS = Object.keys(KIND_LABEL);
 
-export const isStaff = (r: Role) => r === "admin" || r === "secretary";
+export const isStaff = (r: Role) => r === "admin" || r === "secretary" || r === "local_secretary";
 
-// Admin, Secretary, at Treasurer lang ang may access sa financial records (lahat ng lokal)
-export const isFinance = (r: Role) => r === "admin" || r === "secretary" || r === "treasurer";
+// Admin, Secretary, Local Secretary, at Treasurer lang ang may access sa financial records (lahat ng lokal)
+export const isFinance = (r: Role) => r === "admin" || r === "secretary" || r === "local_secretary" || r === "treasurer";
 
 // Mga ministry na ang mga kasapi (at ang mismong ministry) ay Admin lang ang makapagbabago (010 at 018)
 export { PROTECTED_MINISTRY_NAMES, isProtectedMinistryName } from "./ministry-ops";

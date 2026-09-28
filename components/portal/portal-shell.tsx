@@ -40,7 +40,7 @@ export type NavItem = { href: string; label: string; children?: NavItem[]; badge
 // dahil may server-only code ito (next/headers).
 const ROLE_LABEL: Record<string, string> = {
   admin: "Admin (Presiding Minister)",
-  secretary: "Secretary",
+  secretary: "General Secretary",
   leader: "Ministry Leader",
   member: "Member",
   treasurer: "Treasurer",
