@@ -214,11 +214,11 @@ export default async function PortalLayout({ children }: { children: React.React
   const GROUP_DEFS: { label: string; hrefs: string[]; subgroups?: SubGroupDef[] }[] = [
     {
       label: "Gawain",
-      hrefs: ["/portal/ministries", "/portal/prayer", "/portal/attendance", "/portal/sermons", "/portal/events"],
+      hrefs: ["/portal/ministries", "/portal/prayer", "/portal/attendance", "/portal/sermons", "/portal/events", "/portal/pagsamba", "/portal/sugo"],
     },
     {
       label: "Local Ministry",
-      hrefs: ["/portal/roster", "/portal/attendance-record", "/portal/attendance-report", "/portal/pagsamba", "/portal/sugo", "/portal/finance/resibo", "/portal/finance/resibo/kaanib", "/portal/finance/local", "/portal/audit"],
+      hrefs: ["/portal/roster", "/portal/attendance-record", "/portal/attendance-report", "/portal/finance/resibo", "/portal/finance/resibo/kaanib", "/portal/finance/local", "/portal/audit"],
       subgroups: [
         {
           label: "Form Record",
