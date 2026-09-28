@@ -3,6 +3,7 @@ import { yearToDateLabel, fmtPeso, monthLabel, FINANCE_CATEGORIES, FINANCE_CATEG
 import { getYearlyCollections, summarizeCollections, type CollectionRow } from "@/lib/finance-collections";
 import { Empty, Notice, Panel, RoleBadge, StatusBadge } from "@/components/portal/ui";
 import { NotificationBell } from "@/components/portal/notification-bell";
+import { HelpCircle } from "lucide-react";
 import { FinanceSummaryPie } from "@/components/portal/finance-summary-pie";
 import { FinanceCategoryPie, buildCategorySlices } from "@/components/portal/finance-category-pie";
 import { auditTableLabel } from "@/lib/audit";
@@ -439,6 +440,14 @@ export default async function PortalHome({
           <NotificationBell />
           <RoleBadge role={profile.role} />
           <StatusBadge status={profile.status} />
+          <Link
+            href="/portal/help"
+            aria-label="Help"
+            title="Help"
+            className="rounded-full p-2 text-gray-500 transition hover:bg-emerald-50 hover:text-emerald-700"
+          >
+            <HelpCircle className="h-5 w-5" aria-hidden="true" />
+          </Link>
         </div>
       </div>
       <Notice ok={ok} error={error} />
