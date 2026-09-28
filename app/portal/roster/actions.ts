@@ -113,7 +113,18 @@ export async function confirmMember(fd: FormData) {
 // CSV na may mga column na full_name at locale. Ang locale ay hinahanap sa pangalan
 // (hindi case-sensitive) sa mga local na sakop ng naka-log in. Nilalaktawan ang mga
 // row na may maling pangalan o hindi kilalang locale.
-function parseCsvRows(text: string): string[][] {
+//
+// Tinatanggap din ang mga CSV na ginawa sa Excel gamit ang "CSV UTF-8" (may BOM sa
+// unahan) at ang mga CSV na semicolon (;) ang delimiter sa halip na comma — parehong
+// karaniwan depende sa regional settings ng Windows/Excel ng user.
+function detectDelimiter(text: string): string {
+  const firstLine = text.split(/\r?\n/, 1)[0] ?? "";
+  const semiCount = (firstLine.match(/;/g) ?? []).length;
+  const commaCount = (firstLine.match(/,/g) ?? []).length;
+  return semiCount > commaCount ? ";" : ",";
+}
+
+function parseCsvRows(text: string, delimiter: string = ","): string[][] {
   const rows: string[][] = [];
   let row: string[] = [];
   let field = "";
@@ -133,7 +144,7 @@ function parseCsvRows(text: string): string[][] {
       }
     } else if (c === '"') {
       inQuotes = true;
-    } else if (c === ",") {
+    } else if (c === delimiter) {
       row.push(field);
       field = "";
     } else if (c === "\n") {
@@ -159,19 +170,26 @@ export async function importMembers(fd: FormData) {
   if (!(file instanceof File) || file.size === 0) back(path, "error", "Pumili ng CSV file na ia-upload.");
   if (file.size > 2 * 1024 * 1024) back(path, "error", "Masyadong malaki ang file (hanggang 2MB lang).");
 
-  const rows = parseCsvRows(await file.text());
+  const rawText = await file.text();
+  // Alisin ang BOM (﻿) na idinadagdag ng Excel kapag "CSV UTF-8" ang na-export.
+  const text = rawText.charCodeAt(0) === 0xfeff ? rawText.slice(1) : rawText;
+  const delimiter = detectDelimiter(text);
+  const rows = parseCsvRows(text, delimiter);
   let start = 0;
   if (rows.length > 0 && rows[0].some((c) => c.trim().toLowerCase() === "full_name")) start = 1;
   const localByName = new Map(ctx.locals.map((l) => [l.name.trim().toLowerCase(), l.id]));
 
   let added = 0;
   let skipped = 0;
+  const unknownLocales = new Set<string>();
   const total = Math.max(0, rows.length - start);
   for (let i = start; i < rows.length; i++) {
     const name = normalizeName(rows[i][0] ?? "");
-    const localId = localByName.get((rows[i][1] ?? "").trim().toLowerCase());
+    const rawLocale = (rows[i][1] ?? "").trim();
+    const localId = localByName.get(rawLocale.toLowerCase());
     if (nameError(name) !== null || !localId) {
       skipped++;
+      if (!localId && rawLocale !== "") unknownLocales.add(rawLocale);
       continue;
     }
     const { error } = await ctx.supabase.from("members").insert({ local_id: localId, full_name: name });
@@ -206,5 +224,12 @@ export async function importMembers(fd: FormData) {
     }
   }
 
-  back(path, "ok", `Na-import ang ${added} sa ${total} na row; ${skipped} nilaktawan.`);
+  const hint =
+    unknownLocales.size > 0
+      ? ` Hindi nakilalang locale: ${Array.from(unknownLocales)
+          .slice(0, 5)
+          .map((l) => `"${l}"`)
+          .join(", ")}.`
+      : "";
+  back(path, "ok", `Na-import ang ${added} sa ${total} na row; ${skipped} nilaktawan.${hint}`);
 }
