@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { btnCls, inputCls } from "./form-bits";
-import { fmtPeso } from "@/lib/finance";
+import { fmtPeso, monthLabel } from "@/lib/finance";
 import type { SugoChoice } from "@/lib/abuluyan";
 
 export type AbuluyanGridExisting = {
@@ -20,14 +20,15 @@ function fmtSundayLabel(dateStr: string): string {
 }
 
 // Grid na pag-encode ng Abuluyan, sundan ang eksaktong disenyo ng papel na template
-// (public/Pagsamba.pdf): isang hanay bawat Linggo ng buwan, blangkong Halaga (at Sugo). Awtomatiko
-// ang Total. Ang Linggong may kasama nang naipadalang record ay naka-lock — kulay-abo, hindi na
-// mababago dito.
+// (public/Pagsamba.pdf): LOKAL/BUWAN-TAON na label sa itaas, isang hanay bawat Linggo ng buwan,
+// blangkong Halaga at Sugo (parehong nasa orihinal na papel na proseso). Awtomatiko ang Total.
+// Ang Linggong may kasama nang naipadalang record ay naka-lock — kulay-abo, hindi na mababago dito.
 export function AbuluyanGridForm({
   action,
   path,
   hidden,
   buwan,
+  localName,
   sundays,
   existing,
   sugoChoices,
@@ -36,6 +37,7 @@ export function AbuluyanGridForm({
   path: string;
   hidden?: Record<string, string>;
   buwan: string; // YYYY-MM
+  localName: string;
   sundays: string[];
   existing: AbuluyanGridExisting[];
   sugoChoices: SugoChoice[];
@@ -73,6 +75,17 @@ export function AbuluyanGridForm({
       <input type="hidden" name="path" value={path} />
       <input type="hidden" name="buwan" value={buwan} />
       {hidden && Object.entries(hidden).map(([k, v]) => <input key={k} type="hidden" name={k} value={v} />)}
+
+      <div className="flex flex-wrap gap-x-8 gap-y-1 rounded-md border border-gray-200 bg-gray-50 px-3 py-2 text-sm">
+        <div>
+          <span className="font-semibold uppercase tracking-wide text-gray-600">Lokal:</span>{" "}
+          <span className="font-medium text-gray-900">{localName}</span>
+        </div>
+        <div>
+          <span className="font-semibold uppercase tracking-wide text-gray-600">Buwan/Taon:</span>{" "}
+          <span className="font-medium text-gray-900">{monthLabel(buwan)}</span>
+        </div>
+      </div>
 
       <div className="overflow-x-auto rounded-md border border-gray-200">
         <table className="w-full min-w-[480px] border-collapse text-sm">

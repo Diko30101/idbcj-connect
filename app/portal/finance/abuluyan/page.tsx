@@ -89,6 +89,7 @@ export default async function AbuluyanPage({
             action={saveAbuluyanGrid}
             path={pagePath(buwan)}
             buwan={buwan}
+            localName={local.name}
             sundays={sundays}
             existing={gridExisting}
             sugoChoices={sugoChoices}
