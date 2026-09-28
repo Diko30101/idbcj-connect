@@ -454,30 +454,6 @@ export default async function PortalHome({
 
       {isAdmin && (
         <section className="mb-6">
-          <Panel title="Kailangang Aksyunan" subtitle="Mga agarang gawain na nangangailangan ng iyong atensyon">
-            {actionItems.length === 0 ? (
-              <Empty>🎉 Wala kang kailangang aksyunan ngayon.</Empty>
-            ) : (
-              <ul className="divide-y divide-gray-100">
-                {actionItems.map((a, i) => (
-                  <li key={i} className="flex items-center justify-between gap-3 py-3 first:pt-0 last:pb-0">
-                    <div className="flex items-start gap-3">
-                      <span className="text-xl leading-none">{a.icon}</span>
-                      <p className="text-sm text-gray-800">{a.text}</p>
-                    </div>
-                    <Link href={a.href} className="shrink-0 text-sm font-semibold text-emerald-700 hover:underline">
-                      {a.linkText} →
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </Panel>
-        </section>
-      )}
-
-      {isAdmin && (
-        <section className="mb-6">
           <Panel title="Buong Sistema — Pangkalahatang Tanaw" subtitle={financePeriodLabel}>
             <div className="mb-5 flex flex-col gap-6 lg:flex-row lg:items-center">
               <div className="shrink-0">
