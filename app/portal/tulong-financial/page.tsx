@@ -89,7 +89,13 @@ export default async function PortalTulongFinancialPage({
 
       <div className="mt-6">
         <Panel title="Humiling ng hiram">
-          {hasPendingRequest ? (
+          {totalBalance > 0 ? (
+            <p className="text-sm text-gray-500">
+              May natitira ka pang balanse na <span className="font-semibold text-red-700">{fmtPeso(totalBalance)}</span> sa
+              iyong hiram. Hindi ka muna makakahiling ng bagong hiram hangga&apos;t hindi ito nababayaran. Kung
+              kailangan mo talaga ng bagong hiram, makipag-ugnayan sa Finance Ministry.
+            </p>
+          ) : hasPendingRequest ? (
             <p className="text-sm text-gray-500">
               May naghihintay ka pang kahilingan sa ibaba. Hintayin muna ang desisyon bago humiling ulit.
             </p>

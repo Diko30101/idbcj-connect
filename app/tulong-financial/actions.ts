@@ -94,7 +94,9 @@ export async function submitLoanRequest(fd: FormData): Promise<never> {
   if (error || !data)
     redirect(
       `${BASE}?error=` +
-        encodeURIComponent("Hindi naipadala ang kahilingan. Maaaring may naghihintay ka pang kahilingan."),
+        encodeURIComponent(
+          "Hindi naipadala ang kahilingan. Maaaring may naghihintay ka pang kahilingan, o may natitira ka pang balanse sa umiiral na hiram.",
+        ),
     );
 
   await notifyTelegram({
@@ -126,7 +128,9 @@ export async function submitLoanRequestAsPortalUser(fd: FormData): Promise<never
   if (error || !data)
     redirect(
       `${BASE}?error=` +
-        encodeURIComponent("Hindi naipadala ang kahilingan. Maaaring may naghihintay ka pang kahilingan."),
+        encodeURIComponent(
+          "Hindi naipadala ang kahilingan. Maaaring may naghihintay ka pang kahilingan, o may natitira ka pang balanse sa umiiral na hiram.",
+        ),
     );
 
   // Kunin ang pangalan ng miyembro para sa Telegram notification.
