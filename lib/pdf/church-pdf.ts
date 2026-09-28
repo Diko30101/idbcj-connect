@@ -35,7 +35,7 @@ export async function loadChurchFonts(doc: PDFDocument): Promise<ChurchFonts> {
   };
 }
 
-function centerText(page: PDFPage, font: PDFFont, size: number, text: string, y: number) {
+export function centerText(page: PDFPage, font: PDFFont, size: number, text: string, y: number) {
   const w = font.widthOfTextAtSize(text, size);
   page.drawText(text, { x: (PAGE_W - w) / 2, y, size, font, color: rgb(0, 0, 0) });
 }
@@ -49,6 +49,47 @@ function truncateToWidth(font: PDFFont, size: number, text: string, maxW: number
     t = t.slice(0, -1);
   }
   return `${t}…`;
+}
+
+// Hatiin ang teksto sa ilang linya para kasya sa ibinigay na lapad (word-wrap), hanggang sa
+// `maxLines` -- kapag lumagpas pa rin, puputulin (may "…") ang huling linya. Ginagamit ng Pagsamba
+// katitikan sa Paksa, na maaaring mahabang pangungusap (mula sa na-upload na docx) pero kailangang
+// bounded ang taas para ligtas na kasya ang buong katitikan sa isang pahina.
+function wrapText(font: PDFFont, size: number, text: string, maxW: number, maxLines: number): string[] {
+  const words = (text || "").split(/\s+/).filter(Boolean);
+  if (words.length === 0) return [""];
+  const lines: string[] = [];
+  let cur = "";
+  for (const w of words) {
+    const test = cur ? `${cur} ${w}` : w;
+    if (font.widthOfTextAtSize(test, size) <= maxW) {
+      cur = test;
+    } else {
+      if (cur) lines.push(cur);
+      if (lines.length >= maxLines) {
+        cur = "";
+        break;
+      }
+      if (font.widthOfTextAtSize(w, size) > maxW) {
+        lines.push(truncateToWidth(font, size, w, maxW));
+        cur = "";
+      } else {
+        cur = w;
+      }
+    }
+    if (lines.length >= maxLines) {
+      cur = "";
+      break;
+    }
+  }
+  if (cur && lines.length < maxLines) lines.push(cur);
+  if (lines.length > maxLines) lines.length = maxLines;
+  // Kung may natirang salita pa pero puno na ang maxLines, dagdagan ng "…" ang huling linya.
+  const consumedLen = lines.join(" ").length;
+  if (consumedLen < text.trim().length && lines.length === maxLines) {
+    lines[maxLines - 1] = truncateToWidth(font, size, `${lines[maxLines - 1]} …`, maxW);
+  }
+  return lines.length > 0 ? lines : [""];
 }
 
 // Iginuhit ang header (selyo + pangalan ng iglesia + pamagat). Ibinabalik ang "y" pagkatapos.
@@ -218,67 +259,134 @@ export async function drawAmbaganPages(
   return pages;
 }
 
-export type AbuluyanPdfRow = { serviceDate: string; amount: number };
+// Isang Linggo ng Pagsamba: Paksa (church-wide), Sugo (per local), bilang ng dumalo/panauhin
+// (mula sa attendance, read-only), at Abuluyan (kabuuang handog ng araw na iyon, kung meron nang
+// naipadalang record -- `null` kung wala pang naipapasa).
+export type PagsambaPdfWeek = {
+  weekLabel: string; // hal. "Linggo 1"
+  serviceDate: string; // YYYY-MM-DD
+  paksa: string;
+  sugo: string;
+  dumalo: number;
+  panauhin: number;
+  abuluyan: number | null;
+};
 
-// Bumubuo ng isa o higit pang pahina ng Linggo | Halaga (matches public/Pagsamba.pdf) --
-// ang lingguhang Abuluyan (pinagsamang handog, hindi per-miyembro).
-export async function drawAbuluyanPages(
+const PAGSAMBA_HEADER_H = 14;
+const PAGSAMBA_TOP_PAD = 5;
+const PAGSAMBA_PAKSA_LEADING = 11;
+const PAGSAMBA_PAKSA_MAX_LINES = 2;
+const PAGSAMBA_GAP_AFTER_PAKSA = 3;
+const PAGSAMBA_STATS_H = 12;
+const PAGSAMBA_BOTTOM_PAD = 5;
+const PAGSAMBA_BLOCK_GAP = 7;
+const PAGSAMBA_LABEL_W = 44; // lapad ng "Paksa :"
+
+// Nakapirming taas bawat Linggo (Paksa ay naka-cap sa 2 linya, may "…" kung mas mahaba pa) --
+// tinitiyak na kasya ang buong katitikan (hanggang 5 Linggo, PAGSAMBA_MAX_WEEKS) sa isang pahina,
+// gaya ng hiniling: "gawing isang page" ang Pagsamba na bahagi ng Buwanang Resibo.
+function pagsambaWeekBlockHeight(): number {
+  return (
+    PAGSAMBA_TOP_PAD +
+    PAGSAMBA_HEADER_H +
+    2 +
+    PAGSAMBA_PAKSA_MAX_LINES * PAGSAMBA_PAKSA_LEADING +
+    PAGSAMBA_GAP_AFTER_PAKSA +
+    PAGSAMBA_STATS_H +
+    PAGSAMBA_BOTTOM_PAD
+  );
+}
+
+// Iginuhit ang isang kahon na "katitikan" para sa isang Linggo: pamagat na hanay (Linggo + petsa),
+// Paksa (hanggang 2 linya), at ang Sugo/Dumalo/Panauhin/Abuluyan sa isang compact na hanay.
+// Ibinabalik ang "y" sa ilalim ng kahon.
+function drawPagsambaWeekBlock(page: PDFPage, fonts: ChurchFonts, topY: number, week: PagsambaPdfWeek, contentW: number): number {
+  const blockH = pagsambaWeekBlockHeight();
+  const boxBottom = topY - blockH;
+
+  page.drawRectangle({
+    x: MARGIN,
+    y: boxBottom,
+    width: contentW,
+    height: blockH,
+    borderColor: rgb(0, 0, 0),
+    borderWidth: 0.75,
+    color: rgb(0.965, 0.965, 0.965),
+  });
+  page.drawRectangle({
+    x: MARGIN,
+    y: topY - PAGSAMBA_HEADER_H,
+    width: contentW,
+    height: PAGSAMBA_HEADER_H,
+    color: rgb(0.85, 0.85, 0.85),
+    borderColor: rgb(0, 0, 0),
+    borderWidth: 0.75,
+  });
+  page.drawText(`${week.weekLabel} — ${fmtLinggoDate(week.serviceDate)}`, {
+    x: MARGIN + 5,
+    y: topY - PAGSAMBA_HEADER_H + 4,
+    size: 9,
+    font: fonts.sansBold,
+  });
+
+  let ly = topY - PAGSAMBA_HEADER_H - PAGSAMBA_TOP_PAD - 8;
+  const paksaValueW = contentW - PAGSAMBA_LABEL_W - 10;
+  const paksaLines = wrapText(fonts.sans, 9, week.paksa || "(wala pang naitalang paksa)", paksaValueW, PAGSAMBA_PAKSA_MAX_LINES);
+  page.drawText("Paksa :", { x: MARGIN + 5, y: ly, size: 9, font: fonts.sansBold });
+  const paksaX = MARGIN + 5 + PAGSAMBA_LABEL_W;
+  for (const line of paksaLines) {
+    page.drawText(line, { x: paksaX, y: ly, size: 9, font: fonts.sans });
+    ly -= PAGSAMBA_PAKSA_LEADING;
+  }
+  // Kung mas kaunti sa max ang linya ng Paksa, panatilihing pantay ang taas ng bawat kahon.
+  ly -= (PAGSAMBA_PAKSA_MAX_LINES - paksaLines.length) * PAGSAMBA_PAKSA_LEADING;
+  ly -= PAGSAMBA_GAP_AFTER_PAKSA;
+
+  const sugoTxt = week.sugo || "—";
+  const abuluyanTxt = week.abuluyan === null ? "—" : week.abuluyan.toLocaleString("en-PH", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  const statsLine =
+    `Sugo :  ${sugoTxt}` +
+    `      Dumalo:  ${week.dumalo}` +
+    `      Panauhin:  ${week.panauhin}` +
+    `      Abuluyan:  ${abuluyanTxt}`;
+  page.drawText(truncateToWidth(fonts.sans, 9, statsLine, contentW - 10), { x: MARGIN + 5, y: ly, size: 9, font: fonts.sans });
+
+  return boxBottom;
+}
+
+// Bumubuo ng ISANG pahina ng "KATITIKAN NG IDINAOS NA PAGSAMBA": isang kahon bawat Linggo ng buwan
+// na naglalaman ng Paksa, Sugo, Blg. ng Dumalo, Blg. ng Panauhin, at Abuluyan -- sinusunod ang
+// disenyo ng orihinal na papel/Word na template, hindi na simpleng "Linggo | Halaga". Naka-cap ang
+// taas ng bawat Linggo para laging kasya ang buong katitikan (hanggang 5 Linggo) sa isang pahina.
+export async function drawPagsambaPages(
   doc: PDFDocument,
   fonts: ChurchFonts,
   logoBytes: Uint8Array,
   local: string,
   buwanTaon: string,
-  rows: AbuluyanPdfRow[],
+  weeks: PagsambaPdfWeek[],
   grandTotal: number,
   secretaryName?: string,
 ): Promise<PDFPage[]> {
-  const pages: PDFPage[] = [];
-  const dateColW = 340;
-  const amountColW = PAGE_W - MARGIN * 2 - dateColW;
-  const colWidths = [dateColW, amountColW];
-  const headerLabels = ["Linggo", "Halaga"];
-  const headerH = 20;
-  const rowH = 18;
-  const footerReserve = 105;
+  const page = doc.addPage([PAGE_W, PAGE_H]);
+  const contentW = PAGE_W - MARGIN * 2;
 
-  let page = doc.addPage([PAGE_W, PAGE_H]);
-  pages.push(page);
   let y = await drawLetterhead(doc, page, fonts, logoBytes, "P A G S A M B A");
+  // Karagdagang subtitle sa ilalim ng pamagat, ipinapaliwanag kung ano ang dokumentong ito.
+  centerText(page, fonts.serif, 10, "Katitikan ng Idinaos na Pagsamba", y + 22);
   y = drawFieldsRow(page, fonts, y, { label: "LOKAL :", value: local }, { label: "BUWAN/TAON:", value: buwanTaon });
+  y -= 4;
 
-  drawTableHeaderRow(page, fonts, y, colWidths, headerLabels, headerH);
-  let ry = y - headerH;
-
-  const newContinuationPage = () => {
-    page = doc.addPage([PAGE_W, PAGE_H]);
-    pages.push(page);
-    let cy = PAGE_H - MARGIN;
-    page.drawText(`Pagsamba (patuloy) — ${local} — ${buwanTaon}`, { x: MARGIN, y: cy, size: 10, font: fonts.sans, color: rgb(0.35, 0.35, 0.35) });
-    cy -= 20;
-    drawTableHeaderRow(page, fonts, cy, colWidths, headerLabels, headerH);
-    ry = cy - headerH;
-  };
-
-  for (let idx = 0; idx < rows.length; idx++) {
-    const reserve = idx === rows.length - 1 ? footerReserve : 0;
-    if (ry - rowH < MARGIN + reserve) newContinuationPage();
-    const r = rows[idx];
-    let cx = MARGIN;
-    page.drawRectangle({ x: cx, y: ry - rowH, width: colWidths[0], height: rowH, borderColor: rgb(0, 0, 0), borderWidth: 0.75 });
-    page.drawText(fmtLinggoDate(r.serviceDate), { x: cx + 4, y: ry - rowH + 5, size: 9, font: fonts.sans });
-    cx += colWidths[0];
-    page.drawRectangle({ x: cx, y: ry - rowH, width: colWidths[1], height: rowH, borderColor: rgb(0, 0, 0), borderWidth: 0.75 });
-    const txt = r.amount.toLocaleString("en-PH", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-    const tw = fonts.sans.widthOfTextAtSize(txt, 9);
-    page.drawText(txt, { x: cx + colWidths[1] - tw - 5, y: ry - rowH + 5, size: 9, font: fonts.sans });
-    ry -= rowH;
+  for (const week of weeks) {
+    y = drawPagsambaWeekBlock(page, fonts, y, week, contentW);
+    y -= PAGSAMBA_BLOCK_GAP;
   }
 
-  const totalLine = `TOTAL: ${fmtPHP(grandTotal)}`;
+  const totalLine = `TOTAL NA ABULUYAN: ${fmtPHP(grandTotal)}`;
   const totalTw = fonts.sans.widthOfTextAtSize(totalLine, 11);
-  page.drawText(totalLine, { x: PAGE_W - MARGIN - totalTw, y: ry - 22, size: 11, font: fonts.sans });
+  page.drawText(totalLine, { x: PAGE_W - MARGIN - totalTw, y: y - 12, size: 11, font: fonts.sans });
 
-  const sigY = ry - 70;
+  const sigY = y - 56;
   page.drawLine({ start: { x: PAGE_W - MARGIN - 220, y: sigY }, end: { x: PAGE_W - MARGIN, y: sigY }, thickness: 0.75 });
   if (secretaryName) {
     const nameTw = fonts.sansBold.widthOfTextAtSize(secretaryName, 10);
@@ -288,7 +396,7 @@ export async function drawAbuluyanPages(
   const sigTw = fonts.sans.widthOfTextAtSize(sigLabel, 9);
   page.drawText(sigLabel, { x: PAGE_W - MARGIN - 110 - sigTw / 2, y: sigY - 23, size: 9, font: fonts.sans });
 
-  return pages;
+  return [page];
 }
 
 export type PasalamatPdfRow = { date: string; memberName: string; description: string; amount: number };

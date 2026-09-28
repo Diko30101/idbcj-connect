@@ -2,14 +2,16 @@ import { NextRequest, NextResponse } from "next/server";
 import fs from "node:fs";
 import path from "node:path";
 import { PDFDocument } from "pdf-lib";
+import type { SupabaseClient } from "@supabase/supabase-js";
 import { getAbuluyanContext, denyAbuluyan } from "@/lib/portal";
 import { isValidMonth } from "@/lib/abuluyan";
-import { currentMonthPH } from "@/lib/finance";
+import { currentMonthPH, monthToDate } from "@/lib/finance";
 import { groupAmbaganByMember, groupGivingByMember } from "@/lib/resibo";
 import { pasalamatTypeLabel } from "@/lib/giving";
 import { getResiboSummary } from "../summary";
-import { loadChurchFonts, drawAbuluyanPages, drawAmbaganPages, drawAralPages, drawPasalamatPages } from "@/lib/pdf/church-pdf";
+import { loadChurchFonts, drawPagsambaPages, drawAmbaganPages, drawAralPages, drawPasalamatPages, type PagsambaPdfWeek } from "@/lib/pdf/church-pdf";
 import { LOCAL_KEY_TO_LOCALITY } from "@/lib/finance-collections";
+import { sundaysOfMonth } from "@/lib/pagsamba";
 
 // Downloadable/printable na PDF ng Buwanang Resibo (Pagsamba/Abuluyan + Ambagan + Tulong sa Aral +
 // Pasalamat), sundan ang eksaktong disenyo ng opisyal na letterhead template (public/Pagsamba.pdf,
@@ -48,6 +50,7 @@ export async function GET(req: NextRequest) {
   ]);
   const ambaganGrid = groupAmbaganByMember(summary.ambagan);
   const aralRows = groupGivingByMember(summary.tulong);
+  const pagsambaWeeks = await getPagsambaWeeks(ctx.supabase, localId, buwan, summary.abuluyan);
 
   const doc = await PDFDocument.create();
   doc.setTitle(`Pagsamba, Ambagan, Aral at Pasalamat — ${localName} — ${summary.monthLabel}`);
@@ -55,13 +58,13 @@ export async function GET(req: NextRequest) {
   const fonts = await loadChurchFonts(doc);
   const logoBytes = fs.readFileSync(path.join(process.cwd(), "public", "logo-seal.png"));
 
-  await drawAbuluyanPages(
+  await drawPagsambaPages(
     doc,
     fonts,
     logoBytes,
     localName,
     summary.monthLabel,
-    summary.abuluyan.map((w) => ({ serviceDate: w.serviceDate, amount: w.amount })),
+    pagsambaWeeks,
     summary.abuluyanTotal,
     secretaryName,
   );
@@ -135,4 +138,64 @@ async function getLocalSecretaryName(
     .limit(1);
   const row = ((data ?? []) as { full_name: string | null }[])[0];
   return row?.full_name ?? "";
+}
+
+// Katitikan ng Pagsamba bawat Linggo ng buwan: Paksa (church-wide, mula sa pagsamba_topics),
+// Sugo ng pangunahing session (per local, mula sa pagsamba_records), Blg. ng Dumalo/Panauhin
+// (read-only mula sa attendance, service_type = "Linggo" lang), at Abuluyan ng Linggo na iyon
+// (mula sa summary.abuluyan na kinuha na, `null` kung wala pang naipapasang record).
+async function getPagsambaWeeks(
+  supabase: SupabaseClient,
+  localId: string,
+  buwan: string,
+  abuluyan: { serviceDate: string; amount: number }[],
+): Promise<PagsambaPdfWeek[]> {
+  const dates = sundaysOfMonth(buwan);
+  if (dates.length === 0) return [];
+  const abuluyanByDate = new Map(abuluyan.map((w) => [w.serviceDate, w.amount]));
+  const periodMonth = monthToDate(buwan);
+
+  const [{ data: topicRows }, { data: recRows }, { data: attRows }, { data: guestRows }] = await Promise.all([
+    supabase.from("pagsamba_topics").select("week_number, paksa").eq("period_month", periodMonth),
+    supabase.from("pagsamba_records").select("service_date, sugo_id").eq("local_id", localId).eq("session_label", "").in("service_date", dates),
+    supabase.from("attendance_records").select("service_date, present").eq("local_id", localId).eq("service_type", "Linggo").in("service_date", dates),
+    supabase.from("attendance_guests").select("service_date").eq("local_id", localId).eq("service_type", "Linggo").in("service_date", dates),
+  ]);
+
+  const topicByWeek = new Map<number, string>();
+  for (const t of (topicRows ?? []) as { week_number: number; paksa: string }[]) topicByWeek.set(t.week_number, t.paksa);
+
+  const sugoIdByDate = new Map<string, string>();
+  for (const r of (recRows ?? []) as { service_date: string; sugo_id: string | null }[]) {
+    if (r.sugo_id) sugoIdByDate.set(r.service_date, r.sugo_id);
+  }
+  const sugoIds = [...new Set([...sugoIdByDate.values()])];
+  const sugoNameById = new Map<string, string>();
+  if (sugoIds.length > 0) {
+    const { data } = await supabase.from("profiles").select("id, full_name").in("id", sugoIds);
+    for (const p of (data ?? []) as { id: string; full_name: string | null }[]) sugoNameById.set(p.id, p.full_name ?? "");
+  }
+
+  const presentByDate = new Map<string, number>();
+  for (const r of (attRows ?? []) as { service_date: string; present: boolean }[]) {
+    if (r.present) presentByDate.set(r.service_date, (presentByDate.get(r.service_date) ?? 0) + 1);
+  }
+  const guestByDate = new Map<string, number>();
+  for (const r of (guestRows ?? []) as { service_date: string }[]) {
+    guestByDate.set(r.service_date, (guestByDate.get(r.service_date) ?? 0) + 1);
+  }
+
+  return dates.map((date, i) => {
+    const weekNumber = i + 1;
+    const sugoId = sugoIdByDate.get(date);
+    return {
+      weekLabel: `Linggo ${weekNumber}`,
+      serviceDate: date,
+      paksa: topicByWeek.get(weekNumber) ?? "",
+      sugo: sugoId ? sugoNameById.get(sugoId) ?? "" : "",
+      dumalo: presentByDate.get(date) ?? 0,
+      panauhin: guestByDate.get(date) ?? 0,
+      abuluyan: abuluyanByDate.get(date) ?? null,
+    };
+  });
 }
