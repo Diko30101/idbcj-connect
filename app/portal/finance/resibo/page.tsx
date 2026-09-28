@@ -5,7 +5,7 @@ import { Empty, Notice, PageHeader, Panel, btnCls, btnGhostCls } from "@/compone
 import { isValidMonth, nextMonth, prevMonth } from "@/lib/abuluyan";
 import { currentMonthPH, fmtPeso } from "@/lib/finance";
 import { pasalamatTypeLabel } from "@/lib/giving";
-import { RESIBO_BASE } from "@/lib/resibo";
+import { RESIBO_BASE, groupAmbaganByMember, groupGivingByMember } from "@/lib/resibo";
 import { getResiboSummary } from "./summary";
 import { PrintButton } from "./print-button";
 import { KAANIB_RESIBO_BASE } from "./kaanib/page";
@@ -39,6 +39,9 @@ export default async function ResiboPage({
   const buwan = buwanParam && isValidMonth(buwanParam) ? buwanParam : currentMonthPH();
   const pagePath = (b: string, localId: string) => `${RESIBO_BASE}?buwan=${b}&local=${localId}`;
   const summary = await getResiboSummary(ctx.supabase, selected.id, selected.name, buwan);
+  const ambaganGrid = groupAmbaganByMember(summary.ambagan);
+  const aralRows = groupGivingByMember(summary.tulong);
+  const ambaganWeekTotals = [0, 1, 2, 3, 4].map((i) => ambaganGrid.reduce((s, r) => s + (r.weeks[i] ?? 0), 0));
 
   const th = "border border-gray-400 bg-emerald-700 px-2 py-1.5 text-left font-semibold text-white";
   const thRight = "border border-gray-400 bg-emerald-700 px-2 py-1.5 text-right font-semibold text-white";
@@ -146,28 +149,44 @@ export default async function ResiboPage({
               </section>
 
               <section>
-                <h3 className="font-semibold text-gray-900">Ambagan</h3>
-                {summary.ambagan.length === 0 ? (
+                <h3 className="font-semibold text-gray-900">
+                  Ambagan <span className="text-xs font-normal text-gray-500">· Pangalan bawat linggo (I–V)</span>
+                </h3>
+                {ambaganGrid.length === 0 ? (
                   <p className="mt-2 text-sm text-gray-500">(walang naipadalang Ambagan)</p>
                 ) : (
                   <table className="mt-2 w-full border-collapse text-sm">
                     <thead>
                       <tr>
-                        <th className={th}>Kaanib</th>
-                        <th className={th}>Petsa</th>
-                        <th className={thRight}>Halaga</th>
+                        <th className={th}>Pangalan</th>
+                        <th className={thRight}>I</th>
+                        <th className={thRight}>II</th>
+                        <th className={thRight}>III</th>
+                        <th className={thRight}>IV</th>
+                        <th className={thRight}>V</th>
                       </tr>
                     </thead>
                     <tbody>
-                      {summary.ambagan.map((r, i) => (
-                        <tr key={`${r.memberId}-${i}`}>
+                      {ambaganGrid.map((r) => (
+                        <tr key={r.memberId}>
                           <td className={td}>{r.memberName}</td>
-                          <td className={td}>{r.date}</td>
-                          <td className={tdRight}>{fmtPeso(r.amount)}</td>
+                          {r.weeks.map((w, i) => (
+                            <td key={i} className={tdRight}>
+                              {w === null ? "—" : fmtPeso(w)}
+                            </td>
+                          ))}
                         </tr>
                       ))}
                       <tr>
-                        <td className={totalTd} colSpan={2}>Kabuuan ng Ambagan</td>
+                        <td className={td}>Kabuuan bawat linggo</td>
+                        {ambaganWeekTotals.map((w, i) => (
+                          <td key={i} className={tdRight}>
+                            {fmtPeso(w)}
+                          </td>
+                        ))}
+                      </tr>
+                      <tr>
+                        <td className={totalTd} colSpan={5}>TOTAL</td>
                         <td className={totalTdRight}>{fmtPeso(summary.ambaganTotal)}</td>
                       </tr>
                     </tbody>
@@ -177,27 +196,25 @@ export default async function ResiboPage({
 
               <section>
                 <h3 className="font-semibold text-gray-900">Tulong sa Aral</h3>
-                {summary.tulong.length === 0 ? (
+                {aralRows.length === 0 ? (
                   <p className="mt-2 text-sm text-gray-500">(walang naipadalang Tulong sa Aral)</p>
                 ) : (
                   <table className="mt-2 w-full border-collapse text-sm">
                     <thead>
                       <tr>
-                        <th className={th}>Kaanib</th>
-                        <th className={th}>Petsa</th>
+                        <th className={th}>Pangalan</th>
                         <th className={thRight}>Halaga</th>
                       </tr>
                     </thead>
                     <tbody>
-                      {summary.tulong.map((r, i) => (
-                        <tr key={`${r.memberId}-${i}`}>
+                      {aralRows.map((r) => (
+                        <tr key={r.memberId}>
                           <td className={td}>{r.memberName}</td>
-                          <td className={td}>{r.date}</td>
                           <td className={tdRight}>{fmtPeso(r.amount)}</td>
                         </tr>
                       ))}
                       <tr>
-                        <td className={totalTd} colSpan={2}>Kabuuan ng Tulong sa Aral</td>
+                        <td className={totalTd}>TOTAL</td>
                         <td className={totalTdRight}>{fmtPeso(summary.tulongTotal)}</td>
                       </tr>
                     </tbody>

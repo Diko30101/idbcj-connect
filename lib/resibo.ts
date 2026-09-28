@@ -24,6 +24,48 @@ export type ResiboPasalamatRow = {
   notes: string | null;
 };
 
+// Ambagan bilang grid (Pangalan × Linggo I–V), tulad ng opisyal na papel na form.
+// Batay sa araw ng buwan: Linggo I = araw 1–7, II = 8–14, III = 15–21, IV = 22–28, V = 29+.
+export type ResiboAmbaganRow = { memberId: string; memberName: string; weeks: (number | null)[]; total: number };
+
+// Tulong sa Aral bilang simpleng listahan (Pangalan | Halaga) — isang kabuuan bawat kaanib
+// sa buwan, tulad ng opisyal na papel na form (walang linggong breakdown).
+export type ResiboAralRow = { memberId: string; memberName: string; amount: number };
+
+// Pinagsasama-sama ang mga ambagan record ng isang kaanib sa 5 hanay ng linggo (I–V).
+export function groupAmbaganByMember(rows: ResiboGivingRow[]): ResiboAmbaganRow[] {
+  const byMember = new Map<string, { memberName: string; weeks: number[] }>();
+  for (const r of rows) {
+    const day = Number(r.date.slice(8, 10));
+    const weekIdx = Math.min(5, Math.max(1, Math.ceil(day / 7))) - 1; // 0..4
+    const entry = byMember.get(r.memberId) ?? { memberName: r.memberName, weeks: [0, 0, 0, 0, 0] };
+    entry.weeks[weekIdx] += r.amount;
+    byMember.set(r.memberId, entry);
+  }
+  return [...byMember.entries()]
+    .map(([memberId, v]) => ({
+      memberId,
+      memberName: v.memberName,
+      weeks: v.weeks.map((n) => (n === 0 ? null : n)),
+      total: v.weeks.reduce((s, n) => s + n, 0),
+    }))
+    .sort((a, b) => a.memberName.localeCompare(b.memberName, "fil"));
+}
+
+// Pinagsasama-sama ang mga record ng isang kaanib sa isang kabuuan bawat buwan
+// (ginagamit ng Tulong sa Aral; puwede rin gamitin sa ibang simpleng Pangalan|Halaga na ulat).
+export function groupGivingByMember(rows: ResiboGivingRow[]): ResiboAralRow[] {
+  const byMember = new Map<string, { memberName: string; amount: number }>();
+  for (const r of rows) {
+    const entry = byMember.get(r.memberId) ?? { memberName: r.memberName, amount: 0 };
+    entry.amount += r.amount;
+    byMember.set(r.memberId, entry);
+  }
+  return [...byMember.entries()]
+    .map(([memberId, v]) => ({ memberId, memberName: v.memberName, amount: v.amount }))
+    .sort((a, b) => a.memberName.localeCompare(b.memberName, "fil"));
+}
+
 export type ResiboSummary = {
   buwan: string; // YYYY-MM
   monthLabel: string;
