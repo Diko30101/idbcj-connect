@@ -266,6 +266,43 @@ export async function getRosterContext() {
   return { ...ctx, isAdmin, locals };
 }
 
+export type PagsambaLocal = { id: string; key: string; name: string; timezone: string };
+
+// Access ng Pagsamba (regular na Linggong worship service). Paksa: Admin lang ang nag-e-encode (church-wide,
+// iisa para sa buong Iglesia, hindi per-local). Sugo: Leader ng Pastoral Ministry (is_pastoral_leader) o Admin,
+// church-wide dahil sila ang nagpapasya kung saang local nakatalaga ang bawat Sugo. Ang ibang tao
+// (Administrative/Local Admin Ministry, o Pastoral Ministry member) ay makikita lang ang sariling local
+// (tingnan lang, walang edit sa Sugo). Ang database (RLS at validate_pagsamba_sugo) ang huling harang; ito
+// ay para lang malaman kung anong pahina/kontrol ang ipapakita.
+export async function getPagsambaContext() {
+  const ctx = await requirePortalAccess();
+  const { supabase, profile } = ctx;
+  const [{ data: adm }, { data: pl }, { data: mm }, { data: allLocals }] = await Promise.all([
+    supabase.rpc("is_admin"),
+    supabase.rpc("is_pastoral_leader"),
+    supabase
+      .from("ministry_members")
+      .select("local_id, ministries(name), locals(id, key, name, timezone)")
+      .eq("profile_id", profile.id),
+    supabase.from("locals").select("id, key, name, timezone").order("name"),
+  ]);
+  const isAdmin = adm === true;
+  const isPastoralLeader = pl === true;
+  const isChurchWide = isAdmin || isPastoralLeader;
+  const canWritePaksa = isAdmin;
+  const canWriteSugo = isChurchWide;
+
+  const myLocals = new Map<string, PagsambaLocal>();
+  for (const m of (mm ?? []) as any[]) {
+    if (m.local_id && m.locals && (ROSTER_MINISTRY_NAMES.includes(m.ministries?.name) || m.ministries?.name === PASTORAL_MINISTRY_NAME)) {
+      myLocals.set(m.local_id, m.locals as PagsambaLocal);
+    }
+  }
+  const locals = isChurchWide ? ((allLocals ?? []) as PagsambaLocal[]) : [...myLocals.values()];
+  if (locals.length === 0) redirect("/portal?error=" + encodeURIComponent("Wala kang access sa pahinang iyon."));
+  return { ...ctx, isAdmin, isPastoralLeader, canWritePaksa, canWriteSugo, isChurchWide, locals };
+}
+
 // Access ng mga pahintulot (012): ang lider ng Pastoral Ministry na role ay admin (is_pastoral_leader) ang nagbibigay at bumabawi;
 // ang church-wide Finance ay nakakabasa lang. Ang database (RLS at giving_permissions_rules) ang huling harang.
 export async function getPermissionsContext() {
