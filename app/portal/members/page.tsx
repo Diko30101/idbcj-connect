@@ -34,9 +34,11 @@ export default async function MembersPage({
         subtitle="Talaan ng mga kapatiran. Ikaw lang at ang secretary ang nakakakita nito."
         action={
           <div className="flex flex-wrap gap-2">
-            <Link href="/portal/members/new" className={btnCls}>
-              + Add Member
-            </Link>
+            {profile.role === "admin" && (
+              <Link href="/portal/members/new" className={btnCls}>
+                + Add Member
+              </Link>
+            )}
             {profile.role === "admin" && (
               <a href="/portal/members/export" className={btnGhostCls}>
                 Export CSV
@@ -118,10 +120,12 @@ export default async function MembersPage({
         )}
       </Panel>
 
-      <p className="mt-4 text-xs text-gray-500">
-        Para magdagdag ng bagong member, pindutin ang &quot;+ Add Member&quot;. Bibigyan siya ng username at
-        temporary password.
-      </p>
+      {profile.role === "admin" && (
+        <p className="mt-4 text-xs text-gray-500">
+          Para magdagdag ng bagong member, pindutin ang &quot;+ Add Member&quot;. Bibigyan siya ng username at
+          temporary password.
+        </p>
+      )}
     </>
   );
 }

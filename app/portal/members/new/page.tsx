@@ -4,7 +4,8 @@ import { PageHeader, Panel, btnGhostCls } from "@/components/portal/ui";
 import { AddMemberForm } from "@/components/portal/add-member-form";
 
 export default async function NewMemberPage() {
-  await requireRoles(["admin", "secretary", "local_secretary"]);
+  // Admin lang ang puwedeng magdagdag ng bagong member/account.
+  await requireRoles(["admin"]);
 
   return (
     <>

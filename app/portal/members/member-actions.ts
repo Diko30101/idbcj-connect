@@ -36,10 +36,10 @@ function makeTempPassword(): string {
 }
 
 // ---------------------------------------------------------------
-// BAGONG MEMBER (admin o secretary)
+// BAGONG MEMBER (Admin lang)
 // ---------------------------------------------------------------
 export async function createMember(_prev: CreateMemberState, fd: FormData): Promise<CreateMemberState> {
-  const { user } = await requireRoles(["admin", "secretary", "local_secretary"]);
+  const { user } = await requireRoles(["admin"]);
 
   const fullName = str(fd, "full_name").replace(/\s+/g, " ");
   const category = str(fd, "category") as Category;
