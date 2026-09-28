@@ -203,7 +203,7 @@ export default async function PortalHome({
     const weekEnd = addDays(weekStart, 6);
     const trendStart = addDays(today, -55);
 
-    const [dAbuluyan, dAmbagan, dTulong, dPasalamat, weekAbuluyan, resiboLetters, attLatest, attTrendRows, auditRows, tulongUserReq, tulongLoanReq] =
+    const [dAbuluyan, dAmbagan, dTulong, dPasalamat, weekAbuluyan, resiboLetters, attLatest, attTrendRows, auditRows, tulongUserReq, tulongLoanReq, financeSummaryRes] =
       await Promise.all([
         supabase.from("abuluyan_totals").select("id").eq("status", "draft").limit(500),
         supabase.from("ambagan_records").select("id").eq("status", "draft").limit(500),
@@ -236,6 +236,9 @@ export default async function PortalHome({
         // Tulong Financial: mga naghihintay ng apruba ng admin
         supabase.from("tulong_username_requests").select("id").eq("status", "pending").limit(500),
         supabase.from("tulong_loan_requests").select("id").eq("status", "sent").limit(500),
+        // Mga naisumiteng ulat (Abuluyan/Ambagan/Tulong sa Aral/Pasalamat/Tulong Financial)
+        // na naghihintay ng desisyon ng church-wide Finance/Admin.
+        supabase.rpc("admin_home_finance_summary"),
       ]);
 
     const localsList = [...localNames.entries()].map(([key, name]) => ({ key, name }));
@@ -258,6 +261,36 @@ export default async function PortalHome({
         text: `${draftTotal} draft na naghihintay ng pagsusumite (${draftCounts.filter(([, n]) => n > 0).map(([l, n]) => `${n} ${l}`).join(" · ")})`,
         href: "/portal/finance",
         linkText: "Tingnan ang mga draft",
+      });
+    }
+
+    // 1.5) Mga ulat na naisumite, naghihintay ng desisyon ng church-wide Finance/Admin
+    const financeSummary = (financeSummaryRes as any)?.data as
+      | {
+          pending?: { label: string; href: string; n: number; oldest_days: number }[];
+          missing_tulong_klase?: { name: string }[];
+        }
+      | null
+      | undefined;
+    for (const p of financeSummary?.pending ?? []) {
+      const label = p.label === "Tulong sa Klase Ministeryal" ? "Tulong sa Aral" : p.label;
+      actionItems.push({
+        icon: "✅",
+        text: `${p.n} ${label} na naisumite, naghihintay ng iyong desisyon (${p.oldest_days} araw na)`,
+        href: p.href,
+        linkText: "Tingnan",
+      });
+    }
+    const missingTulongKlase = financeSummary?.missing_tulong_klase ?? [];
+    if (missingTulongKlase.length > 0) {
+      const names =
+        missingTulongKlase.slice(0, 3).map((l) => l.name).join(", ") +
+        (missingTulongKlase.length > 3 ? ` at ${missingTulongKlase.length - 3} pa` : "");
+      actionItems.push({
+        icon: "📋",
+        text: `${missingTulongKlase.length} local na wala pang Tulong sa Aral ngayong buwan: ${names}`,
+        href: "/portal/finance/tulong",
+        linkText: "Tingnan ang Tulong sa Aral",
       });
     }
 
