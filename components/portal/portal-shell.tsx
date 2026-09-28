@@ -15,6 +15,7 @@ import {
   Gift,
   HandHeart,
   HandHelping,
+  HelpCircle,
   HeartHandshake,
   Home,
   Inbox,
@@ -45,6 +46,7 @@ const ROLE_LABEL: Record<string, string> = {
   member: "Member",
   treasurer: "Treasurer",
   local_secretary: "Local Secretary",
+  general_treasurer: "General Treasurer",
 };
 
 function isActive(pathname: string, href: string) {
@@ -59,6 +61,7 @@ const ICONS: Record<string, LucideIcon> = {
   "/portal/ministries": Network,
   "/portal/prayer": HeartHandshake,
   "/portal/profile": User,
+  "/portal/help": HelpCircle,
   "/portal/attendance": ClipboardCheck,
   "/portal/members": Users,
   "/portal/sermons": Mic,
