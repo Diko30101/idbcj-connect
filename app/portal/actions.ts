@@ -389,7 +389,10 @@ export async function getNotifications(): Promise<{ items: NotificationItem[] }>
   const { supabase, profile } = await requirePortalAccess();
   const seenAt = profile.notifications_seen_at;
 
-  const [ann, sched, svc, myMinistries, letters] = await Promise.all([
+  // Tandaan: ang Inbox (mga liham) ay hiwalay na sistema ng abiso (may sariling "unread" badge
+  // sa sidebar). Hindi na kasama rito ang mga liham/reply — para lang ito sa mga pangkalahatang
+  // anunsyo, iskedyul, at bagong serbisyo.
+  const [ann, sched, svc, myMinistries] = await Promise.all([
     supabase
       .from("announcements")
       .select("id, title, ministry_id, created_at, ministries(name)")
@@ -412,14 +415,6 @@ export async function getNotifications(): Promise<{ items: NotificationItem[] }>
       .limit(10),
     // Para malaman kung kabilang ang naka-login sa Administrative Ministry
     supabase.from("ministry_members").select("ministries(name)").eq("profile_id", profile.id),
-    // Bagong mensahe sa Inbox (liham o reply) na hindi galing sa sarili
-    supabase
-      .from("letter_messages")
-      .select("id, letter_id, author_id, created_at, letters(subject), profiles(full_name)")
-      .neq("author_id", profile.id)
-      .gt("created_at", seenAt)
-      .order("created_at", { ascending: false })
-      .limit(10),
   ]);
 
   const isAdminMinistryMember = ((myMinistries.data ?? []) as any[]).some(
@@ -469,14 +464,6 @@ export async function getNotifications(): Promise<{ items: NotificationItem[] }>
       subtitle: s.title ? (s.title as string) : "Para sa Administrative Ministry",
       date: s.created_at as string,
       href: "/portal",
-    })),
-    ...((letters.data ?? []) as any[]).map((m) => ({
-      id: `lt-${m.id}`,
-      kind: "letter" as const,
-      title: (m.letters?.subject as string | undefined) ?? "Liham",
-      subtitle: `Mula kay ${(m.profiles?.full_name as string | undefined) ?? "Staff"}`,
-      date: m.created_at as string,
-      href: `/portal/inbox/${m.letter_id}`,
     })),
   ].sort((x, y) => (x.date < y.date ? 1 : -1));
 
