@@ -116,10 +116,10 @@ export async function createMember(_prev: CreateMemberState, fd: FormData): Prom
 }
 
 // ---------------------------------------------------------------
-// I-RESET ANG PASSWORD (admin o secretary)
+// I-RESET ANG PASSWORD (Admin lang)
 // ---------------------------------------------------------------
 export async function resetMemberPassword(_prev: ResetPasswordState, fd: FormData): Promise<ResetPasswordState> {
-  const { user, profile: me } = await requireRoles(["admin", "secretary", "local_secretary"]);
+  const { user, profile: me } = await requireRoles(["admin"]);
   const id = str(fd, "id");
   if (!id) return { error: "Walang napiling member." };
   if (id === user.id) return { error: "Hindi ito para sa sarili mong account. Gamitin ang Change Password." };
@@ -152,14 +152,14 @@ export async function resetMemberPassword(_prev: ResetPasswordState, fd: FormDat
 }
 
 // ---------------------------------------------------------------
-// BURAHIN ANG MEMBER (admin o secretary). Pinal: binubura ang auth
+// BURAHIN ANG MEMBER (Admin lang). Pinal: binubura ang auth
 // account at ang profile; ang mga kaugnay na tala ay sumusunod sa
 // on-delete rules ng database (cascade o set null).
 // ---------------------------------------------------------------
 export type DeleteMemberState = { error?: string } | null;
 
 export async function deleteMember(_prev: DeleteMemberState, fd: FormData): Promise<DeleteMemberState> {
-  const { user, profile: me } = await requireRoles(["admin", "secretary", "local_secretary"]);
+  const { user, profile: me } = await requireRoles(["admin"]);
   const id = str(fd, "id");
   const name = str(fd, "name");
   if (!id) return { error: "Walang napiling member." };

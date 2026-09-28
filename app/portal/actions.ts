@@ -58,10 +58,12 @@ export async function updateMyProfile(fd: FormData) {
 }
 
 // ---------------------------------------------------------------
-// MEMBERS (staff)
+// MEMBERS (Admin lang -- ang buong "Users" section, kasama ang
+// pag-edit ng profile at ministry membership dito, ay Admin-only na.
+// Ginagamit lang ito mula sa /portal/members/[id], na Admin-only na rin.)
 // ---------------------------------------------------------------
 export async function updateMember(fd: FormData) {
-  const { supabase, profile } = await requireRoles(["admin", "secretary", "local_secretary"]);
+  const { supabase, profile } = await requireRoles(["admin"]);
   const id = str(fd, "id");
   const path = `/portal/members/${id}`;
   const status = str(fd, "status");
@@ -100,7 +102,7 @@ export async function updateMember(fd: FormData) {
 }
 
 export async function addMemberToMinistry(fd: FormData) {
-  const { supabase, profile } = await requireRoles(["admin", "secretary", "local_secretary"]);
+  const { supabase, profile } = await requireRoles(["admin"]);
   const profileId = str(fd, "profile_id");
   const ministryId = str(fd, "ministry_id");
   const returnTo = str(fd, "return_to") || `/portal/members/${profileId}`;
@@ -111,7 +113,7 @@ export async function addMemberToMinistry(fd: FormData) {
 }
 
 export async function removeFromMinistry(fd: FormData) {
-  const { supabase, profile } = await requireRoles(["admin", "secretary", "local_secretary"]);
+  const { supabase, profile } = await requireRoles(["admin"]);
   const profileId = str(fd, "profile_id");
   const ministryId = str(fd, "ministry_id");
   const returnTo = str(fd, "return_to") || `/portal/members/${profileId}`;

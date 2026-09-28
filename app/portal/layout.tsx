@@ -56,8 +56,12 @@ export default async function PortalLayout({ children }: { children: React.React
   if (profile.role === "admin" || (((await supabase.from("ministry_members").select("ministries(name)").eq("profile_id", profile.id)).data ?? []) as any[]).some((m) => m.ministries?.name === "Administrative Ministry")) {
     items.push({ href: "/portal/ministries", label: "Ministries" });
   }
-  if (isStaff(profile.role)) {
+  // Ang "Users" (talaan ng mga account na may login) ay Admin lang -- hindi ito kasama sa
+  // pangkalahatang isStaff() (na kasama pa rin ang Secretary/Local Secretary para sa Sermons/Events).
+  if (profile.role === "admin") {
     items.push({ href: "/portal/members", label: "Users" });
+  }
+  if (isStaff(profile.role)) {
     items.push({ href: "/portal/sermons", label: "Sermons" });
     items.push({ href: "/portal/events", label: "Events" });
   }
@@ -90,18 +94,19 @@ export default async function PortalLayout({ children }: { children: React.React
       (m) => m.ministries?.name === PASTORAL_MINISTRY_NAME,
     );
 
-    // Finance role (Admin/Secretary/Treasurer) at Finance Ministry members ay parehong may
-    // buong access sa Finance section (Financial Management, Audit Report, Expenses).
-    // Tandaan: ang "Tulong Financial" ay Admin o Finance Ministry lang -- hindi nakikita
-    // ng Local Finance Ministry, at hindi rin ng secretary/treasurer na hindi kasapi
-    // ng Finance Ministry.
+    // Finance role (Admin/Secretary/Treasurer/General Treasurer) at Finance Ministry members ay
+    // parehong may buong access sa Finance section (Financial Management, Audit Report, Expenses).
+    // Tandaan: ang "Tulong Financial" ay Admin, General Treasurer, o Finance Ministry lang -- hindi
+    // nakikita ng Local Finance Ministry, at hindi rin ng secretary/treasurer na hindi kasapi
+    // ng Finance Ministry. Ang General Treasurer ang tumatanggap/nagpapasa sa Admin ng mga request
+    // (hal. Tulong Financial) at nagbibigay/nagtatala ng datos ng Tulong Financial sa humihiling.
     if (isFinance(profile.role) || isFinanceMinistryMember) {
       const financeChildren: NavItem[] = [
         { href: "/portal/finance", label: "Financial Management" },
         { href: "/portal/finance/report", label: "Audit Report" },
         { href: "/portal/finance/expenses", label: "Expenses" },
       ];
-      if (profile.role === "admin" || isFinanceMinistryMember) {
+      if (profile.role === "admin" || profile.role === "general_treasurer" || isFinanceMinistryMember) {
         financeChildren.push({
           href: "/portal/finance/tulong-financial",
           label: "Tulong Financial",

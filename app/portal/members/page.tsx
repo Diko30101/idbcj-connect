@@ -9,7 +9,8 @@ export default async function MembersPage({
   searchParams: Promise<{ q?: string; status?: string; role?: string; category?: string; locality?: string; ok?: string; error?: string }>;
 }) {
   const { q = "", status = "", role = "", category = "", locality = "", ok, error } = await searchParams;
-  const { supabase, profile } = await requireRoles(["admin", "secretary", "local_secretary"]);
+  // Admin lang ang makakakita ng talaan ng mga account na may login (Users).
+  const { supabase, profile } = await requireRoles(["admin"]);
 
   let query = supabase
     .from("profiles")

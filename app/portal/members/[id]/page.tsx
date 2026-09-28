@@ -16,7 +16,8 @@ export default async function MemberDetail({
 }) {
   const { id } = await params;
   const { ok, error } = await searchParams;
-  const { supabase, profile: me } = await requireRoles(["admin", "secretary", "local_secretary"]);
+  // Admin lang ang makakapasok sa detalye ng isang Users account (login, role, ministries, delete).
+  const { supabase, profile: me } = await requireRoles(["admin"]);
 
   const { data: m } = await supabase.from("profiles").select("*").eq("id", id).maybeSingle();
   if (!m) notFound();
