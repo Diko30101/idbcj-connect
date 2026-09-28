@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import { requirePortalAccess, isStaff } from "@/lib/portal";
 import { createMinistry } from "../actions";
 import { Empty, Field, Notice, PageHeader, Panel, btnCls, inputCls } from "@/components/portal/ui";
@@ -10,6 +11,18 @@ export default async function MinistriesPage({
 }) {
   const { ok, error } = await searchParams;
   const { supabase, profile } = await requirePortalAccess();
+  // Guard: Admin role o Administrative Ministry members lang ang may access.
+  // Ang iba ay nire-redirect sa /portal (kahit via direct URL).
+  if (profile.role !== "admin") {
+    const { data: mm } = await supabase
+      .from("ministry_members")
+      .select("ministries(name)")
+      .eq("profile_id", profile.id);
+    const isAdminMinistry = ((mm ?? []) as any[]).some(
+      (m) => m.ministries?.name === "Administrative Ministry"
+    );
+    if (!isAdminMinistry) redirect("/portal");
+  }
   const staff = isStaff(profile.role);
 
   const [all, mine] = await Promise.all([
