@@ -3,14 +3,16 @@ import { loadPasalamatPage, PasalamatTabs, PasalamatLocalSwitcher, monthBounds }
 import { Notice, PageHeader, Panel } from "@/components/portal/ui";
 import { PasalamatRosterGridForm, type PasalamatRosterExisting } from "@/components/portal/pasalamat-roster-grid-form";
 import { PasalamatList } from "@/components/portal/pasalamat-list";
-import { MonthYearNav } from "@/components/portal/month-year-nav";
+import { PasalamatYearNav } from "@/components/portal/pasalamat-year-nav";
 import { GIVING_BASE, type PasalamatRecord } from "@/lib/giving";
-import { monthLabel } from "@/lib/finance";
 
-// Anniversary Pasalamat: nakalista na agad ang lahat ng kaanib (gaya ng grid ng Ambagan), Halaga
-// na lang ang ie-encode ng Local.
+// Anniversary Pasalamat: pangkalahatan, nakalista na agad ang lahat ng kaanib (gaya ng grid ng
+// Ambagan), Halaga na lang ang ie-encode ng Local. Eksaktong Disyembre 1 bawat taon -- fixed na
+// ang petsa (hindi napipili), taon na lang ang pinipili sa itaas.
 const BASE = `${GIVING_BASE}/pasalamat/anniversary`;
 const TYPE = "anniversary";
+const FIXED_MONTH = "12" as const;
+const FIXED_LABEL = "Disyembre 1";
 
 export default async function PasalamatAnniversaryPage({
   searchParams,
@@ -18,10 +20,16 @@ export default async function PasalamatAnniversaryPage({
   searchParams: Promise<{ ok?: string; error?: string; local?: string; buwan?: string }>;
 }) {
   const { ok, error, local: localParam, buwan: buwanParam } = await searchParams;
-  const { ctx, locals, selected, buwan, path, pagePath, defaultDate } = await loadPasalamatPage(
+  const { ctx, locals, selected, buwan: rawBuwan, pagePath } = await loadPasalamatPage(
     { local: localParam, buwan: buwanParam },
     BASE,
   );
+  // Laging Disyembre 1 ang Anniversary Pasalamat -- kunin lang ang taon mula sa nalutas na buwan,
+  // itakda ang buwan sa "12" anuman ang narating (hal. mula sa Monthly tab).
+  const year = Number(rawBuwan.slice(0, 4));
+  const buwan = `${year}-${FIXED_MONTH}`;
+  const fixedDate = `${year}-${FIXED_MONTH}-01`;
+  const path = pagePath(buwan, ctx.isChurch ? selected?.id : undefined);
   const { min, max } = monthBounds(buwan);
 
   let records: PasalamatRecord[] = [];
@@ -67,8 +75,8 @@ export default async function PasalamatAnniversaryPage({
     <>
       <PageHeader
         title="Anniversary Pasalamat Form"
-        subtitle={selected ? `${selected.name} · ${monthLabel(buwan)}` : undefined}
-        action={<MonthYearNav buwan={buwan} basePath={BASE} localId={ctx.isChurch ? selected?.id : undefined} />}
+        subtitle={selected ? `${selected.name} · ${FIXED_LABEL}, ${year}` : undefined}
+        action={<PasalamatYearNav year={year} fixedMonth={FIXED_MONTH} fixedLabel={FIXED_LABEL} basePath={BASE} localId={ctx.isChurch ? selected?.id : undefined} />}
       />
       <Notice ok={ok} error={error} />
       <PasalamatTabs active={BASE} buwan={buwan} localId={ctx.isChurch ? selected?.id : undefined} />
@@ -78,12 +86,12 @@ export default async function PasalamatAnniversaryPage({
       {selected && (
         <>
           <div className="mt-6">
-            <Panel title="Anniversary Pasalamat Form" subtitle={monthLabel(buwan)}>
+            <Panel title="Anniversary Pasalamat Form" subtitle={`${FIXED_LABEL}, ${year}`}>
               <PasalamatRosterGridForm
                 action={savePasalamatRosterGrid}
                 path={path}
                 pasalamatType={TYPE}
-                defaultDate={defaultDate}
+                fixedDate={fixedDate}
                 members={gridMembers}
                 existing={existing}
                 hidden={ctx.isChurch ? { local_id: selected.id } : undefined}
@@ -92,7 +100,7 @@ export default async function PasalamatAnniversaryPage({
           </div>
 
           <div className="mt-6">
-            <Panel title="Mga Naitalang Anniversary Pasalamat" subtitle={monthLabel(buwan)}>
+            <Panel title="Mga Naitalang Anniversary Pasalamat" subtitle={`${FIXED_LABEL}, ${year}`}>
               <PasalamatList records={records} names={names} timezone={selected.timezone} path={path} mode={ctx.isChurch ? "church" : "local"} />
             </Panel>
           </div>

@@ -6,16 +6,27 @@ import { fmtPeso } from "@/lib/finance";
 
 export type PasalamatRosterExisting = { member_id: string; amount: number; status: string };
 
+function fmtDatePH(dateStr: string): string {
+  return new Date(`${dateStr}T00:00:00Z`).toLocaleDateString("en-PH", { timeZone: "UTC", year: "numeric", month: "long", day: "numeric" });
+}
+
 // Grid ng Taunang Pasalamat o Anniversary Pasalamat: nakalista na agad ang lahat ng kaanib (gaya ng
-// grid ng Ambagan), Halaga na lang ang ie-encode ng Local. Isang Petsa lang para sa buong batch. Ang
-// "type" (annual o anniversary) ay nakatakda na sa panel na ito — hindi na pinipili. Blangkong cell =
-// walang record na gagawin. Naka-lock na ang cell na may kasama nang naipadalang record sa buwang ito.
+// grid ng Ambagan), Halaga na lang ang ie-encode ng Local. Ang "type" (annual o anniversary) ay
+// nakatakda na sa panel na ito — hindi na pinipili. Blangkong cell = walang record na gagawin.
+// Naka-lock na ang cell na may kasama nang naipadalang record sa buwang ito.
+//
+// Ang Petsa ay eksaktong araw bawat taon (pangkalahatan): Enero 1 para sa Taunang Pasalamat,
+// Disyembre 1 para sa Anniversary Pasalamat -- kaya "fixedDate" (hindi na napipili, ipinapakita
+// lang bilang teksto + hidden input). Kung walang "fixedDate", babalik sa editable na petsa
+// (defaultDate) -- pangkaraniwang hindi na ginagamit ngayon dahil parehong may fixedDate na ang
+// Taunang at Anniversary, pero pinapanatili bilang fallback.
 export function PasalamatRosterGridForm({
   action,
   path,
   hidden,
   pasalamatType,
   defaultDate,
+  fixedDate,
   members,
   existing,
 }: {
@@ -23,7 +34,8 @@ export function PasalamatRosterGridForm({
   path: string;
   hidden?: Record<string, string>;
   pasalamatType: string; // "annual" | "anniversary"
-  defaultDate: string; // YYYY-MM-DD
+  defaultDate?: string; // YYYY-MM-DD -- ginagamit lang kung walang fixedDate
+  fixedDate?: string; // YYYY-MM-DD -- eksaktong araw, hindi na napipili
   members: { id: string; full_name: string }[];
   existing: PasalamatRosterExisting[];
 }) {
@@ -61,10 +73,18 @@ export function PasalamatRosterGridForm({
       <input type="hidden" name="pasalamat_type" value={pasalamatType} />
       {hidden && Object.entries(hidden).map(([k, v]) => <input key={k} type="hidden" name={k} value={v} />)}
 
-      <label className="block max-w-xs text-sm">
-        <span className="mb-1 block font-medium text-gray-700">Petsa ng pagbibigay</span>
-        <input type="date" name="date" defaultValue={defaultDate} required className={inputCls} />
-      </label>
+      {fixedDate ? (
+        <div className="max-w-xs text-sm">
+          <span className="mb-1 block font-medium text-gray-700">Petsa ng pagbibigay</span>
+          <input type="hidden" name="date" value={fixedDate} />
+          <p className="rounded-md border border-gray-200 bg-gray-50 px-3 py-2 text-gray-700">{fmtDatePH(fixedDate)}</p>
+        </div>
+      ) : (
+        <label className="block max-w-xs text-sm">
+          <span className="mb-1 block font-medium text-gray-700">Petsa ng pagbibigay</span>
+          <input type="date" name="date" defaultValue={defaultDate} required className={inputCls} />
+        </label>
+      )}
 
       <div className="overflow-x-auto rounded-md border border-gray-200">
         <table className="w-full min-w-[360px] border-collapse text-sm">
