@@ -167,6 +167,26 @@ export async function saveTulongGrid(fd: FormData) {
   back(path, "ok", `Na-save ang Tulong sa Klase Ministeryal: ${parts.join(", ")}.`);
 }
 
+// Burahin ang draft na Tulong sa Klase Ministeryal (mali ang pagkakaencode). Local Finance: sarili
+// nilang local lang; church-wide Finance: anumang draft. Ang naipadala/aprubado ay hindi puwedeng
+// burahin dito; ang database (RLS) ang huling harang.
+export async function deleteTulong(fd: FormData) {
+  const ctx = await requireGiving();
+  const path = target(fd);
+  const id = str(fd, "id");
+  if (id === "") back(path, "error", "Hindi nabura. Subukan ulit.");
+
+  const { data: rec } = await ctx.supabase.from("tulong_klase_records").select("id, local_id, status").eq("id", id).maybeSingle();
+  const row = rec as { id: string; local_id: string; status: string } | null;
+  if (!row || row.status !== "draft") back(path, "error", "Hindi nabura. Baka naipadala na ito o wala kang pahintulot.");
+  if (!ctx.isChurch && row.local_id !== ctx.local!.id) back(path, "error", "Hindi nabura. Wala kang pahintulot.");
+
+  const { error, count } = await ctx.supabase.from("tulong_klase_records").delete({ count: "exact" }).eq("id", id).eq("status", "draft");
+  if (error || !count) back(path, "error", givingErrorMessage(error, "Hindi nabura. Subukan ulit."));
+  revalidatePath(GIVING_BASE, "layout");
+  back(path, "ok", "Nabura ang draft na Tulong sa Klase Ministeryal.");
+}
+
 export async function updateTulong(fd: FormData) {
   const ctx = await requireGiving();
   const path = target(fd);

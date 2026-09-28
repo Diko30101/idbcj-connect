@@ -1,8 +1,8 @@
 import Link from "next/link";
 import { getAbuluyanContext, denyAbuluyan } from "@/lib/portal";
-import { createPasalamat, searchMembers } from "./actions";
+import { savePasalamatGrid, searchMembers } from "./actions";
 import { Notice, PageHeader, Panel } from "@/components/portal/ui";
-import { PasalamatForm } from "@/components/portal/pasalamat-form";
+import { PasalamatGridForm } from "@/components/portal/pasalamat-grid-form";
 import { PasalamatList } from "@/components/portal/pasalamat-list";
 import { GIVING_BASE, type PasalamatRecord } from "@/lib/giving";
 
@@ -74,11 +74,11 @@ export default async function PasalamatPage({
       {selected && (
         <>
           <div className="mt-6">
-            <Panel title="Bagong Pasalamat">
-              <PasalamatForm
-                action={createPasalamat}
-                timezone={selected.timezone}
+            <Panel title="Pag-encode ng Pasalamat">
+              <PasalamatGridForm
+                action={savePasalamatGrid}
                 path={path}
+                timezone={selected.timezone}
                 search={searchMembers}
                 hidden={ctx.isChurch ? { local_id: selected.id } : undefined}
               />

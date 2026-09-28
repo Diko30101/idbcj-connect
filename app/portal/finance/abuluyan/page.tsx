@@ -5,7 +5,8 @@ import { saveAbuluyanGrid } from "./actions";
 import { Notice, PageHeader, Panel, btnGhostCls } from "@/components/portal/ui";
 import { AbuluyanGridForm, type AbuluyanGridExisting } from "@/components/portal/abuluyan-grid-form";
 import { AbuluyanList } from "@/components/portal/abuluyan-list";
-import { ABULUYAN_BASE, ABULUYAN_BUWANAN_PATH, isValidMonth, nextMonth, prevMonth, type AbuluyanRecord, type SugoChoice } from "@/lib/abuluyan";
+import { MonthYearNav } from "@/components/portal/month-year-nav";
+import { ABULUYAN_BASE, ABULUYAN_BUWANAN_PATH, isValidMonth, type AbuluyanRecord, type SugoChoice } from "@/lib/abuluyan";
 import { currentMonthPH, monthLabel, sundaysOfMonth } from "@/lib/finance";
 
 // Pahina ng Local Finance (sariling local). Ang church-wide Finance at Admin ay sa lahat-pahina.
@@ -72,13 +73,8 @@ export default async function AbuluyanPage({
         title="Abuluyan"
         subtitle={`Pag-encode ng Abuluyan bawat Linggo ng pagsamba · ${local.name} · ${monthLabel(buwan)}`}
         action={
-          <div className="flex flex-wrap gap-2">
-            <Link href={pagePath(prevMonth(buwan))} className={btnGhostCls}>
-              ← Nakaraang buwan
-            </Link>
-            <Link href={pagePath(nextMonth(buwan))} className={btnGhostCls}>
-              Susunod na buwan →
-            </Link>
+          <div className="flex flex-wrap items-center gap-2">
+            <MonthYearNav buwan={buwan} basePath={ABULUYAN_BASE} />
             <Link href={ABULUYAN_BUWANAN_PATH} className={btnGhostCls}>
               Buwanang Ulat
             </Link>

@@ -1,12 +1,13 @@
 import Link from "next/link";
 import { getAbuluyanContext, denyAbuluyan } from "@/lib/portal";
-import { decideTulong, saveTulongGrid, submitTulong, submitManyTulong, updateTulong } from "./actions";
-import { Notice, PageHeader, Panel, btnGhostCls } from "@/components/portal/ui";
+import { decideTulong, deleteTulong, saveTulongGrid, submitTulong, submitManyTulong, updateTulong } from "./actions";
+import { Notice, PageHeader, Panel } from "@/components/portal/ui";
 import { TulongGridForm, type TulongGridExisting } from "@/components/portal/tulong-grid-form";
 import { AmbaganList } from "@/components/portal/ambagan-list";
 import { GivingGrid } from "@/components/portal/giving-grid";
+import { MonthYearNav } from "@/components/portal/month-year-nav";
 import { GIVING_BASE, type AmbaganRecord } from "@/lib/giving";
-import { isValidMonth, nextMonth, prevMonth } from "@/lib/abuluyan";
+import { isValidMonth } from "@/lib/abuluyan";
 import { currentMonthPH, monthLabel, todayInTimezone } from "@/lib/finance";
 
 // Tulong sa Klase Ministeryal (per-member): Local Finance (sariling local) at church-wide Finance (lahat ng local). Walang ibang
@@ -80,16 +81,7 @@ export default async function TulongPage({
         subtitle={
           selected ? `Pag-e-encode ng tulong ng bawat kaanib · ${selected.name} · ${monthLabel(buwan)}` : "Pag-e-encode ng tulong ng bawat kaanib"
         }
-        action={
-          <div className="flex flex-wrap gap-2">
-            <Link href={pagePath(prevMonth(buwan), selected?.id)} className={btnGhostCls}>
-              ← Nakaraang buwan
-            </Link>
-            <Link href={pagePath(nextMonth(buwan), selected?.id)} className={btnGhostCls}>
-              Susunod na buwan →
-            </Link>
-          </div>
-        }
+        action={<MonthYearNav buwan={buwan} basePath={`${GIVING_BASE}/tulong`} localId={ctx.isChurch ? selected?.id : undefined} />}
       />
       <Notice ok={ok} error={error} />
 
@@ -137,7 +129,7 @@ export default async function TulongPage({
                 path={path}
                 mode={ctx.isChurch ? "church" : "local"}
                 labels={{ monthPhrase: "Tulong para sa", empty: "Wala pang naitatalang Tulong sa Klase Ministeryal.", periodLabel: "Buwan ng tulong" }}
-                actions={{ update: updateTulong, submit: submitTulong, decide: decideTulong }}
+                actions={{ update: updateTulong, submit: submitTulong, decide: decideTulong, delete: deleteTulong }}
                 submitMany={{ action: submitManyTulong }}
                 bulkItemLabel="Tulong sa Klase Ministeryal"
               />

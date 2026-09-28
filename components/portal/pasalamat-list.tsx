@@ -2,8 +2,8 @@
 
 import { useEffect, useState, type FormEvent } from "react";
 import { PasalamatForm } from "./pasalamat-form";
-import { btnCls, btnGhostCls } from "./form-bits";
-import { updatePasalamat, submitPasalamat, submitManyPasalamat, decidePasalamat } from "@/app/portal/finance/pasalamat/actions";
+import { btnCls, btnDangerCls, btnGhostCls } from "./form-bits";
+import { updatePasalamat, submitPasalamat, submitManyPasalamat, decidePasalamat, deletePasalamat } from "@/app/portal/finance/pasalamat/actions";
 import { DecideButtons, NeedsFixBanner } from "./decide-buttons";
 import { fmtPeso } from "@/lib/finance";
 import { GIVING_STATUS_LABEL, pasalamatTypeLabel, type GivingStatus, type PasalamatRecord } from "@/lib/giving";
@@ -57,6 +57,9 @@ export function PasalamatList({
 
   const confirmSubmit = (e: FormEvent<HTMLFormElement>) => {
     if (!window.confirm("Sigurado ka bang ipapadala? Hindi na ito puwedeng i-edit ng Local Finance pagkatapos.")) e.preventDefault();
+  };
+  const confirmDelete = (e: FormEvent<HTMLFormElement>) => {
+    if (!window.confirm("Sigurado ka bang buburahin ang draft na ito? Hindi na ito maibabalik.")) e.preventDefault();
   };
   const confirmBulk = (e: FormEvent<HTMLFormElement>) => {
     if (selected.length === 0) {
@@ -149,8 +152,16 @@ export function PasalamatList({
                         Ipadala
                       </button>
                     </form>
-)}
-              
+                  )}
+                  {canSubmit && (
+                    <form action={deletePasalamat} onSubmit={confirmDelete}>
+                      <input type="hidden" name="path" value={path} />
+                      <input type="hidden" name="id" value={r.id} />
+                      <button type="submit" className={btnDangerCls}>
+                        Burahin
+                      </button>
+                    </form>
+                  )}
                 </div>
               </div>
             )}

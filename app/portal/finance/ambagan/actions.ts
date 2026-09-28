@@ -99,6 +99,26 @@ export async function updateAmbagan(fd: FormData) {
   back(path, "ok", "Na-update ang Ambagan.");
 }
 
+// Burahin ang draft na Ambagan (mali ang pagkakaencode). Local Finance: sarili nilang local lang;
+// church-wide Finance: anumang draft. Ang naipadala/aprubado ay hindi puwedeng burahin dito; ang
+// database (RLS) ang huling harang.
+export async function deleteAmbagan(fd: FormData) {
+  const ctx = await requireGiving();
+  const path = target(fd);
+  const id = str(fd, "id");
+  if (id === "") back(path, "error", "Hindi nabura. Subukan ulit.");
+
+  const { data: rec } = await ctx.supabase.from("ambagan_records").select("id, local_id, status").eq("id", id).maybeSingle();
+  const row = rec as { id: string; local_id: string; status: string } | null;
+  if (!row || row.status !== "draft") back(path, "error", "Hindi nabura. Baka naipadala na ito o wala kang pahintulot.");
+  if (!ctx.isChurch && row.local_id !== ctx.local!.id) back(path, "error", "Hindi nabura. Wala kang pahintulot.");
+
+  const { error, count } = await ctx.supabase.from("ambagan_records").delete({ count: "exact" }).eq("id", id).eq("status", "draft");
+  if (error || !count) back(path, "error", givingErrorMessage(error, "Hindi nabura. Subukan ulit."));
+  revalidatePath(GIVING_BASE, "layout");
+  back(path, "ok", "Nabura ang draft na Ambagan.");
+}
+
 // Ipadala ang isang draft na Ambagan sa church-wide Finance Ministry.
 export async function submitAmbagan(fd: FormData) {
   const ctx = await requireGiving();

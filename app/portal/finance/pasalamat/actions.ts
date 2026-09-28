@@ -63,6 +63,67 @@ function readFields(fd: FormData): { error: string } | { type: string; amount: n
   return { type, amount, date, notes };
 }
 
+// I-save ang maraming Pasalamat nang sabay-sabay mula sa listahan ng mga hanay (Petsa | Pangalan |
+// Uri | Tala | Halaga bawat hanay), gaya ng public/Monthly Pasalamat Report.pdf. Iba ito sa grid ng
+// Ambagan/Abuluyan/Tulong: walang nakalaang cell bawat kaanib dahil maaaring maraming beses magbigay
+// ang isang kaanib. Blangkong hanay (walang napiling kaanib) = walang record na gagawin. Ang
+// database (validate_giving_member) pa rin ang huling harang sa pagiging kwalipikadong kaanib.
+export async function savePasalamatGrid(fd: FormData) {
+  const ctx = await requireGiving();
+  const path = target(fd);
+  const localId = ctx.isChurch ? strOrNull(fd, "local_id") : ctx.local!.id;
+  if (!localId) back(path, "error", "Pumili ng local.");
+
+  const tz = await timezoneOf(ctx.supabase, localId);
+  const today = tz ? todayInTimezone(tz) : null;
+
+  const rowKeys = str(fd, "row_keys")
+    .split(",")
+    .map((s) => s.trim())
+    .filter((s) => /^\d+$/.test(s))
+    .slice(0, 200);
+
+  let added = 0;
+  let skipped = 0;
+  for (const key of rowKeys) {
+    const memberId = str(fd, `row__${key}__member_id`);
+    if (memberId === "") continue; // blangkong hanay
+
+    const rawType = str(fd, `row__${key}__type`);
+    const type =
+      rawType === PASALAMAT_CUSTOM_TYPE
+        ? parsePasalamatType(str(fd, `row__${key}__custom_type`))
+        : PASALAMAT_TYPES.includes(rawType)
+          ? rawType
+          : null;
+    const amount = parseGivingAmount(str(fd, `row__${key}__amount`));
+    const date = parseIsoDate(str(fd, `row__${key}__date`));
+    const notes = strOrNull(fd, `row__${key}__notes`);
+
+    if (!type || amount === "invalid" || !date || (notes && notes.length > GIVING_NOTES_MAX) || (today && date > today)) {
+      skipped++;
+      continue;
+    }
+
+    const { error } = await ctx.supabase.from("pasalamat_records").insert({
+      local_id: localId,
+      member_id: memberId,
+      type,
+      date,
+      amount,
+      notes,
+    });
+    if (!error) added++;
+    else skipped++;
+  }
+
+  revalidatePath(GIVING_BASE, "layout");
+  if (added === 0 && skipped === 0) back(path, "error", "Walang hanay na napunan. Pumili ng kaanib sa hanay na gagamitin.");
+  const parts = [`${added} naidagdag`];
+  if (skipped > 0) parts.push(`${skipped} nilaktawan (may kulang o di-wastong datos)`);
+  back(path, "ok", `Na-save ang Pasalamat: ${parts.join(", ")}.`);
+}
+
 export async function createPasalamat(fd: FormData) {
   const ctx = await requireGiving();
   const path = target(fd);
@@ -103,6 +164,26 @@ export async function updatePasalamat(fd: FormData) {
   if (error || !count) back(path, "error", givingErrorMessage(error, "Hindi na-update. Baka naipadala na ito o wala kang pahintulot."));
   revalidatePath(GIVING_BASE, "layout");
   back(path, "ok", "Na-update ang Pasalamat.");
+}
+
+// Burahin ang draft na Pasalamat (mali ang pagkakaencode). Local Finance: sarili nilang local lang;
+// church-wide Finance: anumang draft. Ang naipadala/aprubado ay hindi puwedeng burahin dito; ang
+// database (RLS) ang huling harang.
+export async function deletePasalamat(fd: FormData) {
+  const ctx = await requireGiving();
+  const path = target(fd);
+  const id = str(fd, "id");
+  if (id === "") back(path, "error", "Hindi nabura. Subukan ulit.");
+
+  const { data: rec } = await ctx.supabase.from("pasalamat_records").select("id, local_id, status").eq("id", id).maybeSingle();
+  const row = rec as { id: string; local_id: string; status: string } | null;
+  if (!row || row.status !== "draft") back(path, "error", "Hindi nabura. Baka naipadala na ito o wala kang pahintulot.");
+  if (!ctx.isChurch && row.local_id !== ctx.local!.id) back(path, "error", "Hindi nabura. Wala kang pahintulot.");
+
+  const { error, count } = await ctx.supabase.from("pasalamat_records").delete({ count: "exact" }).eq("id", id).eq("status", "draft");
+  if (error || !count) back(path, "error", givingErrorMessage(error, "Hindi nabura. Subukan ulit."));
+  revalidatePath(GIVING_BASE, "layout");
+  back(path, "ok", "Nabura ang draft na Pasalamat.");
 }
 
 export async function submitPasalamat(fd: FormData) {

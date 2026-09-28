@@ -1,12 +1,13 @@
 import Link from "next/link";
 import { getAbuluyanContext, denyAbuluyan } from "@/lib/portal";
-import { decideAmbagan, saveAmbaganGrid, submitAmbagan, submitManyAmbagan, updateAmbagan } from "./actions";
-import { Notice, PageHeader, Panel, btnGhostCls } from "@/components/portal/ui";
+import { decideAmbagan, deleteAmbagan, saveAmbaganGrid, submitAmbagan, submitManyAmbagan, updateAmbagan } from "./actions";
+import { Notice, PageHeader, Panel } from "@/components/portal/ui";
 import { AmbaganGridForm, type GridExisting } from "@/components/portal/ambagan-grid-form";
 import { AmbaganList } from "@/components/portal/ambagan-list";
 import { GivingGrid } from "@/components/portal/giving-grid";
+import { MonthYearNav } from "@/components/portal/month-year-nav";
 import { GIVING_BASE, type AmbaganRecord } from "@/lib/giving";
-import { isValidMonth, nextMonth, prevMonth } from "@/lib/abuluyan";
+import { isValidMonth } from "@/lib/abuluyan";
 import { currentMonthPH, monthLabel, sundaysOfMonth } from "@/lib/finance";
 
 // Ambagan (per-member): Local Finance (sariling local) at church-wide Finance (lahat ng local). Walang ibang nakakakita
@@ -81,16 +82,7 @@ export default async function AmbaganPage({
         subtitle={
           selected ? `Pag-e-encode ng ambag ng bawat kaanib · ${selected.name} · ${monthLabel(buwan)}` : "Pag-e-encode ng ambag ng bawat kaanib"
         }
-        action={
-          <div className="flex flex-wrap gap-2">
-            <Link href={pagePath(prevMonth(buwan), selected?.id)} className={btnGhostCls}>
-              ← Nakaraang buwan
-            </Link>
-            <Link href={pagePath(nextMonth(buwan), selected?.id)} className={btnGhostCls}>
-              Susunod na buwan →
-            </Link>
-          </div>
-        }
+        action={<MonthYearNav buwan={buwan} basePath={`${GIVING_BASE}/ambagan`} localId={ctx.isChurch ? selected?.id : undefined} />}
       />
       <Notice ok={ok} error={error} />
 
@@ -137,7 +129,7 @@ export default async function AmbaganPage({
                 timezone={selected.timezone}
                 path={path}
                 mode={ctx.isChurch ? "church" : "local"}
-                actions={{ update: updateAmbagan, submit: submitAmbagan, decide: decideAmbagan }}
+                actions={{ update: updateAmbagan, submit: submitAmbagan, decide: decideAmbagan, delete: deleteAmbagan }}
                 submitMany={{ action: submitManyAmbagan }}
               />
             </Panel>
