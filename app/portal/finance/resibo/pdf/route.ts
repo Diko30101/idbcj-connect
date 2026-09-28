@@ -6,11 +6,13 @@ import { getAbuluyanContext, denyAbuluyan } from "@/lib/portal";
 import { isValidMonth } from "@/lib/abuluyan";
 import { currentMonthPH } from "@/lib/finance";
 import { groupAmbaganByMember, groupGivingByMember } from "@/lib/resibo";
+import { pasalamatTypeLabel } from "@/lib/giving";
 import { getResiboSummary } from "../summary";
-import { loadChurchFonts, drawAmbaganPages, drawAralPages } from "@/lib/pdf/church-pdf";
+import { loadChurchFonts, drawAbuluyanPages, drawAmbaganPages, drawAralPages, drawPasalamatPages } from "@/lib/pdf/church-pdf";
 
-// Downloadable/printable na PDF ng Buwanang Resibo (Ambagan + Tulong sa Aral), sundan ang
-// eksaktong disenyo ng opisyal na letterhead template (public/Ambagan.pdf, public/Aral.pdf).
+// Downloadable/printable na PDF ng Buwanang Resibo (Pagsamba/Abuluyan + Ambagan + Tulong sa Aral +
+// Pasalamat), sundan ang eksaktong disenyo ng opisyal na letterhead template (public/Pagsamba.pdf,
+// public/Ambagan.pdf, public/Aral.pdf, public/Monthly Pasalamat Report.pdf).
 // Parehong pahintulot gaya ng /portal/finance/resibo (Church-wide Finance, Admin, o Local Finance
 // ng sariling lokal). Ang RLS pa rin ang huling harang sa datos.
 export async function GET(req: NextRequest) {
@@ -41,11 +43,20 @@ export async function GET(req: NextRequest) {
   const aralRows = groupGivingByMember(summary.tulong);
 
   const doc = await PDFDocument.create();
-  doc.setTitle(`Ambagan at Aral — ${localName} — ${summary.monthLabel}`);
+  doc.setTitle(`Pagsamba, Ambagan, Aral at Pasalamat — ${localName} — ${summary.monthLabel}`);
   doc.setProducer("IDBCJ Connect");
   const fonts = await loadChurchFonts(doc);
   const logoBytes = fs.readFileSync(path.join(process.cwd(), "public", "logo-seal.png"));
 
+  await drawAbuluyanPages(
+    doc,
+    fonts,
+    logoBytes,
+    localName,
+    summary.monthLabel,
+    summary.abuluyan.map((w) => ({ serviceDate: w.serviceDate, amount: w.amount })),
+    summary.abuluyanTotal,
+  );
   await drawAmbaganPages(
     doc,
     fonts,
@@ -65,9 +76,23 @@ export async function GET(req: NextRequest) {
     aralRows.map((r) => ({ memberName: r.memberName, amount: r.amount })),
     summary.tulongTotal,
   );
+  await drawPasalamatPages(
+    doc,
+    fonts,
+    logoBytes,
+    localName,
+    summary.monthLabel,
+    summary.pasalamat.map((r) => ({
+      date: r.date,
+      memberName: r.memberName,
+      description: r.notes ? `${pasalamatTypeLabel(r.type)} — ${r.notes}` : pasalamatTypeLabel(r.type),
+      amount: r.amount,
+    })),
+    summary.pasalamatTotal,
+  );
 
   const bytes = await doc.save();
-  const filename = `Ambagan-Aral-${localName.replace(/[^\w-]+/g, "_")}-${buwan}.pdf`;
+  const filename = `Pagsamba-Ambagan-Aral-Pasalamat-${localName.replace(/[^\w-]+/g, "_")}-${buwan}.pdf`;
   return new NextResponse(Buffer.from(bytes), {
     headers: {
       "Content-Type": "application/pdf",

@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { back, getAbuluyanContext, denyAbuluyan, getAdminRecipientIds, str, strOrNull } from "@/lib/portal";
-import { isSunday } from "@/lib/finance";
+import { isSunday, sundaysOfMonth, todayInTimezone } from "@/lib/finance";
 import {
   ABULUYAN_BASE,
   ABULUYAN_BUWANAN_PATH,
@@ -52,6 +52,93 @@ export async function createAbuluyan(fd: FormData) {
   if (error) back(path, "error", abuluyanErrorMessage(error, "Hindi na-save. Subukan ulit."));
   revalidatePath(ABULUYAN_BASE, "layout");
   back(path, "ok", replacesId ? "Na-save ang kapalit na record (Draft)." : "Na-save ang Abuluyan record (Draft).");
+}
+
+// I-save ang buong grid (Linggo I–V ng buwan) ng isang local, parang papel na form (public/Pagsamba.pdf):
+// isang hanay bawat Linggo, "amt__<petsa>" ang halaga at "sugo__<petsa>" ang Sugo. Blangko ang halaga at
+// walang Sugo = walang ginawang record (hindi paglabag). May kasama nang naipadalang record (hindi na
+// "draft") = naka-lock, hindi na binabago dito.
+export async function saveAbuluyanGrid(fd: FormData) {
+  const ctx = await getAbuluyanContext();
+  const path = target(fd);
+  let localId: string | null = null;
+  if (ctx.isChurch) localId = strOrNull(fd, "local_id");
+  else if (ctx.local) localId = ctx.local.id;
+  else denyAbuluyan();
+  if (!localId) back(path, "error", "Pumili ng local.");
+
+  const buwan = str(fd, "buwan");
+  if (!isValidMonth(buwan)) back(path, "error", "Pumili ng wastong Buwan/Taon.");
+  const sundays = sundaysOfMonth(buwan);
+
+  const { data: localRow } = await ctx.supabase.from("locals").select("timezone").eq("id", localId).maybeSingle();
+  const tz = (localRow as { timezone?: string } | null)?.timezone ?? null;
+  const today = tz ? todayInTimezone(tz) : null;
+
+  const { data: existingRows } = await ctx.supabase
+    .from("abuluyan_totals")
+    .select("id, service_date, total_amount, sugo_id, status")
+    .eq("local_id", localId)
+    .neq("status", "void")
+    .in("service_date", sundays);
+  type Existing = { id: string; service_date: string; total_amount: number | null; sugo_id: string | null; status: string };
+  const existing = new Map<string, Existing>();
+  // Numeric column: string ang ibinabalik ng Supabase client, kaya i-cast bago ikumpara.
+  for (const r of (existingRows ?? []) as any[])
+    existing.set(r.service_date, { ...r, total_amount: r.total_amount === null ? null : Number(r.total_amount) });
+
+  let added = 0;
+  let updated = 0;
+  let locked = 0;
+  let skippedFuture = 0;
+  let skippedInvalid = 0;
+
+  for (const date of sundays) {
+    const rawAmt = String(fd.get(`amt__${date}`) ?? "");
+    const rawSugo = String(fd.get(`sugo__${date}`) ?? "").trim();
+    const amount = parseAmount(rawAmt);
+    if (amount === "invalid") {
+      skippedInvalid++;
+      continue;
+    }
+    const sugoId = rawSugo === "" ? null : rawSugo;
+    if (amount === null && sugoId === null) continue; // walang binigay: walang ginawang record
+
+    if (today && date > today) {
+      skippedFuture++;
+      continue;
+    }
+
+    const found = existing.get(date);
+    if (found) {
+      if (found.status !== "draft") {
+        locked++;
+        continue;
+      }
+      if (found.total_amount === amount && found.sugo_id === sugoId) continue; // walang pagbabago
+      const { error } = await ctx.supabase
+        .from("abuluyan_totals")
+        .update({ total_amount: amount, sugo_id: sugoId })
+        .eq("id", found.id)
+        .eq("status", "draft");
+      if (!error) updated++;
+    } else {
+      const { error } = await ctx.supabase.from("abuluyan_totals").insert({
+        local_id: localId,
+        service_date: date,
+        total_amount: amount,
+        sugo_id: sugoId,
+      });
+      if (!error) added++;
+    }
+  }
+
+  revalidatePath(ABULUYAN_BASE, "layout");
+  const parts = [`${added} bago`, `${updated} na-update`];
+  if (locked > 0) parts.push(`${locked} naka-lock na (naipadala na)`);
+  if (skippedFuture > 0) parts.push(`${skippedFuture} nasa hinaharap (hindi isinave)`);
+  if (skippedInvalid > 0) parts.push(`${skippedInvalid} di-wastong halaga (hindi isinave)`);
+  back(path, "ok", `Na-save ang Abuluyan: ${parts.join(", ")}.`);
 }
 
 export async function updateAbuluyanDraft(fd: FormData) {

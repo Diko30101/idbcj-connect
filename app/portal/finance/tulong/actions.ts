@@ -14,6 +14,16 @@ import {
   type MemberChoice,
 } from "@/lib/giving";
 
+// Sinusunod ang eksaktong panuntunan ng kaanib gaya ng search_members, pero listahan ng buong
+// local (hindi paghahanap sa text) — parehong function na ginagamit ng grid ng Ambagan.
+async function eligibleMembersOf(
+  supabase: Awaited<ReturnType<typeof getAbuluyanContext>>["supabase"],
+  localId: string,
+): Promise<Set<string>> {
+  const { data } = await supabase.rpc("list_giving_eligible_members", { p_local_id: localId });
+  return new Set(((data ?? []) as { id: string }[]).map((m) => m.id));
+}
+
 // Local Finance (sariling local) at church-wide Finance lang. Ang server ang nagpapasya kung sino ang makagagawa ng ano;
 // ang database (RLS, enforce_finance_record_rules, validate_giving_member) ang huling harang, at ang mga mensahe nito
 // (natitiwalag, hindi kumpirmado, walang pahintulot) ang ipinapakita. Ang nag-encode, ang status ng pagpapadala at ang
@@ -81,6 +91,80 @@ export async function createTulong(fd: FormData) {
   if (error) back(path, "error", givingErrorMessage(error, "Hindi na-save. Subukan ulit."));
   revalidatePath(GIVING_BASE, "layout");
   back(path, "ok", "Na-save ang Tulong sa Klase Ministeryal (Draft).");
+}
+
+// I-save ang buong grid (Pangalan | Halaga, gaya ng public/Aral.pdf) ng isang buwan sa isang local:
+// isang field bawat kaanib na "amt__<memberId>", isang PETSA lang para sa buong batch (walang
+// lingguhang breakdown ang Tulong sa Aral — isang kabuuan bawat kaanib bawat buwan lang). Blangkong
+// cell = walang ginawang record. Naka-lock na ang cell na may kasama nang naipadalang record.
+export async function saveTulongGrid(fd: FormData) {
+  const ctx = await requireGiving();
+  const path = target(fd);
+  const localId = ctx.isChurch ? strOrNull(fd, "local_id") : ctx.local!.id;
+  if (!localId) back(path, "error", "Pumili ng local.");
+  const period = parsePeriodMonth(str(fd, "period_month"));
+  if (!period) back(path, "error", "Pumili ng wastong Buwan/Taon.");
+  const date = parseIsoDate(str(fd, "date_received"));
+  if (!date) back(path, "error", "Di-wastong petsa ng pagtanggap.");
+
+  const tz = await timezoneOf(ctx.supabase, localId);
+  if (tz && date > todayInTimezone(tz)) back(path, "error", "Hindi puwedeng nasa hinaharap ang petsa ng pagtanggap.");
+
+  const eligibleIds = await eligibleMembersOf(ctx.supabase, localId);
+  if (eligibleIds.size === 0) back(path, "error", "Walang kaanib na tumatanggap ng Tulong sa Klase Ministeryal sa local na ito.");
+
+  const { data: existingRows } = await ctx.supabase
+    .from("tulong_klase_records")
+    .select("id, member_id, amount, status")
+    .eq("local_id", localId)
+    .eq("period_month", period);
+  type Existing = { id: string; member_id: string; amount: number; status: string };
+  const existing = new Map<string, Existing>();
+  for (const r of (existingRows ?? []) as any[])
+    if (r.status !== "void") existing.set(r.member_id, { ...r, amount: Number(r.amount) });
+
+  let added = 0;
+  let updated = 0;
+  let locked = 0;
+  let cellCount = 0;
+  for (const [key, rawValue] of fd.entries()) {
+    if (!key.startsWith("amt__")) continue;
+    if (++cellCount > 1000) break;
+    const memberId = key.slice("amt__".length);
+    if (!eligibleIds.has(memberId)) continue;
+    const amount = parseGivingAmount(String(rawValue));
+    if (amount === "invalid") continue; // blangko o 0: walang ginawang record
+
+    const found = existing.get(memberId);
+    if (found) {
+      if (found.status !== "draft") {
+        locked++;
+        continue;
+      }
+      if (found.amount === amount) continue;
+      const { error } = await ctx.supabase
+        .from("tulong_klase_records")
+        .update({ amount, date_received: date })
+        .eq("id", found.id)
+        .eq("status", "draft");
+      if (!error) updated++;
+    } else {
+      const { error } = await ctx.supabase.from("tulong_klase_records").insert({
+        local_id: localId,
+        member_id: memberId,
+        period_month: period,
+        amount,
+        date_received: date,
+        notes: null,
+      });
+      if (!error) added++;
+    }
+  }
+
+  revalidatePath(GIVING_BASE, "layout");
+  const parts = [`${added} bago`, `${updated} na-update`];
+  if (locked > 0) parts.push(`${locked} naka-lock na (naipadala na)`);
+  back(path, "ok", `Na-save ang Tulong sa Klase Ministeryal: ${parts.join(", ")}.`);
 }
 
 export async function updateTulong(fd: FormData) {

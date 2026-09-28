@@ -73,7 +73,7 @@ export default async function ResiboPage({
               rel="noopener noreferrer"
               className={btnGhostCls}
             >
-              I-download PDF (Ambagan/Aral)
+              I-download PDF (Pagsamba/Ambagan/Aral/Pasalamat)
             </a>
             <Link href={pagePath(nextMonth(buwan), selected.id)} className={btnGhostCls}>
               Susunod →

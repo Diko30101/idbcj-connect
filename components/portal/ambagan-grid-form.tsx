@@ -68,9 +68,9 @@ export function AmbaganGridForm({
     }, 0);
   const grandTotal = members.reduce((s, m) => s + rowTotal(m.id), 0);
 
-  const th = "border border-gray-300 bg-gray-100 px-2 py-1.5 text-left text-xs font-semibold uppercase tracking-wide text-gray-600";
+  const th = "border border-gray-300 bg-gray-100 px-2 py-1.5 text-center text-xs font-semibold uppercase tracking-wide text-gray-600";
   const thRight =
-    "border border-gray-300 bg-gray-100 px-2 py-1.5 text-right text-xs font-semibold uppercase tracking-wide text-gray-600 whitespace-nowrap";
+    "border border-gray-300 bg-gray-100 px-2 py-1.5 text-center text-xs font-semibold uppercase tracking-wide text-gray-600 whitespace-nowrap";
   const td = "border border-gray-200 px-1.5 py-1 text-sm text-gray-800";
   const tdInput = "border border-gray-200 p-0.5";
   const tdRight = "border border-gray-200 px-2 py-1 text-right text-sm tabular-nums text-gray-800";
