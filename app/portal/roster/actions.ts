@@ -6,6 +6,7 @@ import {
   MEMBER_STATUSES,
   ROSTER_BASE,
   ROSTER_NAME_MAX,
+  nameKey,
   normalizeName,
   rosterErrorMessage,
   safeRosterPath,
@@ -179,8 +180,15 @@ export async function importMembers(fd: FormData) {
   if (rows.length > 0 && rows[0].some((c) => c.trim().toLowerCase() === "full_name")) start = 1;
   const localByName = new Map(ctx.locals.map((l) => [l.name.trim().toLowerCase(), l.id]));
 
+  // Kunin ang mga kasalukuyang miyembro (sa mga local na sakop) para hindi madoble ang pag-import —
+  // kasama na rin ang mga row na magkakapareho sa loob mismo ng CSV file na ito.
+  const localIds = ctx.locals.map((l) => l.id);
+  const { data: existingMembers } = await ctx.supabase.from("members").select("full_name, local_id").in("local_id", localIds);
+  const existingKeys = new Set((existingMembers ?? []).map((m) => `${m.local_id}::${nameKey(m.full_name)}`));
+
   let added = 0;
   let skipped = 0;
+  let duplicates = 0;
   const unknownLocales = new Set<string>();
   const total = Math.max(0, rows.length - start);
   for (let i = start; i < rows.length; i++) {
@@ -192,9 +200,19 @@ export async function importMembers(fd: FormData) {
       if (!localId && rawLocale !== "") unknownLocales.add(rawLocale);
       continue;
     }
+    const key = `${localId}::${nameKey(name)}`;
+    if (existingKeys.has(key)) {
+      skipped++;
+      duplicates++;
+      continue;
+    }
     const { error } = await ctx.supabase.from("members").insert({ local_id: localId, full_name: name });
-    if (error) skipped++;
-    else added++;
+    if (error) {
+      skipped++;
+    } else {
+      added++;
+      existingKeys.add(key);
+    }
   }
   revalidatePath(ROSTER_BASE, "layout");
   if (total === 0) back(path, "error", "Walang nabasang row sa CSV.");
@@ -224,12 +242,16 @@ export async function importMembers(fd: FormData) {
     }
   }
 
-  const hint =
-    unknownLocales.size > 0
-      ? ` Hindi nakilalang locale: ${Array.from(unknownLocales)
-          .slice(0, 5)
-          .map((l) => `"${l}"`)
-          .join(", ")}.`
-      : "";
+  const hints: string[] = [];
+  if (duplicates > 0) hints.push(`${duplicates} nilaktawan dahil mayroon nang kaparehong pangalan.`);
+  if (unknownLocales.size > 0) {
+    hints.push(
+      `Hindi nakilalang locale: ${Array.from(unknownLocales)
+        .slice(0, 5)
+        .map((l) => `"${l}"`)
+        .join(", ")}.`,
+    );
+  }
+  const hint = hints.length > 0 ? ` ${hints.join(" ")}` : "";
   back(path, "ok", `Na-import ang ${added} sa ${total} na row; ${skipped} nilaktawan.${hint}`);
 }
