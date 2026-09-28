@@ -12,7 +12,11 @@ export type AbuluyanRecord = {
   void_reason: string | null;
   replaces_id: string | null;
   decision_notes?: string | null;
+  sugo_id: string | null;
+  sugo_name?: string | null;
 };
+
+export type SugoChoice = { id: string; full_name: string };
 
 export const ABULUYAN_STATUS_LABEL: Record<AbuluyanStatus, string> = {
   draft: "Draft",
@@ -45,7 +49,7 @@ export function abuluyanErrorMessage(error: { code?: string; message?: string } 
   if (error.code === "23505") return "May aktibong record na para sa Linggong ito sa local na iyon.";
   // Ang 42501 ay galing din sa RLS ("row-level security"): teknikal at Ingles, kaya fallback ang ipapakita
   if (error.message?.includes("row-level security")) return fallback;
-  if (["42501", "23514", "P0002", "22023", "23502"].includes(error.code ?? "") && error.message) return error.message;
+  if (["42501", "23514", "P0002", "22023", "23502", "P0001"].includes(error.code ?? "") && error.message) return error.message;
   return fallback;
 }
 
@@ -88,7 +92,7 @@ export function nextMonth(month: string): string {
   return shiftMonth(month, 1);
 }
 
-export type MonthlySummaryWeek = { serviceDate: string; amount: number };
+export type MonthlySummaryWeek = { serviceDate: string; amount: number; sugoName: string | null };
 
 export type MonthlySummaryLocal = {
   localId: string;
@@ -109,7 +113,7 @@ export type MonthlySummary = {
 // Bumubuo ng buwanang ulat mula sa mga NAIPADALANG (submitted) record.
 // Lahat ng local sa scope ay kasama kahit walang record (makikita sa missingLocalNames).
 export function buildMonthlySummary(
-  records: { local_id: string; service_date: string; total_amount: number | null }[],
+  records: { local_id: string; service_date: string; total_amount: number | null; sugo_name?: string | null }[],
   locals: { id: string; name: string }[],
   month: string,
   generatedLabel: string,
@@ -117,7 +121,7 @@ export function buildMonthlySummary(
   const byLocal = new Map<string, MonthlySummaryWeek[]>();
   for (const r of records) {
     const list = byLocal.get(r.local_id) ?? [];
-    list.push({ serviceDate: r.service_date, amount: r.total_amount ?? 0 });
+    list.push({ serviceDate: r.service_date, amount: r.total_amount ?? 0, sugoName: r.sugo_name ?? null });
     byLocal.set(r.local_id, list);
   }
   const summaryLocals: MonthlySummaryLocal[] = locals.map((l) => {
@@ -138,7 +142,8 @@ export function monthlySummaryText(s: MonthlySummary): string {
     if (l.weeks.length === 0) {
       lines.push("  (walang naipadalang Abuluyan)");
     } else {
-      for (const w of l.weeks) lines.push(`  ${w.serviceDate} — ${fmtPeso(w.amount)}`);
+      for (const w of l.weeks)
+        lines.push(`  ${w.serviceDate} — Sugo: ${w.sugoName ?? "(walang Sugo)"} — ${fmtPeso(w.amount)}`);
       lines.push(`  Kabuuan ng local: ${fmtPeso(l.total)}`);
     }
     lines.push("");

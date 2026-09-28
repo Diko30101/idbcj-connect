@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { btnCls, btnGhostCls, inputCls } from "./form-bits";
 import { isSunday, todayInTimezone } from "@/lib/finance";
+import type { SugoChoice } from "@/lib/abuluyan";
 
 type Props = {
   action: (fd: FormData) => void;
@@ -11,6 +12,8 @@ type Props = {
   id?: string;
   defaultDate?: string;
   defaultAmount?: string;
+  defaultSugoId?: string | null;
+  sugoChoices?: SugoChoice[];
   lockDate?: boolean; // para sa kapalit na record: ang Linggo ay ang sa void
   hidden?: Record<string, string>; // hal. local_id, replaces_id
   submitLabel?: string;
@@ -24,6 +27,8 @@ export function AbuluyanForm({
   id,
   defaultDate,
   defaultAmount,
+  defaultSugoId,
+  sugoChoices = [],
   lockDate,
   hidden,
   submitLabel = "I-save bilang Draft",
@@ -38,7 +43,7 @@ export function AbuluyanForm({
   const scope = id ?? hidden?.replaces_id ?? "new";
 
   return (
-    <form action={action} className="grid gap-4 sm:grid-cols-[minmax(0,auto)_minmax(0,auto)_auto] sm:items-end">
+    <form action={action} className="grid gap-4 sm:grid-cols-[minmax(0,auto)_minmax(0,auto)_minmax(0,auto)_auto] sm:items-end">
       <input type="hidden" name="path" value={path} />
       {id && <input type="hidden" name="id" value={id} />}
       {hidden && Object.entries(hidden).map(([k, v]) => <input key={k} type="hidden" name={k} value={v} />)}
@@ -56,6 +61,17 @@ export function AbuluyanForm({
           className={inputCls}
           required
         />
+      </label>
+      <label className="grid gap-1.5">
+        <span className="text-sm font-medium text-gray-700">Sugo</span>
+        <select id={`sugo_id_${scope}`} name="sugo_id" defaultValue={defaultSugoId ?? ""} className={inputCls}>
+          <option value="">— Walang Sugo —</option>
+          {sugoChoices.map((s) => (
+            <option key={s.id} value={s.id}>
+              {s.full_name}
+            </option>
+          ))}
+        </select>
       </label>
       <label className="grid gap-1.5">
         <span className="text-sm font-medium text-gray-700">Kabuuang Abuluyan (₱)</span>
@@ -83,14 +99,14 @@ export function AbuluyanForm({
         )}
       </div>
       {!sunday && (
-        <p className="sm:col-span-3 text-sm font-medium text-amber-700">
+        <p className="sm:col-span-4 text-sm font-medium text-amber-700">
           Ang Abuluyan ay ini-e-encode lamang tuwing Linggo, araw ng pagsamba — ang napiling petsa (
           {new Date(`${date}T00:00:00Z`).toLocaleDateString("en-PH", { timeZone: "UTC", weekday: "long" })}) ay hindi
           Linggo. Pumili ng petsang Linggo para makapag-save.
         </p>
       )}
       {future && (
-        <p className="sm:col-span-3 text-sm font-medium text-amber-700">
+        <p className="sm:col-span-4 text-sm font-medium text-amber-700">
           Hindi puwedeng nasa hinaharap ang petsa (ayon sa oras ng local).
         </p>
       )}

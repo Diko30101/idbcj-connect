@@ -1,7 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { back, getAbuluyanContext, denyAbuluyan, getFinanceMinistryRecipientIds, str, strOrNull } from "@/lib/portal";
+import { back, getAbuluyanContext, denyAbuluyan, getAdminRecipientIds, str, strOrNull } from "@/lib/portal";
 import { isSunday } from "@/lib/finance";
 import {
   ABULUYAN_BASE,
@@ -30,6 +30,7 @@ export async function createAbuluyan(fd: FormData) {
   const serviceDate = str(fd, "service_date");
   const amount = parseAmount(str(fd, "total_amount"));
   const replacesId = strOrNull(fd, "replaces_id");
+  const sugoId = strOrNull(fd, "sugo_id");
 
   let localId: string | null = null;
   if (ctx.isChurch) localId = strOrNull(fd, "local_id");
@@ -45,6 +46,7 @@ export async function createAbuluyan(fd: FormData) {
     local_id: localId,
     service_date: serviceDate,
     total_amount: amount,
+    sugo_id: sugoId,
     ...(replacesId ? { replaces_id: replacesId } : {}),
   });
   if (error) back(path, "error", abuluyanErrorMessage(error, "Hindi na-save. Subukan ulit."));
@@ -59,13 +61,14 @@ export async function updateAbuluyanDraft(fd: FormData) {
   const id = str(fd, "id");
   const serviceDate = str(fd, "service_date");
   const amount = parseAmount(str(fd, "total_amount"));
+  const sugoId = strOrNull(fd, "sugo_id");
 
   if (!isSunday(serviceDate)) back(path, "error", "Dapat Linggo ang petsa ng Abuluyan.");
   if (amount === "invalid") back(path, "error", "Di-wastong halaga.");
 
   const { error, count } = await ctx.supabase
     .from("abuluyan_totals")
-    .update({ service_date: serviceDate, total_amount: amount }, { count: "exact" })
+    .update({ service_date: serviceDate, total_amount: amount, sugo_id: sugoId }, { count: "exact" })
     .eq("id", id)
     .eq("status", "draft");
   if (error || !count) back(path, "error", abuluyanErrorMessage(error, "Hindi na-update. Baka naipadala na ito o wala kang pahintulot."));
@@ -176,7 +179,7 @@ export async function decideAbuluyan(fd: FormData) {
   back(path, "ok", decision === "approved" ? "Aprubado ang Abuluyan record." : "Ibinalik sa Local ang record para ayusin.");
 }
 
-// Buwanang Ulat ng Abuluyan: ipadala bilang liham sa mga miyembro ng Finance Ministry.
+// Buwanang Ulat ng Abuluyan: ipadala bilang liham sa Admin (hindi na sa Finance Ministry).
 // Church-wide Finance at Admin: lahat ng local. Local Finance: sariling local lang.
 // Ang padron ng pag-insert ng liham ay gaya ng createLetter (letters -> letter_recipients -> letter_messages).
 export async function sendAbuluyanMonthlySummary(fd: FormData) {
@@ -209,9 +212,9 @@ export async function sendAbuluyanMonthlySummary(fd: FormData) {
     back(pagePath, "error", "Hindi maipadala ang liham: kulang ang server configuration.");
   }
 
-  // Ang tatanggap: mga miyembro ng Finance Ministry (sila ang "Admin" sa sistemang ito)
-  const recipientIds = await getFinanceMinistryRecipientIds(admin);
-  if (recipientIds.length === 0) back(pagePath, "error", "Walang miyembro ng Finance Ministry na mapapadalhan.");
+  // Ang tatanggap: mga tunay na Admin (role='admin'), hindi na ang Finance Ministry.
+  const recipientIds = await getAdminRecipientIds(admin);
+  if (recipientIds.length === 0) back(pagePath, "error", "Walang Admin na mapapadalhan.");
 
   const subject = `Buwanang Ulat ng Abuluyan — ${monthLabel(buwan)}`;
   const body = monthlySummaryText(summary);
@@ -234,5 +237,5 @@ export async function sendAbuluyanMonthlySummary(fd: FormData) {
   if (e3) back(pagePath, "error", "Hindi naipadala ang mensahe: " + e3.message);
 
   revalidatePath(ABULUYAN_BASE, "layout");
-  back(pagePath, "ok", "Naisumite na ang buwanang ulat sa Finance Ministry.");
+  back(pagePath, "ok", "Naisumite na ang buwanang ulat sa Admin.");
 }

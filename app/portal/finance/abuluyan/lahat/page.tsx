@@ -1,11 +1,11 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { getAbuluyanContext, denyAbuluyan } from "@/lib/portal";
+import { getAbuluyanContext, denyAbuluyan, PASTORAL_MINISTRY_NAME } from "@/lib/portal";
 import { createAbuluyan } from "../actions";
 import { Notice, PageHeader, Panel, btnGhostCls } from "@/components/portal/ui";
 import { AbuluyanForm } from "@/components/portal/abuluyan-form";
 import { AbuluyanList } from "@/components/portal/abuluyan-list";
-import { ABULUYAN_BASE, ABULUYAN_BUWANAN_PATH, type AbuluyanRecord } from "@/lib/abuluyan";
+import { ABULUYAN_BASE, ABULUYAN_BUWANAN_PATH, type AbuluyanRecord, type SugoChoice } from "@/lib/abuluyan";
 
 // Pahina ng church-wide Finance at Admin: lahat ng local. Dito nagvo-void at gumagawa ng kapalit.
 export default async function AbuluyanChurchPage({
@@ -29,18 +29,29 @@ export default async function AbuluyanChurchPage({
 
   const path = selected ? `${ABULUYAN_BASE}/lahat?local=${selected.id}` : `${ABULUYAN_BASE}/lahat`;
 
-  const { data } = selected
-    ? await supabase
-        .from("abuluyan_totals")
-        .select("id, local_id, service_date, total_amount, status, void_reason, replaces_id, decision_notes")
-        .eq("local_id", selected.id)
-        .order("service_date", { ascending: false })
-    : { data: [] };
+  const [{ data }, { data: mmRows }] = selected
+    ? await Promise.all([
+        supabase
+          .from("abuluyan_totals")
+          .select(
+            "id, local_id, service_date, total_amount, status, void_reason, replaces_id, decision_notes, sugo_id, sugo:profiles!abuluyan_totals_sugo_id_fkey(full_name)",
+          )
+          .eq("local_id", selected.id)
+          .order("service_date", { ascending: false }),
+        supabase.from("ministry_members").select("profile_id, ministries(name), profiles(id, full_name, status)").eq("local_id", selected.id),
+      ])
+    : [{ data: [] }, { data: [] }];
 
   const records = ((data ?? []) as any[]).map((r) => ({
     ...r,
     total_amount: r.total_amount === null ? null : Number(r.total_amount),
+    sugo_name: r.sugo?.full_name ?? null,
   })) as AbuluyanRecord[];
+
+  const sugoChoices: SugoChoice[] = ((mmRows ?? []) as any[])
+    .filter((m) => m.ministries?.name === PASTORAL_MINISTRY_NAME && m.profiles && m.profiles.status !== "inactive")
+    .map((m) => ({ id: m.profiles.id as string, full_name: (m.profiles.full_name as string) || "(walang pangalan)" }))
+    .sort((a, b) => a.full_name.localeCompare(b.full_name, "fil"));
 
   return (
     <>
@@ -78,12 +89,13 @@ export default async function AbuluyanChurchPage({
                 timezone={selected.timezone}
                 path={path}
                 hidden={{ local_id: selected.id }}
+                sugoChoices={sugoChoices}
               />
             </Panel>
           </div>
           <div className="mt-6">
             <Panel title={`Mga Naitalang Abuluyan · ${selected.name}`}>
-              <AbuluyanList records={records} timezone={selected.timezone} path={path} mode="church" />
+              <AbuluyanList records={records} timezone={selected.timezone} path={path} mode="church" sugoChoices={sugoChoices} />
             </Panel>
           </div>
         </>

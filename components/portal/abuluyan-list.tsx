@@ -6,7 +6,7 @@ import { updateAbuluyanDraft, submitAbuluyan, submitManyAbuluyan, deleteAbuluyan
 import { btnCls, btnDangerCls, btnGhostCls } from "./form-bits";
 import { DecideButtons, NeedsFixBanner } from "./decide-buttons";
 import { fmtPeso } from "@/lib/finance";
-import { ABULUYAN_STATUS_LABEL, type AbuluyanRecord, type AbuluyanStatus } from "@/lib/abuluyan";
+import { ABULUYAN_STATUS_LABEL, type AbuluyanRecord, type AbuluyanStatus, type SugoChoice } from "@/lib/abuluyan";
 
 function fmtDatePH(dateStr: string): string {
   return new Date(`${dateStr}T00:00:00Z`).toLocaleDateString("en-PH", {
@@ -41,11 +41,13 @@ export function AbuluyanList({
   timezone,
   path,
   mode,
+  sugoChoices = [],
 }: {
   records: AbuluyanRecord[];
   timezone: string;
   path: string;
   mode: "local" | "church";
+  sugoChoices?: SugoChoice[];
 }) {
   const [editingId, setEditingId] = useState<string | null>(null);
 
@@ -133,6 +135,8 @@ export function AbuluyanList({
                 id={r.id}
                 defaultDate={r.service_date}
                 defaultAmount={r.total_amount === null ? "" : String(r.total_amount)}
+                defaultSugoId={r.sugo_id}
+                sugoChoices={sugoChoices}
                 lockDate={isReplacement}
                 submitLabel="I-update"
                 onCancel={() => setEditingId(null)}
@@ -151,6 +155,7 @@ export function AbuluyanList({
                   )}
                   <div className="min-w-0 flex-1">
                     <p className="font-semibold text-gray-800">{fmtDatePH(r.service_date)}</p>
+                    <p className="text-sm text-gray-600">Sugo: {r.sugo_name ?? "—"}</p>
                     <p className="text-sm text-gray-500">
                       {r.total_amount === null ? "Wala pang halaga" : fmtPeso(r.total_amount)}
                       {isReplacement && " · Kapalit ng na-void na record"}
@@ -204,6 +209,7 @@ export function AbuluyanList({
                             timezone={timezone}
                             path={path}
                             defaultDate={r.service_date}
+                            sugoChoices={sugoChoices}
                             lockDate
                             hidden={{ local_id: r.local_id, replaces_id: r.id }}
                             submitLabel="I-save ang kapalit (Draft)"

@@ -84,6 +84,7 @@ export default async function AbuluyanBuwananPage({
                   <thead>
                     <tr className="text-left text-xs uppercase tracking-wide text-gray-500">
                       <th className="py-1 pr-4 font-medium">Linggo</th>
+                      <th className="py-1 pr-4 font-medium">Sugo</th>
                       <th className="py-1 text-right font-medium">Halaga</th>
                     </tr>
                   </thead>
@@ -91,11 +92,12 @@ export default async function AbuluyanBuwananPage({
                     {l.weeks.map((w) => (
                       <tr key={w.serviceDate} className="border-t border-gray-100">
                         <td className="py-1.5 pr-4 text-gray-700">{w.serviceDate}</td>
+                        <td className="py-1.5 pr-4 text-gray-700">{w.sugoName ?? "—"}</td>
                         <td className="py-1.5 text-right tabular-nums text-gray-700">{fmtPeso(w.amount)}</td>
                       </tr>
                     ))}
                     <tr className="border-t-2 border-gray-200 font-semibold text-gray-900">
-                      <td className="py-1.5 pr-4">Kabuuan ng local</td>
+                      <td className="py-1.5 pr-4" colSpan={2}>Kabuuan ng local</td>
                       <td className="py-1.5 text-right tabular-nums">{fmtPeso(l.total)}</td>
                     </tr>
                   </tbody>
@@ -130,7 +132,7 @@ export default async function AbuluyanBuwananPage({
               Submit
             </button>
             <p className="text-xs text-gray-500">
-              Isusumite ang ulat na ito bilang liham sa Finance Ministry.
+              Isusumite ang ulat na ito bilang liham sa Admin.
             </p>
           </form>
         </Panel>

@@ -98,6 +98,13 @@ export async function getFinanceMinistryRecipientIds(supabase: SupabaseClient): 
   return [...new Set(((data ?? []) as { profile_id: string }[]).map((m) => m.profile_id))];
 }
 
+// Ang mga tunay na Admin (role='admin' sa profiles). Ginagamit para sa mga ulat/liham na dating
+// napupunta sa Finance Ministry (hal. Buwanang Ulat ng Abuluyan) pero dapat sa Admin mismo.
+export async function getAdminRecipientIds(supabase: SupabaseClient): Promise<string[]> {
+  const { data } = await supabase.from("profiles").select("id").eq("role", "admin");
+  return [...new Set(((data ?? []) as { id: string }[]).map((p) => p.id))];
+}
+
 // Ang tumatanggap ng Ulat ng Pagdalo: mga miyembro ng Administrative Ministry
 // (hindi ang mga profile na role='admin'). Ibinabalik ang mga profile id.
 // Tatanggap ng Ulat ng Pagdalo: ang LEADER ng Administrative Ministry

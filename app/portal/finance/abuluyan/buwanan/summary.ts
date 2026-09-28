@@ -24,7 +24,7 @@ export async function getMonthlySummary(
   const { data } = localIds.length
     ? await supabase
         .from("abuluyan_totals")
-        .select("local_id, service_date, total_amount")
+        .select("local_id, service_date, total_amount, sugo:profiles!abuluyan_totals_sugo_id_fkey(full_name)")
         .eq("status", "submitted")
         .gte("service_date", first)
         .lt("service_date", firstNext)
@@ -32,10 +32,13 @@ export async function getMonthlySummary(
         .order("service_date", { ascending: true })
     : { data: [] as unknown[] };
 
-  const records = ((data ?? []) as { local_id: string; service_date: string; total_amount: unknown }[]).map((r) => ({
+  const records = (
+    (data ?? []) as { local_id: string; service_date: string; total_amount: unknown; sugo: { full_name: string } | null }[]
+  ).map((r) => ({
     local_id: r.local_id,
     service_date: r.service_date,
     total_amount: r.total_amount === null ? null : Number(r.total_amount),
+    sugo_name: r.sugo?.full_name ?? null,
   }));
 
   const generatedLabel = new Date().toLocaleDateString("en-CA", { timeZone: "Asia/Manila" });

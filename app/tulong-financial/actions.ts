@@ -73,7 +73,7 @@ export async function getBorrowerSessionToken(): Promise<string | null> {
 }
 
 // Borrower: humiling ng hiram (kailangan aktibo ang account; walang username = walang hiram).
-// Ang kahilingan ay awtomatikong nagkakaroon ng Inbox letter sa admin para sa apruba.
+// Ang kahilingan ay awtomatikong nagkakaroon ng Inbox letter sa Admin AT Finance Ministry para sa apruba.
 export async function submitLoanRequest(fd: FormData): Promise<never> {
   const token = await getBorrowerSessionToken();
   if (!token) redirect(`${BASE}/login`);
@@ -108,7 +108,8 @@ export async function submitLoanRequest(fd: FormData): Promise<never> {
 
 // Portal user (may portal account, aprubadong Tulong Financial member):
 // humiling ng hiram gamit ang portal login (walang borrower token).
-// Ang kahilingan ay awtomatikong nagkakaroon ng Inbox letter sa admin para sa apruba.
+// Ang kahilingan ay awtomatikong nagkakaroon ng Inbox letter sa Admin AT Finance Ministry para sa apruba
+// (tulong_create_loan_request_by_profile -> tulong_make_loan_letter; dati, ito ang kulang, kaya walang notification).
 export async function submitLoanRequestAsPortalUser(fd: FormData): Promise<never> {
   const amount = Number(String(fd.get("amount") ?? "").replace(/,/g, ""));
   const target = String(fd.get("target_return_date") ?? "").trim();
