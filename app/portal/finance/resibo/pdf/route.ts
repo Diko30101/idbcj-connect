@@ -9,6 +9,7 @@ import { groupAmbaganByMember, groupGivingByMember } from "@/lib/resibo";
 import { pasalamatTypeLabel } from "@/lib/giving";
 import { getResiboSummary } from "../summary";
 import { loadChurchFonts, drawAbuluyanPages, drawAmbaganPages, drawAralPages, drawPasalamatPages } from "@/lib/pdf/church-pdf";
+import { LOCAL_KEY_TO_LOCALITY } from "@/lib/finance-collections";
 
 // Downloadable/printable na PDF ng Buwanang Resibo (Pagsamba/Abuluyan + Ambagan + Tulong sa Aral +
 // Pasalamat), sundan ang eksaktong disenyo ng opisyal na letterhead template (public/Pagsamba.pdf,
@@ -25,22 +26,25 @@ export async function GET(req: NextRequest) {
 
   let localId: string;
   let localName: string;
+  let localKey: string;
   if (wide) {
     if (!localId2Uuid(localParam)) return new NextResponse("Di-wastong lokal.", { status: 400 });
-    const { data } = await ctx.supabase.from("locals").select("id, name").eq("id", localParam).maybeSingle();
-    const row = data as { id: string; name: string } | null;
+    const { data } = await ctx.supabase.from("locals").select("id, name, key").eq("id", localParam).maybeSingle();
+    const row = data as { id: string; name: string; key: string } | null;
     if (!row) return new NextResponse("Di-wastong lokal.", { status: 400 });
     localId = row.id;
     localName = row.name;
+    localKey = row.key;
   } else {
     if (!ctx.local) denyAbuluyan();
     localId = ctx.local.id;
     localName = ctx.local.name;
+    localKey = ctx.local.key;
   }
 
   const [summary, secretaryName] = await Promise.all([
     getResiboSummary(ctx.supabase, localId, localName, buwan),
-    getLocalSecretaryName(ctx.supabase, localId),
+    getLocalSecretaryName(ctx.supabase, localKey),
   ]);
   const ambaganGrid = groupAmbaganByMember(summary.ambagan);
   const aralRows = groupGivingByMember(summary.tulong);
@@ -114,19 +118,21 @@ function localId2Uuid(v: string): boolean {
   return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(v);
 }
 
-// Pangalan ng Local Secretary (leader ng Local Finance Ministry ng local --
-// walang hiwalay na "Local Secretary" na field sa database, kaya ito ang tugma).
-// Ipinapakita sa ilalim ng guhit ng lagda sa bawat pahina ng Buwanang Resibo PDF.
+// Pangalan ng Local Secretary: ang member na naka-set ng role = "local_secretary" (lib/portal.ts)
+// sa locality ng local na ito. Ipinapakita sa ilalim ng guhit ng lagda sa bawat pahina ng
+// Buwanang Resibo PDF.
 async function getLocalSecretaryName(
   supabase: Awaited<ReturnType<typeof getAbuluyanContext>>["supabase"],
-  localId: string,
+  localKey: string,
 ): Promise<string> {
+  const locality = LOCAL_KEY_TO_LOCALITY[localKey];
+  if (!locality) return "";
   const { data } = await supabase
-    .from("ministry_members")
-    .select("profiles(full_name), ministries!inner(name)")
-    .eq("local_id", localId)
-    .eq("is_leader", true)
-    .eq("ministries.name", "Local Finance Ministry");
-  const row = ((data ?? []) as { profiles: { full_name: string | null } | null }[])[0];
-  return row?.profiles?.full_name ?? "";
+    .from("profiles")
+    .select("full_name")
+    .eq("role", "local_secretary")
+    .eq("locality", locality)
+    .limit(1);
+  const row = ((data ?? []) as { full_name: string | null }[])[0];
+  return row?.full_name ?? "";
 }
