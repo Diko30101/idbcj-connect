@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { back, getAbuluyanContext, denyAbuluyan, str, strOrNull } from "@/lib/portal";
 import { todayInTimezone } from "@/lib/finance";
+import { monthDateRange } from "@/lib/abuluyan";
 import {
   GIVING_BASE,
   GIVING_NOTES_MAX,
@@ -12,6 +13,7 @@ import {
   parseGivingAmount,
   parseIsoDate,
   parsePasalamatType,
+  pasalamatTypeLabel,
   safeGivingPath,
   type MemberChoice,
 } from "@/lib/giving";
@@ -122,6 +124,86 @@ export async function savePasalamatGrid(fd: FormData) {
   const parts = [`${added} naidagdag`];
   if (skipped > 0) parts.push(`${skipped} nilaktawan (may kulang o di-wastong datos)`);
   back(path, "ok", `Na-save ang Pasalamat: ${parts.join(", ")}.`);
+}
+
+// I-save ang Taunang Pasalamat o Anniversary Pasalamat ng buong local nang sabay-sabay: nakalista na
+// agad ang lahat ng kaanib (gaya ng grid ng Ambagan), Halaga na lang ang ie-encode. Isang Petsa lang
+// para sa buong batch. Ang "pasalamat_type" (annual o anniversary) ay itinatakda ng form na
+// nagpadala (PasalamatRosterGridForm), hindi napipili ng nag-e-encode. Blangkong cell = walang
+// record na gagawin. Naka-lock na ang cell na may kasama nang naipadalang record sa buwang iyon.
+export async function savePasalamatRosterGrid(fd: FormData) {
+  const ctx = await requireGiving();
+  const path = target(fd);
+  const localId = ctx.isChurch ? strOrNull(fd, "local_id") : ctx.local!.id;
+  if (!localId) back(path, "error", "Pumili ng local.");
+  const type = str(fd, "pasalamat_type");
+  if (!PASALAMAT_TYPES.includes(type)) back(path, "error", "Di-wastong uri ng pasalamat.");
+  const date = parseIsoDate(str(fd, "date"));
+  if (!date) back(path, "error", "Di-wastong petsa ng pagbibigay.");
+
+  const tz = await timezoneOf(ctx.supabase, localId);
+  if (tz && date > todayInTimezone(tz)) back(path, "error", "Hindi puwedeng nasa hinaharap ang petsa ng pagbibigay.");
+
+  const eligibleRes = await ctx.supabase.rpc("list_giving_eligible_members", { p_local_id: localId });
+  const eligibleIds = new Set(((eligibleRes.data ?? []) as { id: string }[]).map((m) => m.id));
+  if (eligibleIds.size === 0) back(path, "error", "Walang kaanib na tumatanggap ng Pasalamat sa local na ito.");
+
+  const { first, firstNext } = monthDateRange(date.slice(0, 7));
+  const { data: existingRows } = await ctx.supabase
+    .from("pasalamat_records")
+    .select("id, member_id, amount, status")
+    .eq("local_id", localId)
+    .eq("type", type)
+    .neq("status", "void")
+    .gte("date", first)
+    .lt("date", firstNext);
+  type Existing = { id: string; member_id: string; amount: number; status: string };
+  const existing = new Map<string, Existing>();
+  // Numeric column: string ang ibinabalik ng Supabase client (hindi number), kaya i-cast bago ikumpara.
+  for (const r of (existingRows ?? []) as any[]) existing.set(r.member_id, { ...r, amount: Number(r.amount) });
+
+  let added = 0;
+  let updated = 0;
+  let locked = 0;
+  let cellCount = 0;
+  for (const [key, rawValue] of fd.entries()) {
+    if (!key.startsWith("amt__")) continue;
+    if (++cellCount > 1000) break;
+    const memberId = key.slice("amt__".length);
+    if (!eligibleIds.has(memberId)) continue;
+    const amount = parseGivingAmount(String(rawValue));
+    if (amount === "invalid") continue; // blangko o 0: walang ginawang record
+
+    const found = existing.get(memberId);
+    if (found) {
+      if (found.status !== "draft") {
+        locked++;
+        continue;
+      }
+      if (found.amount === amount) continue;
+      const { error } = await ctx.supabase
+        .from("pasalamat_records")
+        .update({ amount, date })
+        .eq("id", found.id)
+        .eq("status", "draft");
+      if (!error) updated++;
+    } else {
+      const { error } = await ctx.supabase.from("pasalamat_records").insert({
+        local_id: localId,
+        member_id: memberId,
+        type,
+        date,
+        amount,
+        notes: null,
+      });
+      if (!error) added++;
+    }
+  }
+
+  revalidatePath(GIVING_BASE, "layout");
+  const parts = [`${added} bago`, `${updated} na-update`];
+  if (locked > 0) parts.push(`${locked} naka-lock na (naipadala na)`);
+  back(path, "ok", `Na-save ang ${pasalamatTypeLabel(type)}: ${parts.join(", ")}.`);
 }
 
 export async function createPasalamat(fd: FormData) {

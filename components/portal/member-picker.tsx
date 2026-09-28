@@ -10,9 +10,13 @@ import type { MemberChoice } from "@/lib/giving";
 export function MemberPicker({
   search,
   name = "member_id",
+  compact = false,
 }: {
   search: (q: string) => Promise<MemberChoice[]>;
   name?: string;
+  // compact: walang label (gamitin sa loob ng talahanayan/table, e.g. pasalamat-grid-form.tsx) —
+  // aria-label pa rin ang ginagamit para sa accessibility.
+  compact?: boolean;
 }) {
   const [q, setQ] = useState("");
   const [results, setResults] = useState<MemberChoice[]>([]);
@@ -49,16 +53,20 @@ export function MemberPicker({
   if (chosen) {
     return (
       <div className="grid gap-1.5">
-        <span className="text-sm font-medium text-gray-700">Kaanib</span>
+        {!compact && <span className="text-sm font-medium text-gray-700">Kaanib</span>}
         <input type="hidden" name={name} value={chosen.id} />
-        <div className="flex items-center gap-2 rounded-md border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-900">
+        <div
+          className={`flex flex-wrap items-center gap-1.5 rounded-md border border-emerald-200 bg-emerald-50 text-emerald-900 ${compact ? "px-2 py-1 text-xs" : "px-3 py-2 text-sm"}`}
+        >
           <span className="font-semibold">{chosen.full_name}</span>
-          <span className="text-emerald-700">
-            · {chosen.local_name} · {chosen.status}
-          </span>
+          {!compact && (
+            <span className="text-emerald-700">
+              · {chosen.local_name} · {chosen.status}
+            </span>
+          )}
           <button
             type="button"
-            className={`${btnGhostCls} ml-auto`}
+            className={compact ? "ml-auto text-xs font-medium text-emerald-800 hover:underline" : `${btnGhostCls} ml-auto`}
             onClick={() => {
               setChosen(null);
               setQ("");
@@ -74,17 +82,30 @@ export function MemberPicker({
 
   return (
     <div className="relative grid gap-1.5">
-      <label className="grid gap-1.5">
-        <span className="text-sm font-medium text-gray-700">Kaanib (hanapin ang pangalan)</span>
+      {compact ? (
         <input
           ref={input}
           value={q}
           onChange={(e) => setQ(e.target.value)}
           autoComplete="off"
           required
+          placeholder="Hanapin ang pangalan…"
+          aria-label="Kaanib (hanapin ang pangalan)"
           className={inputCls}
         />
-      </label>
+      ) : (
+        <label className="grid gap-1.5">
+          <span className="text-sm font-medium text-gray-700">Kaanib (hanapin ang pangalan)</span>
+          <input
+            ref={input}
+            value={q}
+            onChange={(e) => setQ(e.target.value)}
+            autoComplete="off"
+            required
+            className={inputCls}
+          />
+        </label>
+      )}
       {searching && <span className="text-xs text-gray-500">Hinahanap…</span>}
       {results.length > 0 && (
         <ul className="max-h-56 overflow-auto rounded-md border border-gray-200 bg-white text-sm shadow-sm">
