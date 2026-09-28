@@ -6,6 +6,11 @@
 // Ang Sugo ay per-local, pinipili ng Leader ng Pastoral Ministry (o Admin) mula sa Pastoral Ministry
 // members ng local na iyon. Ang bilang ng dumalo/panauhin ay hindi dito ie-encode — kukunin lang
 // (read-only) mula sa attendance_records/attendance_guests, service_type = "Linggo" lang.
+//
+// Ilang local (hal. Sta Teresita) ay may higit sa isang Pagsamba sa parehong araw (hal. 9:00 AM at
+// 3:00 PM), na may ibang Sugo bawat isa. Ang session_label ("" = tanging/default na Pagsamba ng araw;
+// o hal. "3:00 PM" kung may karagdagang session) ang nagpapahintulot nito. Ang Dumalo/Panauhin ay hindi
+// hinahati per session -- kabuuan pa rin ng buong araw.
 
 export { parsePeriodMonth } from "@/lib/giving";
 
@@ -13,6 +18,7 @@ export const PAGSAMBA_BASE = "/portal/pagsamba";
 export const PAGSAMBA_MAX_WEEKS = 5;
 export const PAGSAMBA_PAKSA_MAX = 500;
 export const PAGSAMBA_NOTES_MAX = 500;
+export const PAGSAMBA_SESSION_LABEL_MAX = 100;
 export const PAGSAMBA_DOCX_MAX_BYTES = 15 * 1024 * 1024;
 
 export type PagsambaTopic = {
@@ -27,6 +33,7 @@ export type PagsambaRecord = {
   id: string;
   local_id: string;
   service_date: string; // YYYY-MM-DD
+  session_label: string; // "" = pangunahing/default na Pagsamba ng araw; o hal. "3:00 PM"
   sugo_id: string | null;
   notes: string | null;
 };
