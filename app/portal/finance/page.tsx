@@ -1,9 +1,10 @@
 import Link from "next/link";
-import { requireFinanceSectionAccess, LOCALITIES, LOCALITY_LABEL, FINANCE_CATEGORIES, FINANCE_CATEGORY_LABEL, fmtDate, type FinanceCategory, type Locality } from "@/lib/portal";
+import { requireFinanceSectionAccess, LOCALITIES, LOCALITY_LABEL, FINANCE_CATEGORIES, FINANCE_CATEGORY_LABEL, type FinanceCategory, type Locality } from "@/lib/portal";
 import { monthLabel, fmtPeso } from "@/lib/finance";
 import { getYearlyCollections, summarizeCollections } from "@/lib/finance-collections";
 import { Empty, Notice, PageHeader, Panel, btnCls, btnGhostCls, inputCls } from "@/components/portal/ui";
 import { FinanceChart } from "@/components/portal/finance-chart";
+import { FinanceDetailTable } from "@/components/portal/finance-detail-table";
 
 export default async function FinancePage({
   searchParams,
@@ -33,11 +34,10 @@ export default async function FinancePage({
     FINANCE_CATEGORIES.reduce((s, c) => s + (yearGrid.get(`${mm}_${c}`) ?? 0), 0);
   const yearGrandTotal = FINANCE_CATEGORIES.reduce((s, c) => s + yearCatTotal(c), 0);
 
-  // Detalyadong talaan: bawat naipadalang record (petsa, lokal, kategorya, halaga)
-  const detailRows = (localityFilter ? collections.filter((r) => r.locality === localityFilter) : collections)
-    .slice()
-    .sort((a, b) => a.date.localeCompare(b.date) || a.category.localeCompare(b.category));
-  const detailTotal = detailRows.reduce((s, r) => s + r.amount, 0);
+  // Detalyadong talaan: bawat naipadalang record (petsa, lokal, kategorya, halaga). Search bar na
+  // lang ang nagpapakita ng mga tala (FinanceDetailTable, client component) sa halip na ilista agad
+  // lahat ng buong taon -- para hindi humahaba ang page.
+  const detailRows = localityFilter ? collections.filter((r) => r.locality === localityFilter) : collections;
   const detailTitle = localityFilter
     ? `Detalyadong talaan · ${LOCALITY_LABEL[localityFilter]} · ${year}`
     : `Detalyadong talaan · Lahat ng Lokal · ${year}`;
@@ -141,34 +141,7 @@ export default async function FinancePage({
           {detailRows.length === 0 ? (
             <Empty>Wala pang naitatalang koleksyon para sa {year}.</Empty>
           ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full min-w-[640px] border-collapse text-sm">
-                <thead>
-                  <tr className="border-b border-gray-200 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">
-                    <th className="py-2 pr-3">Petsa</th>
-                    <th className="py-2 pr-3">Lokal</th>
-                    <th className="py-2 pr-3">Kategorya</th>
-                    <th className="py-2 pr-3">Halaga</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {detailRows.map((r, i) => (
-                    <tr key={`${r.date}-${r.category}-${r.localKey ?? "x"}-${i}`} className="border-b border-gray-100">
-                      <td className="py-2 pr-3 text-gray-700">{fmtDate(r.date)}</td>
-                      <td className="py-2 pr-3 text-gray-700">
-                        {r.locality ? LOCALITY_LABEL[r.locality] : (r.localKey ?? "—")}
-                      </td>
-                      <td className="py-2 pr-3 text-gray-700">{FINANCE_CATEGORY_LABEL[r.category]}</td>
-                      <td className="py-2 pr-3 text-gray-700">{fmtPeso(r.amount)}</td>
-                    </tr>
-                  ))}
-                  <tr className="border-t-2 border-gray-300 font-semibold text-gray-900">
-                    <td className="py-2 pr-3" colSpan={3}>Total</td>
-                    <td className="py-2 pr-3">{fmtPeso(detailTotal)}</td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
+            <FinanceDetailTable rows={detailRows} localityLabel={LOCALITY_LABEL} categoryLabel={FINANCE_CATEGORY_LABEL} />
           )}
         </Panel>
       </div>
