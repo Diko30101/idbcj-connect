@@ -179,7 +179,7 @@ export default async function PortalLayout({ children }: { children: React.React
       items.push({ href: "/portal/attendance-report", label: "Attendance Report" });
     // Pagsamba (Paksa at Sugo kada Linggo): Admin, Administrative/Local Admin Ministry (Roster), o Pastoral Ministry member.
     if (profile.role === "admin" || isRosterMember || isPastoralMinistryMember)
-      items.push({ href: "/portal/pagsamba", label: "Pagsamba" });
+      items.push({ href: "/portal/pagsamba", label: "Paksa sa Pagsamba" });
   }
   if (profile.role === "admin") items.push({ href: "/portal/audit", label: "Audit Log" });
 
