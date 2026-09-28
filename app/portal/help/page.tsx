@@ -58,7 +58,7 @@ const GUIDES: GuideSection[] = [
     title: "Finance -- pag-eencode at pag-uulat",
     body: [
       "Ang Ambagan, Tulong sa Aral, at Pasalamat ay pinipili muna ang Buwan/Taon bago mag-encode -- grid na katulad ng papel na form, awtomatiko ang Total.",
-      "Ang Abuluyan ay lingguhang kabuuan ng lokal (hindi per-member).",
+      "Ang Abuluyan ay lingguhang kabuuan ng lokal (hindi per-member). Kung may naka-schedule nang Sugo sa \"Schedule ng Sugo\" para sa Linggong iyon (sa pangunahing serbisyo), awtomatiko itong lalabas na default sa dropdown ng Sugo -- kung wala namang naka-schedule, manual na pipiliin sa dropdown. Puwede pa ring palitan bago i-save kung mali ang default.",
       "Ang Buwanang Resibo ay pinagsasama sa isang printable na resibo ang Abuluyan, Ambagan, Tulong sa Aral, at Pasalamat ng isang buwan -- may \"I-download PDF\" din.",
       "Ang Local Finance Ministry ay limitado lang sa sariling lokal; ang Finance Ministry (church-wide) at ang General Treasurer ang may access sa lahat ng lokal.",
     ],
@@ -83,6 +83,7 @@ const GUIDES: GuideSection[] = [
     body: [
       "Ang \"Paksa sa Pagsamba\" ay church-wide na listahan ng paksa kada Linggo sa buong buwan.",
       "Ang \"Schedule ng Sugo\" ay per-lokal -- sino ang nakatalagang sugo/tagapagsalita sa bawat Linggo ng lokal na iyon. Hiwalay ang dalawang ito kahit magkaugnay.",
+      "Kung may dalawang serbisyo ang isang lokal sa isang Linggo (hal. may hapon), maaaring magkaiba ang naka-schedule na Sugo bawat serbisyo. Ang Sugo ng pangunahing serbisyo (walang session label) ang siyang ginagamit bilang default sa pag-encode ng Abuluyan.",
     ],
   },
 ];

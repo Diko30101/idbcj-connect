@@ -34,7 +34,7 @@ export default async function AbuluyanPage({
   const pagePath = (b: string) => `${ABULUYAN_BASE}?buwan=${b}`;
   const sundays = sundaysOfMonth(buwan);
 
-  const [{ data }, { data: mmRows }, { data: gridRows }] = await Promise.all([
+  const [{ data }, { data: mmRows }, { data: gridRows }, { data: sugoScheduleRows }] = await Promise.all([
     supabase
       .from("abuluyan_totals")
       .select(
@@ -49,6 +49,14 @@ export default async function AbuluyanPage({
       .eq("local_id", local.id)
       .neq("status", "void")
       .in("service_date", sundays),
+    // Sugo na naka-schedule sa "Schedule ng Sugo" (pagsamba_records) para sa mga Linggo ng buwang ito —
+    // gagamitin bilang default ng dropdown sa ibaba kapag wala pang manual na napili/naipadala.
+    supabase
+      .from("pagsamba_records")
+      .select("service_date, sugo_id, session_label, created_at")
+      .eq("local_id", local.id)
+      .in("service_date", sundays)
+      .not("sugo_id", "is", null),
   ]);
 
   const records = ((data ?? []) as any[]).map((r) => ({
@@ -66,6 +74,23 @@ export default async function AbuluyanPage({
     ...r,
     total_amount: r.total_amount === null ? null : Number(r.total_amount),
   }));
+
+  // Bawat Linggo, kunin ang naka-schedule na Sugo mula sa pangunahing serbisyo (walang session label —
+  // ang mga local na may dagdag na hapon/ibang session ay may sariling Sugo doon, hindi ito gagamitin dito).
+  // Kung wala namang naka-schedule, manual pa rin ang dropdown (walang default).
+  const scheduledSugo: Record<string, string> = {};
+  {
+    const byDate = new Map<string, { sugo_id: string; session_label: string | null; created_at: string }[]>();
+    for (const r of (sugoScheduleRows ?? []) as any[]) {
+      const arr = byDate.get(r.service_date) ?? [];
+      arr.push(r);
+      byDate.set(r.service_date, arr);
+    }
+    for (const [date, rows] of byDate) {
+      const main = rows.find((r) => !r.session_label) ?? [...rows].sort((a, b) => a.created_at.localeCompare(b.created_at))[0];
+      if (main) scheduledSugo[date] = main.sugo_id;
+    }
+  }
 
   return (
     <>
@@ -93,6 +118,7 @@ export default async function AbuluyanPage({
             sundays={sundays}
             existing={gridExisting}
             sugoChoices={sugoChoices}
+            scheduledSugo={scheduledSugo}
           />
         </Panel>
       </div>

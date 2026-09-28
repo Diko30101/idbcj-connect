@@ -32,6 +32,7 @@ export function AbuluyanGridForm({
   sundays,
   existing,
   sugoChoices,
+  scheduledSugo,
 }: {
   action: (fd: FormData) => void;
   path: string;
@@ -41,6 +42,9 @@ export function AbuluyanGridForm({
   sundays: string[];
   existing: AbuluyanGridExisting[];
   sugoChoices: SugoChoice[];
+  // Sugo na naka-schedule sa "Schedule ng Sugo" bawat Linggo (service_date -> profile id).
+  // Default ito kapag wala pang manual na napili/naipadala para sa Linggong iyon.
+  scheduledSugo?: Record<string, string>;
 }) {
   const byDate = useMemo(() => {
     const m = new Map<string, AbuluyanGridExisting>();
@@ -100,6 +104,10 @@ export function AbuluyanGridForm({
             {sundays.map((d) => {
               const e = byDate.get(d);
               const locked = e && e.status !== "draft";
+              // Kung wala pang manual na sugo_id na naka-save (bagong/blangkong Linggo pa), gamitin ang
+              // naka-schedule sa "Schedule ng Sugo" bilang default — pero kapag may nakalagay na talaga
+              // (naipadala na, o manual nang napili dati), iyon ang susundin, hindi na ang schedule.
+              const defaultSugo = e?.sugo_id ?? scheduledSugo?.[d] ?? "";
               return (
                 <tr key={d}>
                   <td className={td}>{fmtSundayLabel(d)}</td>
@@ -109,7 +117,7 @@ export function AbuluyanGridForm({
                         {sugoChoices.find((s) => s.id === e!.sugo_id)?.full_name ?? "—"}
                       </div>
                     ) : (
-                      <select name={`sugo__${d}`} defaultValue={e?.sugo_id ?? ""} className={inputCls}>
+                      <select name={`sugo__${d}`} defaultValue={defaultSugo} className={inputCls}>
                         <option value="">— Walang Sugo —</option>
                         {sugoChoices.map((s) => (
                           <option key={s.id} value={s.id}>
