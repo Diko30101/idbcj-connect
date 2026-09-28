@@ -33,7 +33,7 @@ import { FINANCE_CATEGORIES, monthToDate } from "@/lib/finance";
 import { parseQuizText, countQuizBlocks, type QuizQuestion } from "@/lib/courses";
 
 const STATUSES = ["visitor", "active", "inactive"];
-const ROLES: Role[] = ["admin", "secretary", "leader", "member", "treasurer"];
+const ROLES: Role[] = ["admin", "secretary", "leader", "member", "treasurer", "local_secretary"];
 const BAPTISM = ["Not Baptized", "Scheduled", "Baptized"];
 
 // ---------------------------------------------------------------

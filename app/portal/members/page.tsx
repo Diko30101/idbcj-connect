@@ -20,7 +20,7 @@ export default async function MembersPage({
   const term = q.replace(/[,()%*\\]/g, " ").trim();
   if (term) query = query.or(`full_name.ilike.%${term}%,username.ilike.%${term}%,email.ilike.%${term}%,phone_number.ilike.%${term}%`);
   if (["visitor", "active", "inactive"].includes(status)) query = query.eq("status", status);
-  if (["admin", "secretary", "leader", "member"].includes(role)) query = query.eq("role", role);
+  if (["admin", "secretary", "leader", "member", "local_secretary"].includes(role)) query = query.eq("role", role);
   if (["adult", "young", "child"].includes(category)) query = query.eq("category", category);
   if (Object.keys(LOCALITY_LABEL).includes(locality)) query = query.eq("locality", locality);
 
@@ -72,6 +72,7 @@ export default async function MembersPage({
           <option value="admin">Admin</option>
           <option value="secretary">Secretary</option>
           <option value="leader">Leader</option>
+          <option value="local_secretary">Local Secretary</option>
           <option value="member">Member</option>
         </select>
         <button className={btnCls}>Hanapin</button>

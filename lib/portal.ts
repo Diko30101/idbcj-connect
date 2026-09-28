@@ -17,7 +17,7 @@ import { FINANCE_CATEGORIES, FINANCE_CATEGORY_LABEL, type FinanceCategory } from
 export { CATEGORIES, CATEGORY_LABEL, LOCALITIES, LOCALITY_LABEL, FINANCE_CATEGORIES, FINANCE_CATEGORY_LABEL };
 export type { Category, Locality, FinanceCategory };
 
-export type Role = "admin" | "secretary" | "leader" | "member" | "treasurer";
+export type Role = "admin" | "secretary" | "leader" | "member" | "treasurer" | "local_secretary";
 export type MemberStatus = "visitor" | "active" | "inactive";
 
 export type Profile = {
@@ -49,6 +49,7 @@ export const ROLE_LABEL: Record<Role, string> = {
   leader: "Ministry Leader",
   member: "Member",
   treasurer: "Treasurer",
+  local_secretary: "Local Secretary",
 };
 
 export const STATUS_LABEL: Record<MemberStatus, string> = {

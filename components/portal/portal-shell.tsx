@@ -44,6 +44,7 @@ const ROLE_LABEL: Record<string, string> = {
   leader: "Ministry Leader",
   member: "Member",
   treasurer: "Treasurer",
+  local_secretary: "Local Secretary",
 };
 
 function isActive(pathname: string, href: string) {
