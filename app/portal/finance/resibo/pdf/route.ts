@@ -38,7 +38,10 @@ export async function GET(req: NextRequest) {
     localName = ctx.local.name;
   }
 
-  const summary = await getResiboSummary(ctx.supabase, localId, localName, buwan);
+  const [summary, secretaryName] = await Promise.all([
+    getResiboSummary(ctx.supabase, localId, localName, buwan),
+    getLocalSecretaryName(ctx.supabase, localId),
+  ]);
   const ambaganGrid = groupAmbaganByMember(summary.ambagan);
   const aralRows = groupGivingByMember(summary.tulong);
 
@@ -56,6 +59,7 @@ export async function GET(req: NextRequest) {
     summary.monthLabel,
     summary.abuluyan.map((w) => ({ serviceDate: w.serviceDate, amount: w.amount })),
     summary.abuluyanTotal,
+    secretaryName,
   );
   await drawAmbaganPages(
     doc,
@@ -66,6 +70,7 @@ export async function GET(req: NextRequest) {
     ambaganGrid.map((r) => ({ memberName: r.memberName, weeks: r.weeks })),
     [0, 1, 2, 3, 4].map((i) => ambaganGrid.reduce((s, r) => s + (r.weeks[i] ?? 0), 0)),
     summary.ambaganTotal,
+    secretaryName,
   );
   await drawAralPages(
     doc,
@@ -75,6 +80,7 @@ export async function GET(req: NextRequest) {
     summary.monthLabel,
     aralRows.map((r) => ({ memberName: r.memberName, amount: r.amount })),
     summary.tulongTotal,
+    secretaryName,
   );
   await drawPasalamatPages(
     doc,
@@ -89,6 +95,7 @@ export async function GET(req: NextRequest) {
       amount: r.amount,
     })),
     summary.pasalamatTotal,
+    secretaryName,
   );
 
   const bytes = await doc.save();
@@ -105,4 +112,21 @@ export async function GET(req: NextRequest) {
 // Simpleng UUID shape check bago i-query (iwas walang-kwentang query kung malformed ang param)
 function localId2Uuid(v: string): boolean {
   return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(v);
+}
+
+// Pangalan ng Local Secretary (leader ng Local Finance Ministry ng local --
+// walang hiwalay na "Local Secretary" na field sa database, kaya ito ang tugma).
+// Ipinapakita sa ilalim ng guhit ng lagda sa bawat pahina ng Buwanang Resibo PDF.
+async function getLocalSecretaryName(
+  supabase: Awaited<ReturnType<typeof getAbuluyanContext>>["supabase"],
+  localId: string,
+): Promise<string> {
+  const { data } = await supabase
+    .from("ministry_members")
+    .select("profiles(full_name), ministries!inner(name)")
+    .eq("local_id", localId)
+    .eq("is_leader", true)
+    .eq("ministries.name", "Local Finance Ministry");
+  const row = ((data ?? []) as { profiles: { full_name: string | null } | null }[])[0];
+  return row?.profiles?.full_name ?? "";
 }

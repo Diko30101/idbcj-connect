@@ -141,6 +141,7 @@ export async function drawAmbaganPages(
   rows: AmbaganPdfRow[],
   weekTotals: number[],
   grandTotal: number,
+  secretaryName?: string,
 ): Promise<PDFPage[]> {
   const pages: PDFPage[] = [];
   const nameColW = 220;
@@ -149,7 +150,7 @@ export async function drawAmbaganPages(
   const headerLabels = ["Pangalan", "I", "II", "III", "IV", "V"];
   const headerH = 20;
   const rowH = 18;
-  const footerReserve = 95; // TOTAL + guhit ng lagda
+  const footerReserve = 105; // TOTAL + guhit ng lagda + pangalan ng Local Secretary
 
   let page = doc.addPage([PAGE_W, PAGE_H]);
   pages.push(page);
@@ -204,9 +205,13 @@ export async function drawAmbaganPages(
 
   const sigY = ry - 70;
   page.drawLine({ start: { x: PAGE_W - MARGIN - 220, y: sigY }, end: { x: PAGE_W - MARGIN, y: sigY }, thickness: 0.75 });
+  if (secretaryName) {
+    const nameTw = fonts.sansBold.widthOfTextAtSize(secretaryName, 10);
+    page.drawText(secretaryName, { x: PAGE_W - MARGIN - 110 - nameTw / 2, y: sigY - 11, size: 10, font: fonts.sansBold });
+  }
   const sigLabel = "LOCAL SECRETARY";
-  const sigTw = fonts.sans.widthOfTextAtSize(sigLabel, 10);
-  page.drawText(sigLabel, { x: PAGE_W - MARGIN - 110 - sigTw / 2, y: sigY - 12, size: 10, font: fonts.sans });
+  const sigTw = fonts.sans.widthOfTextAtSize(sigLabel, 9);
+  page.drawText(sigLabel, { x: PAGE_W - MARGIN - 110 - sigTw / 2, y: sigY - 23, size: 9, font: fonts.sans });
   void isFirstPage;
   void weekTotals; // reserbado kung sakaling idagdag pa ang kabuuan bawat linggo sa hinaharap
 
@@ -225,6 +230,7 @@ export async function drawAbuluyanPages(
   buwanTaon: string,
   rows: AbuluyanPdfRow[],
   grandTotal: number,
+  secretaryName?: string,
 ): Promise<PDFPage[]> {
   const pages: PDFPage[] = [];
   const dateColW = 340;
@@ -233,7 +239,7 @@ export async function drawAbuluyanPages(
   const headerLabels = ["Linggo", "Halaga"];
   const headerH = 20;
   const rowH = 18;
-  const footerReserve = 95;
+  const footerReserve = 105;
 
   let page = doc.addPage([PAGE_W, PAGE_H]);
   pages.push(page);
@@ -274,9 +280,13 @@ export async function drawAbuluyanPages(
 
   const sigY = ry - 70;
   page.drawLine({ start: { x: PAGE_W - MARGIN - 220, y: sigY }, end: { x: PAGE_W - MARGIN, y: sigY }, thickness: 0.75 });
+  if (secretaryName) {
+    const nameTw = fonts.sansBold.widthOfTextAtSize(secretaryName, 10);
+    page.drawText(secretaryName, { x: PAGE_W - MARGIN - 110 - nameTw / 2, y: sigY - 11, size: 10, font: fonts.sansBold });
+  }
   const sigLabel = "LOCAL SECRETARY";
-  const sigTw = fonts.sans.widthOfTextAtSize(sigLabel, 10);
-  page.drawText(sigLabel, { x: PAGE_W - MARGIN - 110 - sigTw / 2, y: sigY - 12, size: 10, font: fonts.sans });
+  const sigTw = fonts.sans.widthOfTextAtSize(sigLabel, 9);
+  page.drawText(sigLabel, { x: PAGE_W - MARGIN - 110 - sigTw / 2, y: sigY - 23, size: 9, font: fonts.sans });
 
   return pages;
 }
@@ -293,6 +303,7 @@ export async function drawPasalamatPages(
   buwanTaon: string,
   rows: PasalamatPdfRow[],
   grandTotal: number,
+  secretaryName?: string,
 ): Promise<PDFPage[]> {
   const pages: PDFPage[] = [];
   const dateColW = 62;
@@ -303,7 +314,7 @@ export async function drawPasalamatPages(
   const headerLabels = ["Petsa", "Pangalan", "Detalye", "Halaga"];
   const headerH = 20;
   const rowH = 18;
-  const footerReserve = 95;
+  const footerReserve = 105;
 
   let page = doc.addPage([PAGE_W, PAGE_H]);
   pages.push(page);
@@ -355,9 +366,13 @@ export async function drawPasalamatPages(
 
   const sigY2 = ry - 70;
   page.drawLine({ start: { x: PAGE_W - MARGIN - 220, y: sigY2 }, end: { x: PAGE_W - MARGIN, y: sigY2 }, thickness: 0.75 });
+  if (secretaryName) {
+    const nameTw2 = fonts.sansBold.widthOfTextAtSize(secretaryName, 10);
+    page.drawText(secretaryName, { x: PAGE_W - MARGIN - 110 - nameTw2 / 2, y: sigY2 - 11, size: 10, font: fonts.sansBold });
+  }
   const sigLabel2 = "LOCAL SECRETARY";
-  const sigTw2 = fonts.sans.widthOfTextAtSize(sigLabel2, 10);
-  page.drawText(sigLabel2, { x: PAGE_W - MARGIN - 110 - sigTw2 / 2, y: sigY2 - 12, size: 10, font: fonts.sans });
+  const sigTw2 = fonts.sans.widthOfTextAtSize(sigLabel2, 9);
+  page.drawText(sigLabel2, { x: PAGE_W - MARGIN - 110 - sigTw2 / 2, y: sigY2 - 23, size: 9, font: fonts.sans });
 
   return pages;
 }
@@ -373,6 +388,7 @@ export async function drawAralPages(
   buwanTaon: string,
   rows: AralPdfRow[],
   grandTotal: number,
+  secretaryName?: string,
 ): Promise<PDFPage[]> {
   const pages: PDFPage[] = [];
   const nameColW = 340;
@@ -381,7 +397,7 @@ export async function drawAralPages(
   const headerLabels = ["Pangalan", "Halaga"];
   const headerH = 20;
   const rowH = 18;
-  const footerReserve = 95;
+  const footerReserve = 105;
 
   let page = doc.addPage([PAGE_W, PAGE_H]);
   pages.push(page);
@@ -422,9 +438,13 @@ export async function drawAralPages(
 
   const sigY = ry - 70;
   page.drawLine({ start: { x: PAGE_W - MARGIN - 220, y: sigY }, end: { x: PAGE_W - MARGIN, y: sigY }, thickness: 0.75 });
+  if (secretaryName) {
+    const nameTw = fonts.sansBold.widthOfTextAtSize(secretaryName, 10);
+    page.drawText(secretaryName, { x: PAGE_W - MARGIN - 110 - nameTw / 2, y: sigY - 11, size: 10, font: fonts.sansBold });
+  }
   const sigLabel = "LOCAL SECRETARY";
-  const sigTw = fonts.sans.widthOfTextAtSize(sigLabel, 10);
-  page.drawText(sigLabel, { x: PAGE_W - MARGIN - 110 - sigTw / 2, y: sigY - 12, size: 10, font: fonts.sans });
+  const sigTw = fonts.sans.widthOfTextAtSize(sigLabel, 9);
+  page.drawText(sigLabel, { x: PAGE_W - MARGIN - 110 - sigTw / 2, y: sigY - 23, size: 9, font: fonts.sans });
 
   return pages;
 }
