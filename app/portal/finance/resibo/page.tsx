@@ -67,6 +67,14 @@ export default async function ResiboPage({
               ← Nakaraan
             </Link>
             <PrintButton />
+            <a
+              href={`${RESIBO_BASE}/pdf?buwan=${buwan}&local=${selected.id}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className={btnGhostCls}
+            >
+              I-download PDF (Ambagan/Aral)
+            </a>
             <Link href={pagePath(nextMonth(buwan), selected.id)} className={btnGhostCls}>
               Susunod →
             </Link>
