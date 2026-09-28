@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { getAbuluyanContext, denyAbuluyan } from "@/lib/portal";
-import { createAmbagan, searchMembers } from "./actions";
+import { createAmbagan, decideAmbagan, searchMembers, submitAmbagan, submitManyAmbagan, updateAmbagan } from "./actions";
 import { Notice, PageHeader, Panel } from "@/components/portal/ui";
 import { AmbaganForm } from "@/components/portal/ambagan-form";
 import { AmbaganList } from "@/components/portal/ambagan-list";
@@ -35,7 +35,7 @@ export default async function AmbaganPage({
   if (selected) {
     const { data } = await supabase
       .from("ambagan_records")
-      .select("id, local_id, member_id, period_month, amount, date_received, notes, status")
+      .select("id, local_id, member_id, period_month, amount, date_received, notes, status, decision_notes")
       .eq("local_id", selected.id)
       .order("date_received", { ascending: false })
       .order("created_at", { ascending: false })
@@ -92,7 +92,15 @@ export default async function AmbaganPage({
           <div className="mt-6">
             <Panel title="Mga Naitalang Ambagan">
               <GivingGrid records={records} names={names} mode="weekly" />
-              <AmbaganList records={records} names={names} timezone={selected.timezone} path={path} mode={ctx.isChurch ? "church" : "local"} />
+              <AmbaganList
+                records={records}
+                names={names}
+                timezone={selected.timezone}
+                path={path}
+                mode={ctx.isChurch ? "church" : "local"}
+                actions={{ update: updateAmbagan, submit: submitAmbagan, decide: decideAmbagan }}
+                submitMany={{ action: submitManyAmbagan }}
+              />
             </Panel>
           </div>
         </>
