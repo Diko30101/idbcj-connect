@@ -51,9 +51,9 @@ export default async function PortalLayout({ children }: { children: React.React
     { href: "/portal/prayer", label: "Prayer" },
     { href: "/portal/profile", label: "My Profile" },
   ];
-  // Ang "Ministries" na menu ay para LANG sa Admin -- hindi ito makikita
-  // ng kahit anong ibang role o ministry (kasama ang Administrative Ministry).
-  if (profile.role === "admin") {
+  // Ang "Ministries" na menu ay para LANG sa Admin role at mga kasapi ng
+  // Administrative Ministry -- hindi ito makikita ng iba.
+  if (profile.role === "admin" || (((await supabase.from("ministry_members").select("ministries(name)").eq("profile_id", profile.id)).data ?? []) as any[]).some((m) => m.ministries?.name === "Administrative Ministry")) {
     items.push({ href: "/portal/ministries", label: "Ministries" });
   }
   if (isStaff(profile.role)) {
