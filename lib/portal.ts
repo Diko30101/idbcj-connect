@@ -72,6 +72,11 @@ export const KINDS = Object.keys(KIND_LABEL);
 
 export const isStaff = (r: Role) => r === "admin" || r === "secretary" || r === "local_secretary";
 
+// Admin/Secretary lang ang may write access (gumawa/mag-edit/magbura) sa Bible Study Courses;
+// ang view/quiz ay para sa Pastoral Ministry members (tingnan ang requirePastoralAccess).
+// SADYANG hindi kasama ang Local Secretary.
+export const isCourseManager = (r: Role) => r === "admin" || r === "secretary";
+
 // Admin, Secretary, Treasurer, at General Treasurer lang ang role na awtomatikong may access sa
 // buong Finance section (Financial Management, Audit Report, Expenses -- lahat ng lokal), kaparehong
 // antas ng access ng isang kasapi ng Finance Ministry (church-wide). SADYANG hindi kasama ang
@@ -359,11 +364,14 @@ export async function requireFinanceSectionAccess() {
 // Alias para sa dating pangalan (Expenses page lang gumagamit nito dati)
 export const requireExpenseAccess = requireFinanceSectionAccess;
 
-// Tulong Financial: Admin lang o kasapi ng "Finance Ministry" (buong iglesia, hindi per-local)
+// Tulong Financial: Admin, General Treasurer, o kasapi ng "Finance Ministry" (buong iglesia, hindi
+// per-local). Ang General Treasurer ay kaparehong antas ng access ng Finance Ministry dito -- siya
+// rin ang tumatanggap/nagpapasa sa Admin ng mga request (hal. Tulong Financial) at nagbibigay at
+// nagtatala ng datos ng Tulong Financial sa mga humihiling.
 export async function requireTulongFinancialAccess() {
   const ctx = await requirePortalAccess();
   const { supabase, profile } = ctx;
-  if (profile.role === "admin") return ctx;
+  if (profile.role === "admin" || profile.role === "general_treasurer") return ctx;
   const { data } = await supabase.from("ministry_members").select("ministries(name)").eq("profile_id", profile.id);
   const ministryNames = ((data ?? []) as any[]).map((m) => m.ministries?.name).filter(Boolean);
   if (!ministryNames.includes(FINANCE_MINISTRY_NAME))
@@ -376,11 +384,14 @@ export async function requireTulongFinancialAccess() {
 export const PASTORAL_MINISTRY_NAME = "Pastoral Ministry";
 
 // Buong Bible Study Courses section: Admin/Secretary, o kasapi ng
-// "Pastoral Ministry" (parehong rights, kagaya ng Finance Ministry pattern)
+// "Pastoral Ministry" (parehong rights, kagaya ng Finance Ministry pattern).
+// SADYANG hindi kasama ang Local Secretary dito (kaya hindi isStaff() ang
+// ginagamit) -- limitado sa Pastoral Ministry members ang view/quiz access,
+// maliban sa Admin/Secretary.
 export async function requirePastoralAccess() {
   const ctx = await requirePortalAccess();
   const { supabase, profile } = ctx;
-  if (isStaff(profile.role)) return ctx;
+  if (profile.role === "admin" || profile.role === "secretary") return ctx;
   const { data } = await supabase.from("ministry_members").select("ministries(name)").eq("profile_id", profile.id);
   const ministryNames = ((data ?? []) as any[]).map((m) => m.ministries?.name).filter(Boolean);
   if (!ministryNames.includes(PASTORAL_MINISTRY_NAME))

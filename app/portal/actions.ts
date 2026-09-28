@@ -950,7 +950,7 @@ export async function deleteEvent(fd: FormData) {
 // lang; view ay Admin/Secretary o Pastoral Ministry member
 // ---------------------------------------------------------------
 export async function createCourse(fd: FormData) {
-  const { supabase } = await requireRoles(["admin", "secretary", "local_secretary"]);
+  const { supabase } = await requireRoles(["admin", "secretary"]);
   const title = str(fd, "title");
   if (!title) back("/portal/courses", "error", "Kailangan ng pamagat.");
   const { data, error } = await supabase
@@ -968,7 +968,7 @@ export async function createCourse(fd: FormData) {
 }
 
 export async function updateCourse(fd: FormData) {
-  const { supabase } = await requireRoles(["admin", "secretary", "local_secretary"]);
+  const { supabase } = await requireRoles(["admin", "secretary"]);
   const id = str(fd, "id");
   const path = `/portal/courses/${id}`;
   const title = str(fd, "title");
@@ -987,7 +987,7 @@ export async function updateCourse(fd: FormData) {
 }
 
 export async function toggleCourse(fd: FormData) {
-  const { supabase } = await requireRoles(["admin", "secretary", "local_secretary"]);
+  const { supabase } = await requireRoles(["admin", "secretary"]);
   const id = str(fd, "id");
   const { error } = await supabase
     .from("courses")
@@ -999,7 +999,7 @@ export async function toggleCourse(fd: FormData) {
 }
 
 export async function deleteCourse(fd: FormData) {
-  const { supabase } = await requireRoles(["admin", "secretary", "local_secretary"]);
+  const { supabase } = await requireRoles(["admin", "secretary"]);
   const id = str(fd, "id");
   const { error } = await supabase.from("courses").delete().eq("id", id);
   if (error) back(`/portal/courses/${id}`, "error", "Hindi nabura: " + error.message);
@@ -1008,7 +1008,7 @@ export async function deleteCourse(fd: FormData) {
 }
 
 export async function createLesson(fd: FormData) {
-  const { supabase } = await requireRoles(["admin", "secretary", "local_secretary"]);
+  const { supabase } = await requireRoles(["admin", "secretary"]);
   const courseId = str(fd, "course_id");
   const title = str(fd, "title");
   if (!title) back(`/portal/courses/${courseId}`, "error", "Kailangan ng pamagat ng aralin.");
@@ -1027,7 +1027,7 @@ export async function createLesson(fd: FormData) {
 }
 
 export async function updateLesson(fd: FormData) {
-  const { supabase } = await requireRoles(["admin", "secretary", "local_secretary"]);
+  const { supabase } = await requireRoles(["admin", "secretary"]);
   const id = str(fd, "id");
   const courseId = str(fd, "course_id");
   const path = `/portal/courses/${courseId}/lessons/${id}`;
@@ -1058,7 +1058,7 @@ export async function updateLesson(fd: FormData) {
 }
 
 export async function deleteLesson(fd: FormData) {
-  const { supabase } = await requireRoles(["admin", "secretary", "local_secretary"]);
+  const { supabase } = await requireRoles(["admin", "secretary"]);
   const id = str(fd, "id");
   const courseId = str(fd, "course_id");
   const { error } = await supabase.from("lessons").delete().eq("id", id);

@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { requirePastoralAccess, isStaff } from "@/lib/portal";
+import { requirePastoralAccess, isCourseManager } from "@/lib/portal";
 import { createCourse } from "../actions";
 import { Empty, Field, Notice, PageHeader, Panel, btnCls, inputCls } from "@/components/portal/ui";
 
@@ -10,7 +10,7 @@ export default async function CoursesPage({
 }) {
   const { ok, error } = await searchParams;
   const { supabase, profile } = await requirePastoralAccess();
-  const staff = isStaff(profile.role);
+  const staff = isCourseManager(profile.role);
 
   const { data, error: queryError } = await supabase
     .from("courses")

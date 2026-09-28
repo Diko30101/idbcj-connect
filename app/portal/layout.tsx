@@ -50,6 +50,8 @@ export default async function PortalLayout({ children }: { children: React.React
     { href: "/portal/announcements", label: "Announcements" },
     { href: "/portal/prayer", label: "Prayer" },
     { href: "/portal/profile", label: "My Profile" },
+    // Help: gabay sa paggamit, mga patakaran, at FAQ -- nakikita ng LAHAT, walang role/ministry gate.
+    { href: "/portal/help", label: "Help" },
   ];
   // Ang "Ministries" na menu ay para LANG sa Admin role at mga kasapi ng
   // Administrative Ministry -- hindi ito makikita ng iba.
@@ -148,8 +150,9 @@ export default async function PortalLayout({ children }: { children: React.React
       }
     }
 
-    // Admin/Secretary o Pastoral Ministry members lang ang may access sa Bible Study Courses
-    if (isStaff(profile.role) || isPastoralMinistryMember) {
+    // Admin/Secretary o Pastoral Ministry members lang ang may access sa Bible Study Courses.
+    // SADYANG hindi kasama ang Local Secretary (kaya hindi isStaff() ang ginagamit).
+    if (profile.role === "admin" || profile.role === "secretary" || isPastoralMinistryMember) {
       items.push({ href: "/portal/courses", label: "Bible Study" });
     }
     // Isang link; ang pahina ang nagre-redirect ayon sa role (Local Finance, church-wide Finance, o Admin)
@@ -203,6 +206,7 @@ export default async function PortalLayout({ children }: { children: React.React
     "/portal/members",
     "/portal/courses",
     "/portal/profile",
+    "/portal/help",
     "/tulong-financial",
     "/portal/tulong-financial",
   ]);

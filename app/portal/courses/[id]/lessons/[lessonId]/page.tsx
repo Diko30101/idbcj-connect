@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { requirePastoralAccess, isStaff, fmtDate } from "@/lib/portal";
+import { requirePastoralAccess, isCourseManager, fmtDate } from "@/lib/portal";
 import { updateLesson, deleteLesson, submitQuizAttempt } from "../../../../actions";
 import { formatQuizText, type QuizQuestion } from "@/lib/courses";
 import { Field, Notice, PageHeader, Panel, btnCls, btnDangerCls, btnGhostCls, inputCls } from "@/components/portal/ui";
@@ -36,7 +36,7 @@ export default async function LessonDetailPage({
   const { id, lessonId } = await params;
   const { ok, error } = await searchParams;
   const { supabase, profile } = await requirePastoralAccess();
-  const staff = isStaff(profile.role);
+  const staff = isCourseManager(profile.role);
 
   const { data: lesson } = await supabase
     .from("lessons")

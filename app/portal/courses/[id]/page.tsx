@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { requirePastoralAccess, isStaff, fmtDate } from "@/lib/portal";
+import { requirePastoralAccess, isCourseManager, fmtDate } from "@/lib/portal";
 import { updateCourse, toggleCourse, deleteCourse, createLesson } from "../../actions";
 import type { QuizQuestion } from "@/lib/courses";
 import { Empty, Field, Notice, PageHeader, Panel, btnCls, btnDangerCls, btnGhostCls, inputCls } from "@/components/portal/ui";
@@ -18,7 +18,7 @@ export default async function CourseDetailPage({
   const { id } = await params;
   const { ok, error } = await searchParams;
   const { supabase, profile } = await requirePastoralAccess();
-  const staff = isStaff(profile.role);
+  const staff = isCourseManager(profile.role);
 
   const { data: course } = await supabase.from("courses").select("*").eq("id", id).maybeSingle();
   if (!course) notFound();
