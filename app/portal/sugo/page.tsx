@@ -1,0 +1,221 @@
+import Link from "next/link";
+import { getPagsambaContext, fmtDate, PASTORAL_MINISTRY_NAME } from "@/lib/portal";
+import { monthLabel, currentMonthPH } from "@/lib/finance";
+import { sundaysOfMonth, SUGO_BASE, type PagsambaRecord } from "@/lib/pagsamba";
+import { saveSugo, deleteSugoSession } from "./actions";
+import { Empty, Field, Notice, PageHeader, Panel, btnGhostCls, inputCls } from "@/components/portal/ui";
+
+// Schedule ng Sugo (per local, per Linggo): pinipili ng Leader ng Pastoral Ministry o Admin mula sa
+// Pastoral Ministry members ng local na iyon. Hiwalay ito sa Paksa (church-wide, tingnan ang
+// /portal/pagsamba) -- magkaiba ang saklaw at ang nagpapasya sa bawat isa. Ang dumalo/panauhin ay
+// hindi dito ie-encode -- kukunin lang (read-only) mula sa attendance_records/attendance_guests na
+// naka-encode na ng Local Admin Ministry, service_type = "Linggo" lang.
+export default async function SugoPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ ok?: string; error?: string; buwan?: string; local?: string }>;
+}) {
+  const { ok, error, buwan: buwanParam, local: localParam } = await searchParams;
+  const ctx = await getPagsambaContext();
+  const { supabase } = ctx;
+
+  const buwan = /^\d{4}-(0[1-9]|1[0-2])$/.test(buwanParam ?? "") ? buwanParam! : currentMonthPH();
+  const dates = sundaysOfMonth(buwan);
+
+  const selected = ctx.locals.find((l) => l.id === localParam) ?? ctx.locals[0];
+
+  const [{ data: recRows }, { data: attRows }, { data: guestRows }, { data: mmRows }] = await Promise.all([
+    selected && dates.length > 0
+      ? supabase
+          .from("pagsamba_records")
+          .select("id, local_id, service_date, session_label, sugo_id, notes")
+          .eq("local_id", selected.id)
+          .in("service_date", dates)
+      : Promise.resolve({ data: [] }),
+    selected && dates.length > 0
+      ? supabase.from("attendance_records").select("service_date, present").eq("local_id", selected.id).eq("service_type", "Linggo").in("service_date", dates)
+      : Promise.resolve({ data: [] }),
+    selected && dates.length > 0
+      ? supabase.from("attendance_guests").select("service_date").eq("local_id", selected.id).eq("service_type", "Linggo").in("service_date", dates)
+      : Promise.resolve({ data: [] }),
+    selected
+      ? supabase.from("ministry_members").select("profile_id, ministries(name), profiles(id, full_name, status)").eq("local_id", selected.id)
+      : Promise.resolve({ data: [] }),
+  ]);
+
+  // Kadalasan isa lang ang Pagsamba kada araw ("" na session_label), pero may ilang local (hal. Sta
+  // Teresita) na may higit sa isa (hal. 9:00 AM at 3:00 PM) na may ibang Sugo bawat isa.
+  const sessionsByDate = new Map<string, PagsambaRecord[]>();
+  for (const r of (recRows ?? []) as PagsambaRecord[]) {
+    const list = sessionsByDate.get(r.service_date) ?? [];
+    list.push(r);
+    sessionsByDate.set(r.service_date, list);
+  }
+  for (const list of sessionsByDate.values()) list.sort((a, b) => a.session_label.localeCompare(b.session_label));
+
+  const presentByDate = new Map<string, number>();
+  for (const r of (attRows ?? []) as { service_date: string; present: boolean }[]) {
+    if (r.present) presentByDate.set(r.service_date, (presentByDate.get(r.service_date) ?? 0) + 1);
+  }
+  const guestByDate = new Map<string, number>();
+  for (const r of (guestRows ?? []) as { service_date: string }[]) {
+    guestByDate.set(r.service_date, (guestByDate.get(r.service_date) ?? 0) + 1);
+  }
+
+  const sugoChoices = ((mmRows ?? []) as any[])
+    .filter((m) => m.ministries?.name === PASTORAL_MINISTRY_NAME && m.profiles && m.profiles.status !== "inactive")
+    .map((m) => ({ id: m.profiles.id as string, full_name: (m.profiles.full_name as string) || "(walang pangalan)" }))
+    .sort((a, b) => a.full_name.localeCompare(b.full_name, "fil"));
+  const sugoNameById = new Map(sugoChoices.map((s) => [s.id, s.full_name]));
+
+  const monthQs = `buwan=${encodeURIComponent(buwan)}`;
+
+  return (
+    <>
+      <PageHeader title="Schedule ng Sugo" subtitle={`Sugo at Pagsamba kada Linggo · ${monthLabel(buwan)}`} />
+      <Notice ok={ok} error={error} />
+
+      <form className="mb-6 flex flex-wrap items-end gap-3">
+        <Field label="Buwan">
+          <input type="month" name="buwan" defaultValue={buwan} className={inputCls} />
+        </Field>
+        {selected && <input type="hidden" name="local" value={selected.id} />}
+        <button className={btnGhostCls}>Tingnan</button>
+      </form>
+
+      {ctx.locals.length > 1 && (
+        <div className="mb-6 flex flex-wrap gap-2">
+          {ctx.locals.map((l) => (
+            <Link
+              key={l.id}
+              href={`${SUGO_BASE}?${monthQs}&local=${l.id}`}
+              className={`rounded-full border px-3 py-1 text-sm font-medium ${
+                l.id === selected?.id ? "border-emerald-600 bg-emerald-50 text-emerald-800" : "border-gray-300 bg-white text-gray-700 hover:bg-gray-50"
+              }`}
+            >
+              {l.name}
+            </Link>
+          ))}
+        </div>
+      )}
+
+      {selected && (
+        <Panel title={`Sugo at Pagsamba kada Linggo · ${selected.name}`}>
+          {dates.length === 0 ? (
+            <Empty>Di-wastong buwan.</Empty>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-sm">
+                <thead className="text-xs uppercase tracking-wide text-gray-400">
+                  <tr>
+                    <th className="py-2 pr-3">Petsa</th>
+                    <th className="py-2 pr-3">Session</th>
+                    <th className="py-2 pr-3">Sugo</th>
+                    <th className="py-2 pr-3">Dumalo</th>
+                    <th className="py-2">Panauhin</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-100">
+                  {dates.map((date) => {
+                    // Laging may pangunahing/default session ("") kahit wala pang naka-save.
+                    const sessions = sessionsByDate.get(date) ?? [{ id: "", local_id: selected.id, service_date: date, session_label: "", sugo_id: null, notes: null } as PagsambaRecord];
+                    const present = presentByDate.get(date) ?? 0;
+                    const guests = guestByDate.get(date) ?? 0;
+                    return sessions.map((rec, i) => (
+                      <tr key={`${date}-${rec.session_label}`}>
+                        {i === 0 && (
+                          <td className="py-2 pr-3 align-top font-medium text-gray-800" rowSpan={sessions.length}>
+                            {fmtDate(date)}
+                          </td>
+                        )}
+                        <td className="py-2 pr-3 align-top">
+                          {rec.session_label === "" ? (
+                            <span className="text-xs text-gray-400">Pangunahin</span>
+                          ) : (
+                            <span className="inline-flex items-center gap-1">
+                              {rec.session_label}
+                              {ctx.canWriteSugo && rec.id && (
+                                <form action={deleteSugoSession}>
+                                  <input type="hidden" name="id" value={rec.id} />
+                                  <input type="hidden" name="buwan" value={buwan} />
+                                  <input type="hidden" name="local" value={selected.id} />
+                                  <button className="text-xs text-red-500 hover:underline" title="Tanggalin ang session na ito">
+                                    ✕
+                                  </button>
+                                </form>
+                              )}
+                            </span>
+                          )}
+                        </td>
+                        <td className="py-2 pr-3 align-top">
+                          {ctx.canWriteSugo ? (
+                            <form action={saveSugo} className="flex items-center gap-2">
+                              <input type="hidden" name="local_id" value={selected.id} />
+                              <input type="hidden" name="service_date" value={date} />
+                              <input type="hidden" name="session_label" value={rec.session_label} />
+                              <input type="hidden" name="buwan" value={buwan} />
+                              <input type="hidden" name="local" value={selected.id} />
+                              <select name="sugo_id" defaultValue={rec.sugo_id ?? ""} className={inputCls}>
+                                <option value="">— Pumili —</option>
+                                {sugoChoices.map((s) => (
+                                  <option key={s.id} value={s.id}>
+                                    {s.full_name}
+                                  </option>
+                                ))}
+                              </select>
+                              <button className={btnGhostCls}>I-save</button>
+                            </form>
+                          ) : (
+                            (rec.sugo_id && sugoNameById.get(rec.sugo_id)) || "-"
+                          )}
+                        </td>
+                        {i === 0 && (
+                          <>
+                            <td className="py-2 pr-3 align-top" rowSpan={sessions.length}>
+                              {present}
+                            </td>
+                            <td className="py-2 align-top" rowSpan={sessions.length}>
+                              {guests}
+                            </td>
+                          </>
+                        )}
+                      </tr>
+                    ));
+                  })}
+                  {ctx.canWriteSugo &&
+                    dates.map((date) => (
+                      <tr key={`${date}-add`} className="bg-gray-50/60">
+                        <td className="py-2 pr-3"></td>
+                        <td className="py-2 pr-3" colSpan={3}>
+                          <form action={saveSugo} className="flex flex-wrap items-center gap-2">
+                            <input type="hidden" name="local_id" value={selected.id} />
+                            <input type="hidden" name="service_date" value={date} />
+                            <input type="hidden" name="buwan" value={buwan} />
+                            <input type="hidden" name="local" value={selected.id} />
+                            <input name="session_label" placeholder={`Karagdagang session sa ${fmtDate(date)} (hal. 3:00 PM)`} className={`${inputCls} w-64`} required />
+                            <select name="sugo_id" defaultValue="" className={inputCls}>
+                              <option value="">— Pumili ng Sugo —</option>
+                              {sugoChoices.map((s) => (
+                                <option key={s.id} value={s.id}>
+                                  {s.full_name}
+                                </option>
+                              ))}
+                            </select>
+                            <button className={btnGhostCls}>+ Magdagdag ng Session</button>
+                          </form>
+                        </td>
+                      </tr>
+                    ))}
+                </tbody>
+              </table>
+              <p className="mt-3 text-xs text-gray-400">
+                Ang Dumalo at Panauhin ay mula sa attendance na naka-encode na ng Local Admin Ministry (regular na Linggo lang, hindi Pasalamat) —
+                kabuuan ng buong araw, hindi hiwalay per session.
+              </p>
+            </div>
+          )}
+        </Panel>
+      )}
+    </>
+  );
+}

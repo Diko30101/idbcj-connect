@@ -75,6 +75,8 @@ const ICONS: Record<string, LucideIcon> = {
   "/portal/roster": ClipboardList,
   "/portal/attendance-record": ClipboardCheck,
   "/portal/audit": ScrollText,
+  "/portal/pagsamba": BookOpen,
+  "/portal/sugo": Mic,
 };
 
 function SidebarLink({

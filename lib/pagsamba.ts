@@ -15,6 +15,7 @@
 export { parsePeriodMonth } from "@/lib/giving";
 
 export const PAGSAMBA_BASE = "/portal/pagsamba";
+export const SUGO_BASE = "/portal/sugo";
 export const PAGSAMBA_MAX_WEEKS = 5;
 export const PAGSAMBA_PAKSA_MAX = 500;
 export const PAGSAMBA_NOTES_MAX = 500;
