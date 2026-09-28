@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { back, getAbuluyanContext, denyAbuluyan, str, strOrNull } from "@/lib/portal";
-import { todayInTimezone } from "@/lib/finance";
+import { sundaysOfMonth, todayInTimezone } from "@/lib/finance";
 import {
   GIVING_BASE,
   GIVING_NOTES_MAX,
@@ -127,6 +127,86 @@ export async function decideAmbagan(fd: FormData) {
   if (error) back(path, "error", givingErrorMessage(error, "Hindi naiproseso ang desisyon."));
   revalidatePath(GIVING_BASE, "layout");
   back(path, "ok", decision === "approved" ? "Aprubado ang Ambagan." : "Ibinalik sa Local ang Ambagan para ayusin.");
+}
+
+// I-save ang buong grid (Pangalan × Linggo I–V) ng isang buwan sa isang local, parang papel na form:
+// isang field bawat cell na "amt__<memberId>__<petsa>". Blangkong cell = walang ginawang record
+// (hindi paglabag; parehong patakaran ng isa-isang form dati). May halaga na = bago o na-update na
+// draft. Naka-lock na (naipadala na/aprubado na) ang cell na may kasama nang naipadalang record —
+// hindi na ito nababago dito, kagaya rin ng dati.
+export async function saveAmbaganGrid(fd: FormData) {
+  const ctx = await requireGiving();
+  const path = target(fd);
+  const localId = ctx.isChurch ? strOrNull(fd, "local_id") : ctx.local!.id;
+  if (!localId) back(path, "error", "Pumili ng local.");
+  const period = parsePeriodMonth(str(fd, "period_month"));
+  if (!period) back(path, "error", "Pumili ng wastong Buwan/Taon.");
+  const month = period.slice(0, 7);
+  const validDates = new Set(sundaysOfMonth(month));
+
+  const { data: eligible } = await ctx.supabase.rpc("list_giving_eligible_members", { p_local_id: localId });
+  const eligibleIds = new Set(((eligible ?? []) as { id: string }[]).map((m) => m.id));
+  if (eligibleIds.size === 0) back(path, "error", "Walang kaanib na tumatanggap ng Ambagan sa local na ito.");
+
+  const { data: existingRows } = await ctx.supabase
+    .from("ambagan_records")
+    .select("id, member_id, date_received, amount, status")
+    .eq("local_id", localId)
+    .neq("status", "void") // hindi kasama ang void: hindi na binibilang, kaya puwedeng palitan ng bagong record
+    .in("date_received", [...validDates]);
+  type Existing = { id: string; member_id: string; date_received: string; amount: number; status: string };
+  const existing = new Map<string, Existing>();
+  // Numeric column: string ang ibinabalik ng Supabase client (hindi number), kaya i-cast bago ikumpara.
+  for (const r of (existingRows ?? []) as any[]) existing.set(`${r.member_id}::${r.date_received}`, { ...r, amount: Number(r.amount) });
+
+  const tz = await timezoneOf(ctx.supabase, localId);
+  const today = tz ? todayInTimezone(tz) : null;
+
+  let added = 0;
+  let updated = 0;
+  let locked = 0;
+  let skippedFuture = 0;
+  let cellCount = 0;
+  for (const [key, rawValue] of fd.entries()) {
+    if (!key.startsWith("amt__")) continue;
+    if (++cellCount > 1000) break; // hindi dapat abutin ito sa normal na paggamit
+    const [, memberId, date] = key.split("__");
+    if (!memberId || !date || !eligibleIds.has(memberId) || !validDates.has(date)) continue;
+    const amount = parseGivingAmount(String(rawValue));
+    if (amount === "invalid") continue; // blangko o 0: walang ginawang record, tulad ng dati
+
+    if (today && date > today) {
+      skippedFuture++;
+      continue;
+    }
+
+    const found = existing.get(`${memberId}::${date}`);
+    if (found) {
+      if (found.status !== "draft") {
+        locked++;
+        continue;
+      }
+      if (found.amount === amount) continue; // walang pagbabago
+      const { error } = await ctx.supabase.from("ambagan_records").update({ amount }).eq("id", found.id).eq("status", "draft");
+      if (!error) updated++;
+    } else {
+      const { error } = await ctx.supabase.from("ambagan_records").insert({
+        local_id: localId,
+        member_id: memberId,
+        period_month: period,
+        amount,
+        date_received: date,
+        notes: null,
+      });
+      if (!error) added++;
+    }
+  }
+
+  revalidatePath(GIVING_BASE, "layout");
+  const parts = [`${added} bago`, `${updated} na-update`];
+  if (locked > 0) parts.push(`${locked} naka-lock na (naipadala na)`);
+  if (skippedFuture > 0) parts.push(`${skippedFuture} nasa hinaharap (hindi isinave)`);
+  back(path, "ok", `Na-save ang Ambagan: ${parts.join(", ")}.`);
 }
 
 // Ipadala ang napili: mga draft lang ang naipapadala; ang database (RLS) pa rin ang huling harang.

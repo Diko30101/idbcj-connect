@@ -76,3 +76,22 @@ export function isSunday(dateStr: string): boolean {
 export function todayInTimezone(timezone: string): string {
   return new Date().toLocaleDateString("en-CA", { timeZone: timezone });
 }
+
+// Lahat ng Linggo (Sunday) sa loob ng isang buwan (YYYY-MM), pataas ang pagkakasunod-sunod.
+// 4 o 5 karaniwan bawat buwan. Ginagamit para sa grid na pag-encode ng Ambagan (Linggo I–V) —
+// parehong batayan ng "Linggo" gaya ng Abuluyan (isSunday), kaya tunay na petsa ng
+// pagsamba ang nasa bawat hanay, hindi basta-basta bucket ng araw.
+export function sundaysOfMonth(month: string): string[] {
+  const [y, m] = month.split("-").map(Number);
+  if (!y || !m) return [];
+  const out: string[] = [];
+  const d = new Date(Date.UTC(y, m - 1, 1));
+  while (d.getUTCMonth() === m - 1) {
+    if (d.getUTCDay() === 0) {
+      const iso = `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, "0")}-${String(d.getUTCDate()).padStart(2, "0")}`;
+      out.push(iso);
+    }
+    d.setUTCDate(d.getUTCDate() + 1);
+  }
+  return out;
+}
