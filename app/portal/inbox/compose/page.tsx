@@ -9,7 +9,7 @@ export default async function ComposeLetterPage({
   searchParams: Promise<{ ok?: string; error?: string }>;
 }) {
   const { ok, error } = await searchParams;
-  const { supabase } = await requireRoles(["admin", "secretary"]);
+  const { supabase } = await requireRoles(["admin", "secretary", "local_secretary"]);
 
   const { data: members } = await supabase
     .from("profiles")

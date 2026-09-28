@@ -39,7 +39,7 @@ function makeTempPassword(): string {
 // BAGONG MEMBER (admin o secretary)
 // ---------------------------------------------------------------
 export async function createMember(_prev: CreateMemberState, fd: FormData): Promise<CreateMemberState> {
-  const { user } = await requireRoles(["admin", "secretary"]);
+  const { user } = await requireRoles(["admin", "secretary", "local_secretary"]);
 
   const fullName = str(fd, "full_name").replace(/\s+/g, " ");
   const category = str(fd, "category") as Category;
@@ -119,7 +119,7 @@ export async function createMember(_prev: CreateMemberState, fd: FormData): Prom
 // I-RESET ANG PASSWORD (admin o secretary)
 // ---------------------------------------------------------------
 export async function resetMemberPassword(_prev: ResetPasswordState, fd: FormData): Promise<ResetPasswordState> {
-  const { user, profile: me } = await requireRoles(["admin", "secretary"]);
+  const { user, profile: me } = await requireRoles(["admin", "secretary", "local_secretary"]);
   const id = str(fd, "id");
   if (!id) return { error: "Walang napiling member." };
   if (id === user.id) return { error: "Hindi ito para sa sarili mong account. Gamitin ang Change Password." };
@@ -159,7 +159,7 @@ export async function resetMemberPassword(_prev: ResetPasswordState, fd: FormDat
 export type DeleteMemberState = { error?: string } | null;
 
 export async function deleteMember(_prev: DeleteMemberState, fd: FormData): Promise<DeleteMemberState> {
-  const { user, profile: me } = await requireRoles(["admin", "secretary"]);
+  const { user, profile: me } = await requireRoles(["admin", "secretary", "local_secretary"]);
   const id = str(fd, "id");
   const name = str(fd, "name");
   if (!id) return { error: "Walang napiling member." };

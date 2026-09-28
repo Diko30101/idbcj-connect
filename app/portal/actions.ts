@@ -61,7 +61,7 @@ export async function updateMyProfile(fd: FormData) {
 // MEMBERS (staff)
 // ---------------------------------------------------------------
 export async function updateMember(fd: FormData) {
-  const { supabase, profile } = await requireRoles(["admin", "secretary"]);
+  const { supabase, profile } = await requireRoles(["admin", "secretary", "local_secretary"]);
   const id = str(fd, "id");
   const path = `/portal/members/${id}`;
   const status = str(fd, "status");
@@ -100,7 +100,7 @@ export async function updateMember(fd: FormData) {
 }
 
 export async function addMemberToMinistry(fd: FormData) {
-  const { supabase, profile } = await requireRoles(["admin", "secretary"]);
+  const { supabase, profile } = await requireRoles(["admin", "secretary", "local_secretary"]);
   const profileId = str(fd, "profile_id");
   const ministryId = str(fd, "ministry_id");
   const returnTo = str(fd, "return_to") || `/portal/members/${profileId}`;
@@ -111,7 +111,7 @@ export async function addMemberToMinistry(fd: FormData) {
 }
 
 export async function removeFromMinistry(fd: FormData) {
-  const { supabase, profile } = await requireRoles(["admin", "secretary"]);
+  const { supabase, profile } = await requireRoles(["admin", "secretary", "local_secretary"]);
   const profileId = str(fd, "profile_id");
   const ministryId = str(fd, "ministry_id");
   const returnTo = str(fd, "return_to") || `/portal/members/${profileId}`;
@@ -122,7 +122,7 @@ export async function removeFromMinistry(fd: FormData) {
 }
 
 export async function setMinistryLeader(fd: FormData) {
-  const { supabase, profile } = await requireRoles(["admin", "secretary"]);
+  const { supabase, profile } = await requireRoles(["admin", "secretary", "local_secretary"]);
   const profileId = str(fd, "profile_id");
   const ministryId = str(fd, "ministry_id");
   const makeLeader = str(fd, "make_leader") === "true";
@@ -137,7 +137,7 @@ export async function setMinistryLeader(fd: FormData) {
 // MINISTRIES
 // ---------------------------------------------------------------
 export async function createMinistry(fd: FormData) {
-  const { supabase } = await requireRoles(["admin", "secretary"]);
+  const { supabase } = await requireRoles(["admin", "secretary", "local_secretary"]);
   const r = await createMinistryOp(supabase, { name: str(fd, "name"), name_tl: strOrNull(fd, "name_tl"), description: strOrNull(fd, "description") });
   if (!r.ok || !r.id) back("/portal/ministries", "error", r.message);
   revalidatePath("/portal/ministries");
@@ -145,7 +145,7 @@ export async function createMinistry(fd: FormData) {
 }
 
 export async function updateMinistry(fd: FormData) {
-  const { supabase } = await requireRoles(["admin", "secretary"]);
+  const { supabase } = await requireRoles(["admin", "secretary", "local_secretary"]);
   const id = str(fd, "id");
   const path = `/portal/ministries/${id}`;
   const r = await updateMinistryOp(supabase, id, { name: str(fd, "name"), name_tl: strOrNull(fd, "name_tl"), description: strOrNull(fd, "description") });
@@ -155,7 +155,7 @@ export async function updateMinistry(fd: FormData) {
 }
 
 export async function deleteMinistry(fd: FormData) {
-  const { supabase } = await requireRoles(["admin", "secretary"]);
+  const { supabase } = await requireRoles(["admin", "secretary", "local_secretary"]);
   const id = str(fd, "id");
   const r = await deleteMinistryOp(supabase, id);
   if (!r.ok) back(`/portal/ministries/${id}`, "error", r.message);
@@ -196,7 +196,7 @@ export async function deleteSchedule(fd: FormData) {
 // ATTENDANCE (staff)
 // ---------------------------------------------------------------
 export async function createService(fd: FormData) {
-  const { supabase } = await requireRoles(["admin", "secretary"]);
+  const { supabase } = await requireRoles(["admin", "secretary", "local_secretary"]);
   const date = str(fd, "service_date");
   const kind = str(fd, "kind");
   if (!date || !KINDS.includes(kind)) back("/portal/attendance", "error", "Kumpletuhin ang petsa at uri.");
@@ -217,7 +217,7 @@ export async function createService(fd: FormData) {
 }
 
 export async function updateService(fd: FormData) {
-  const { supabase } = await requireRoles(["admin", "secretary"]);
+  const { supabase } = await requireRoles(["admin", "secretary", "local_secretary"]);
   const id = str(fd, "id");
   const path = `/portal/attendance/${id}`;
   const date = str(fd, "service_date");
@@ -239,7 +239,7 @@ export async function updateService(fd: FormData) {
 }
 
 export async function deleteService(fd: FormData) {
-  const { supabase } = await requireRoles(["admin", "secretary"]);
+  const { supabase } = await requireRoles(["admin", "secretary", "local_secretary"]);
   const id = str(fd, "id");
   const { error } = await supabase.from("services").delete().eq("id", id);
   if (error) back(`/portal/attendance/${id}`, "error", "Hindi nabura: " + error.message);
@@ -248,7 +248,7 @@ export async function deleteService(fd: FormData) {
 }
 
 export async function saveAttendance(fd: FormData) {
-  const { supabase, user } = await requireRoles(["admin", "secretary"]);
+  const { supabase, user } = await requireRoles(["admin", "secretary", "local_secretary"]);
   const serviceId = str(fd, "service_id");
   const path = `/portal/attendance/${serviceId}`;
   const all = fd.getAll("all").map(String);
@@ -479,7 +479,7 @@ export async function markNotificationsSeen() {
 // INBOX (mga liham mula sa Administrative/staff papunta sa piniling members)
 // ---------------------------------------------------------------
 export async function createLetter(fd: FormData) {
-  const { supabase, user } = await requireRoles(["admin", "secretary"]);
+  const { supabase, user } = await requireRoles(["admin", "secretary", "local_secretary"]);
   const subject = str(fd, "subject");
   const body = str(fd, "body");
   const recipients = fd.getAll("recipients").map(String);
@@ -759,7 +759,7 @@ function parseQuestions(fd: FormData): string[] {
 }
 
 export async function createSermon(fd: FormData) {
-  const { supabase } = await requireRoles(["admin", "secretary"]);
+  const { supabase } = await requireRoles(["admin", "secretary", "local_secretary"]);
   const slug = str(fd, "slug");
   const title = str(fd, "title");
   const speaker = str(fd, "speaker");
@@ -798,7 +798,7 @@ export async function createSermon(fd: FormData) {
 }
 
 export async function updateSermon(fd: FormData) {
-  const { supabase } = await requireRoles(["admin", "secretary"]);
+  const { supabase } = await requireRoles(["admin", "secretary", "local_secretary"]);
   const id = str(fd, "id");
   const path = `/portal/sermons/${id}`;
   const slug = str(fd, "slug");
@@ -839,7 +839,7 @@ export async function updateSermon(fd: FormData) {
 }
 
 export async function toggleSermon(fd: FormData) {
-  const { supabase } = await requireRoles(["admin", "secretary"]);
+  const { supabase } = await requireRoles(["admin", "secretary", "local_secretary"]);
   const id = str(fd, "id");
   const { error } = await supabase
     .from("sermons")
@@ -852,7 +852,7 @@ export async function toggleSermon(fd: FormData) {
 }
 
 export async function deleteSermon(fd: FormData) {
-  const { supabase } = await requireRoles(["admin", "secretary"]);
+  const { supabase } = await requireRoles(["admin", "secretary", "local_secretary"]);
   const id = str(fd, "id");
   const { error } = await supabase.from("sermons").delete().eq("id", id);
   if (error) back(`/portal/sermons/${id}`, "error", "Hindi nabura: " + error.message);
@@ -865,7 +865,7 @@ export async function deleteSermon(fd: FormData) {
 // EVENTS (Admin/Secretary lang) — special events sa publikong /events
 // ---------------------------------------------------------------
 export async function createEvent(fd: FormData) {
-  const { supabase } = await requireRoles(["admin", "secretary"]);
+  const { supabase } = await requireRoles(["admin", "secretary", "local_secretary"]);
   const title = str(fd, "title");
   const eventDate = str(fd, "event_date");
   if (!title || !eventDate) back("/portal/events", "error", "Kumpletuhin ang pamagat at petsa.");
@@ -892,7 +892,7 @@ export async function createEvent(fd: FormData) {
 }
 
 export async function updateEvent(fd: FormData) {
-  const { supabase } = await requireRoles(["admin", "secretary"]);
+  const { supabase } = await requireRoles(["admin", "secretary", "local_secretary"]);
   const id = str(fd, "id");
   const path = `/portal/events/${id}`;
   const title = str(fd, "title");
@@ -921,7 +921,7 @@ export async function updateEvent(fd: FormData) {
 }
 
 export async function toggleEvent(fd: FormData) {
-  const { supabase } = await requireRoles(["admin", "secretary"]);
+  const { supabase } = await requireRoles(["admin", "secretary", "local_secretary"]);
   const id = str(fd, "id");
   const { error } = await supabase
     .from("events")
@@ -934,7 +934,7 @@ export async function toggleEvent(fd: FormData) {
 }
 
 export async function deleteEvent(fd: FormData) {
-  const { supabase } = await requireRoles(["admin", "secretary"]);
+  const { supabase } = await requireRoles(["admin", "secretary", "local_secretary"]);
   const id = str(fd, "id");
   const { error } = await supabase.from("events").delete().eq("id", id);
   if (error) back(`/portal/events/${id}`, "error", "Hindi nabura: " + error.message);
@@ -948,7 +948,7 @@ export async function deleteEvent(fd: FormData) {
 // lang; view ay Admin/Secretary o Pastoral Ministry member
 // ---------------------------------------------------------------
 export async function createCourse(fd: FormData) {
-  const { supabase } = await requireRoles(["admin", "secretary"]);
+  const { supabase } = await requireRoles(["admin", "secretary", "local_secretary"]);
   const title = str(fd, "title");
   if (!title) back("/portal/courses", "error", "Kailangan ng pamagat.");
   const { data, error } = await supabase
@@ -966,7 +966,7 @@ export async function createCourse(fd: FormData) {
 }
 
 export async function updateCourse(fd: FormData) {
-  const { supabase } = await requireRoles(["admin", "secretary"]);
+  const { supabase } = await requireRoles(["admin", "secretary", "local_secretary"]);
   const id = str(fd, "id");
   const path = `/portal/courses/${id}`;
   const title = str(fd, "title");
@@ -985,7 +985,7 @@ export async function updateCourse(fd: FormData) {
 }
 
 export async function toggleCourse(fd: FormData) {
-  const { supabase } = await requireRoles(["admin", "secretary"]);
+  const { supabase } = await requireRoles(["admin", "secretary", "local_secretary"]);
   const id = str(fd, "id");
   const { error } = await supabase
     .from("courses")
@@ -997,7 +997,7 @@ export async function toggleCourse(fd: FormData) {
 }
 
 export async function deleteCourse(fd: FormData) {
-  const { supabase } = await requireRoles(["admin", "secretary"]);
+  const { supabase } = await requireRoles(["admin", "secretary", "local_secretary"]);
   const id = str(fd, "id");
   const { error } = await supabase.from("courses").delete().eq("id", id);
   if (error) back(`/portal/courses/${id}`, "error", "Hindi nabura: " + error.message);
@@ -1006,7 +1006,7 @@ export async function deleteCourse(fd: FormData) {
 }
 
 export async function createLesson(fd: FormData) {
-  const { supabase } = await requireRoles(["admin", "secretary"]);
+  const { supabase } = await requireRoles(["admin", "secretary", "local_secretary"]);
   const courseId = str(fd, "course_id");
   const title = str(fd, "title");
   if (!title) back(`/portal/courses/${courseId}`, "error", "Kailangan ng pamagat ng aralin.");
@@ -1025,7 +1025,7 @@ export async function createLesson(fd: FormData) {
 }
 
 export async function updateLesson(fd: FormData) {
-  const { supabase } = await requireRoles(["admin", "secretary"]);
+  const { supabase } = await requireRoles(["admin", "secretary", "local_secretary"]);
   const id = str(fd, "id");
   const courseId = str(fd, "course_id");
   const path = `/portal/courses/${courseId}/lessons/${id}`;
@@ -1056,7 +1056,7 @@ export async function updateLesson(fd: FormData) {
 }
 
 export async function deleteLesson(fd: FormData) {
-  const { supabase } = await requireRoles(["admin", "secretary"]);
+  const { supabase } = await requireRoles(["admin", "secretary", "local_secretary"]);
   const id = str(fd, "id");
   const courseId = str(fd, "course_id");
   const { error } = await supabase.from("lessons").delete().eq("id", id);

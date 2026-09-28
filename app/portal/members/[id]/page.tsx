@@ -16,7 +16,7 @@ export default async function MemberDetail({
 }) {
   const { id } = await params;
   const { ok, error } = await searchParams;
-  const { supabase, profile: me } = await requireRoles(["admin", "secretary"]);
+  const { supabase, profile: me } = await requireRoles(["admin", "secretary", "local_secretary"]);
 
   const { data: m } = await supabase.from("profiles").select("*").eq("id", id).maybeSingle();
   if (!m) notFound();

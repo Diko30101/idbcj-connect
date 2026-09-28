@@ -9,7 +9,7 @@ export default async function AttendancePage({
   searchParams: Promise<{ ok?: string; error?: string }>;
 }) {
   const { ok, error } = await searchParams;
-  const { supabase } = await requireRoles(["admin", "secretary"]);
+  const { supabase } = await requireRoles(["admin", "secretary", "local_secretary"]);
 
   const [summary, care] = await Promise.all([
     supabase.rpc("attendance_summary", { limit_n: 20 }),
