@@ -264,19 +264,29 @@ function SidebarShell({
 
   return (
     <div className="min-h-screen bg-slate-50 lg:pl-64">
-      {/* Mobile top bar */}
-      <header className="sticky top-0 z-30 flex h-16 items-center gap-3 border-b border-gray-200 bg-white px-4 lg:hidden">
+      {/* Top bar — laging makikita (mobile at desktop). Sa mobile: hamburger + app title sa
+          kaliwa. Sa kanan, lagi: Help at Notification bell (tingnan ang layout.tsx -- inalis na
+          ang "Help" sa sidebar list at inilipat dito). */}
+      <header className="sticky top-0 z-30 flex h-16 items-center gap-3 border-b border-gray-200 bg-white px-4 lg:px-8">
         <button
           type="button"
           onClick={() => setDrawerOpen(true)}
           aria-expanded={drawerOpen}
           aria-label="Buksan ang menu"
-          className="rounded-lg p-2 text-gray-600 transition hover:bg-emerald-50 hover:text-[#075f47]"
+          className="rounded-lg p-2 text-gray-600 transition hover:bg-emerald-50 hover:text-[#075f47] lg:hidden"
         >
           <Menu className="h-6 w-6" aria-hidden="true" />
         </button>
-        <span className="text-base font-bold text-[#075f47]">IDBCJ Connect</span>
-        <div className="ml-auto">
+        <span className="text-base font-bold text-[#075f47] lg:hidden">IDBCJ Connect</span>
+        <div className="ml-auto flex items-center gap-1">
+          <Link
+            href="/portal/help"
+            aria-label="Help"
+            title="Help"
+            className="rounded-full p-2 text-gray-500 transition hover:bg-emerald-50 hover:text-emerald-700"
+          >
+            <HelpCircle className="h-5 w-5" aria-hidden="true" />
+          </Link>
           <NotificationBell />
         </div>
       </header>

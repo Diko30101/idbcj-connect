@@ -50,9 +50,10 @@ export default async function PortalLayout({ children }: { children: React.React
     { href: "/portal/announcements", label: "Announcements" },
     { href: "/portal/prayer", label: "Prayer" },
     { href: "/portal/profile", label: "My Profile" },
-    // Help: gabay sa paggamit, mga patakaran, at FAQ -- nakikita ng LAHAT, walang role/ministry gate.
-    { href: "/portal/help", label: "Help" },
   ];
+  // Help: gabay sa paggamit, mga patakaran, at FAQ -- nakikita ng LAHAT, walang role/ministry gate.
+  // Hindi na ito kasama sa listahan ng sidebar -- inilipat sa itaas (kanang bahagi ng top bar),
+  // katabi ng notification bell, tingnan ang PortalShell/SidebarShell sa portal-shell.tsx.
   // Ang "Ministries" na menu ay para LANG sa Admin role at mga kasapi ng
   // Administrative Ministry -- hindi ito makikita ng iba.
   if (profile.role === "admin" || (((await supabase.from("ministry_members").select("ministries(name)").eq("profile_id", profile.id)).data ?? []) as any[]).some((m) => m.ministries?.name === "Administrative Ministry")) {
@@ -206,7 +207,6 @@ export default async function PortalLayout({ children }: { children: React.React
     "/portal/members",
     "/portal/courses",
     "/portal/profile",
-    "/portal/help",
     "/tulong-financial",
     "/portal/tulong-financial",
   ]);

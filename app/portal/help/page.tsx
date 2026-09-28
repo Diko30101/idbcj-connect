@@ -1,5 +1,6 @@
 import { requirePortalAccess } from "@/lib/portal";
 import { PageHeader, Panel } from "@/components/portal/ui";
+import { HelpSearch } from "@/components/portal/help-search";
 
 // Help: gabay sa paggamit ng portal, mga tuntunin/patakaran, at FAQ. Nakikita ito ng LAHAT ng
 // may account (walang role/ministry gate) -- katulad ng Home/Inbox/Announcements/Prayer/My Profile.
@@ -144,6 +145,10 @@ export default async function HelpPage() {
             nasagot ang tanong mo pagkatapos basahin ito, tingnan ang &ldquo;Kailangan pa ng tulong?&rdquo; sa
             ibaba.
           </p>
+        </Panel>
+
+        <Panel title="Maghanap ng Sagot">
+          <HelpSearch guides={GUIDES} faq={FAQ} />
         </Panel>
 
         <Panel title="Mga Role sa Portal">
