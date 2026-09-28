@@ -1,16 +1,26 @@
+import Link from "next/link";
+
 // Katawan ng liham: ginagawang totoong table (gaya ng Excel) ang mga
 // pipe-table na linya (hal. "| Petsa | Halaga |") na galing sa Buwanang at
-// Lingguhang Resibo. Ang ibang linya ay plain text pa rin.
+// Lingguhang Resibo. Ang linyang "Link: /portal/..." ay ginagawang totoong
+// pindutan (hal. galing sa notify_admin_new_member). Ang ibang linya ay
+// plain text pa rin.
 const TABLE_LINE = /^\|.*\|$/;
 
 type Block =
   | { kind: "text"; lines: string[] }
   | { kind: "table"; rows: string[][] }
-  | { kind: "total"; line: string; grand: boolean };
+  | { kind: "total"; line: string; grand: boolean }
+  | { kind: "link"; href: string };
 
 // Mga linya ng kabuuan sa resibo (hal. "Kabuuan ng Ambagan: ₱...",
 // "PANGKALAHATANG KABUUAN: ₱...").
 const TOTAL_LINE = /^(Kabuuan ng|PANGKALAHATANG KABUUAN)/;
+
+// Linya ng link papunta sa ibang pahina ng portal (hal. "Link: /portal/roster?q=...&pending=1").
+// Panloob lang na landas (nagsisimula sa "/") ang tinatanggap — hindi buong URL — para hindi ito
+// magamit bilang open redirect papunta sa ibang site.
+const LINK_LINE = /^Link:\s*(\/\S+)$/;
 
 function parseBlocks(body: string): Block[] {
   const blocks: Block[] = [];
@@ -30,7 +40,12 @@ function parseBlocks(body: string): Block[] {
   };
   for (const rawLine of body.split("\n")) {
     const line = rawLine.trim();
-    if (TABLE_LINE.test(line)) {
+    const linkMatch = line.match(LINK_LINE);
+    if (linkMatch) {
+      flushText();
+      flushTable();
+      blocks.push({ kind: "link", href: linkMatch[1] });
+    } else if (TABLE_LINE.test(line)) {
       flushText();
       rows.push(line.split("|").slice(1, -1).map((c) => c.trim()));
     } else if (TOTAL_LINE.test(line)) {
@@ -90,6 +105,17 @@ export function LetterBody({ body }: { body: string }) {
   return (
     <div className="text-sm text-gray-700">
       {blocks.map((b, i) => {
+        if (b.kind === "link")
+          return (
+            <p key={i} className="my-2">
+              <Link
+                href={b.href}
+                className="inline-flex items-center gap-1 rounded-md bg-emerald-700 px-3 py-1.5 text-sm font-semibold text-white hover:bg-emerald-800"
+              >
+                Tingnan sa Mga Miyembro →
+              </Link>
+            </p>
+          );
         if (b.kind === "table") return <ResiboTable key={i} rows={b.rows} />;
         if (b.kind === "total")
           return (
