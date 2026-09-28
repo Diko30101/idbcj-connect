@@ -151,7 +151,18 @@ export default async function PortalLayout({ children }: { children: React.React
     if (isLocalFinanceMember || isFinanceMinistryMember) {
       items.push({ href: "/portal/finance/ambagan", label: "Ambagan" });
       items.push({ href: "/portal/finance/tulong", label: "Tulong sa Aral" });
-      items.push({ href: "/portal/finance/pasalamat", label: "Pasalamat" });
+      // Hiwalay na pahina ang bawat uri ng Pasalamat (Monthly/Birthday, Taunang, Anniversary,
+      // Extra) -- submenu sa ilalim ng "Pasalamat" gamit ang parehong recursive na SidebarGroup.
+      items.push({
+        href: "/portal/finance/pasalamat",
+        label: "Pasalamat",
+        children: [
+          { href: "/portal/finance/pasalamat", label: "Monthly Pasalamat" },
+          { href: "/portal/finance/pasalamat/annual", label: "Taunang Pasalamat" },
+          { href: "/portal/finance/pasalamat/anniversary", label: "Anniversary Pasalamat" },
+          { href: "/portal/finance/pasalamat/extra", label: "Extra Pasalamat" },
+        ],
+      });
     }
     // Roster ng mga kaanib: Admin, Administrative Ministry o Local Admin Ministry (ang pahina ang nagsasala ng local)
     if (profile.role === "admin" || isRosterMember) items.push({ href: "/portal/roster", label: "Membership Record" });
