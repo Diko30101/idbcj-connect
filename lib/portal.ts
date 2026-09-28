@@ -71,8 +71,13 @@ export const KINDS = Object.keys(KIND_LABEL);
 
 export const isStaff = (r: Role) => r === "admin" || r === "secretary" || r === "local_secretary";
 
-// Admin, Secretary, Local Secretary, at Treasurer lang ang may access sa financial records (lahat ng lokal)
-export const isFinance = (r: Role) => r === "admin" || r === "secretary" || r === "local_secretary" || r === "treasurer";
+// Admin, Secretary, at Treasurer lang ang role na awtomatikong may access sa buong Finance section
+// (Financial Management, Audit Report, Expenses -- lahat ng lokal). SADYANG hindi kasama ang
+// Local Secretary: ang access ng isang Local Secretary sa financial records ay dapat manggaling sa
+// TUNAY na ministry membership niya (Finance Ministry = buong iglesia, Local Finance Ministry =
+// sariling lokal lang -- tingnan ang LOCAL_FINANCE_MINISTRY_NAME/getAbuluyanContext), hindi dapat
+// basta makita ang buong Finance menu dahil lang "local_secretary" ang role niya.
+export const isFinance = (r: Role) => r === "admin" || r === "secretary" || r === "treasurer";
 
 // Mga ministry na ang mga kasapi (at ang mismong ministry) ay Admin lang ang makapagbabago (010 at 018)
 export { PROTECTED_MINISTRY_NAMES, isProtectedMinistryName } from "./ministry-ops";
