@@ -7,12 +7,16 @@ import { MonthYearNav } from "@/components/portal/month-year-nav";
 import { GIVING_BASE, type PasalamatRecord } from "@/lib/giving";
 import { monthLabel } from "@/lib/finance";
 
-// Monthly Pasalamat: Birthday Pasalamat bawat buwan -- kung sino ang nagbibigay ng pasalamat sa
-// buwang ito (isang hanay bawat kaanib, hanapin sa roster, may "+ Magdagdag" kung marami pa).
-// Awtomatiko ang uri (Birthday Pasalamat) -- hindi na kailangang piliin. Naka-scope sa buwan (Petsa
-// ng bawat hanay ay dapat nasa loob nito).
+// Monthly Pasalamat: kung sino ang nagpapasalamat sa buwang ito (Birthday, Extra, o anumang
+// dahilan) -- isang hanay bawat kaanib, hanapin sa roster, may "+ Magdagdag" kung marami pa. May
+// Dahilan bawat hanay -- ang mismong dahilan na itina-type ang siyang magiging uri/pamagat sa
+// resibo (hindi na limitado sa preset na uri). Naka-scope sa buwan (Petsa ng bawat hanay ay dapat
+// nasa loob nito). Ang Taunang at Anniversary Pasalamat lang ang may sariling hiwalay na pahina
+// (pangkalahatan, nakalista na agad ang lahat ng kaanib).
 const BASE = `${GIVING_BASE}/pasalamat`;
-const FIXED_TYPE = "birthday";
+// Ang Taunang (annual) at Anniversary Pasalamat ay may sariling pahina/grid na (roster ng lahat ng
+// kaanib) -- ang mga ito lang ang hindi kasama sa listahan ng Monthly Pasalamat.
+const EXCLUDED_TYPES = ["annual", "anniversary"];
 
 export default async function PasalamatMonthlyPage({
   searchParams,
@@ -35,7 +39,7 @@ export default async function PasalamatMonthlyPage({
       .from("pasalamat_records")
       .select("id, local_id, member_id, type, date, amount, notes, status, decision_notes")
       .eq("local_id", selected.id)
-      .eq("type", FIXED_TYPE)
+      .not("type", "in", `(${EXCLUDED_TYPES.map((t) => `"${t}"`).join(",")})`)
       .gte("date", min)
       .lte("date", max)
       .order("date", { ascending: false })
@@ -52,11 +56,11 @@ export default async function PasalamatMonthlyPage({
   return (
     <>
       <PageHeader
-        title="Monthly Pasalamat"
+        title="Monthly Pasalamat Report"
         subtitle={
           selected
-            ? `Birthday Pasalamat bawat buwan · ${selected.name} · ${monthLabel(buwan)}`
-            : "Birthday Pasalamat bawat buwan"
+            ? `Pasalamat bawat buwan (Birthday, Extra, atbp.) · ${selected.name} · ${monthLabel(buwan)}`
+            : "Pasalamat bawat buwan (Birthday, Extra, atbp.)"
         }
         action={<MonthYearNav buwan={buwan} basePath={BASE} localId={ctx.isChurch ? selected?.id : undefined} />}
       />
@@ -68,7 +72,7 @@ export default async function PasalamatMonthlyPage({
       {selected && (
         <>
           <div className="mt-6">
-            <Panel title="Mag-encode ng Monthly Pasalamat" subtitle={monthLabel(buwan)}>
+            <Panel title="Mag-encode ng Monthly Pasalamat Report" subtitle={monthLabel(buwan)}>
               <PasalamatSimpleGridForm
                 action={savePasalamatGrid}
                 path={path}
@@ -76,14 +80,14 @@ export default async function PasalamatMonthlyPage({
                 maxDate={max}
                 defaultDate={gridDefaultDate}
                 search={searchMembers}
-                mode={{ kind: "fixed", type: FIXED_TYPE }}
+                mode={{ kind: "reason", placeholder: "Dahilan ng Pasalamat (Birthday, Extra, atbp.)" }}
                 hidden={ctx.isChurch ? { local_id: selected.id } : undefined}
               />
             </Panel>
           </div>
 
           <div className="mt-6">
-            <Panel title="Mga Naitalang Monthly Pasalamat" subtitle={monthLabel(buwan)}>
+            <Panel title="Mga Naitalang Monthly Pasalamat Report" subtitle={monthLabel(buwan)}>
               <PasalamatList records={records} names={names} timezone={selected.timezone} path={path} mode={ctx.isChurch ? "church" : "local"} />
             </Panel>
           </div>

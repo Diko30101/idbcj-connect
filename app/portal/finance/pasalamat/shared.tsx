@@ -4,8 +4,9 @@ import { isValidMonth } from "@/lib/abuluyan";
 import { currentMonthPH, todayInTimezone } from "@/lib/finance";
 import { GIVING_BASE } from "@/lib/giving";
 
-// Karaniwang paghahanda ng bawat pahina ng Pasalamat (Monthly/overview, Taunang, Anniversary,
-// Extra -- hiwalay na pahina bawat isa, kagaya ng Abuluyan/Ambagan/Tulong). Iisa lang dito ang
+// Karaniwang paghahanda ng bawat pahina ng Pasalamat (Monthly -- kasama na ang dating Extra,
+// Taunang, Anniversary -- hiwalay na pahina bawat isa, kagaya ng Abuluyan/Ambagan/Tulong). Iisa
+// lang dito ang
 // lohika ng pagpili ng local (church-wide vs sariling local), buwan, at "path" na ipinapasa sa
 // bawat action form (target ng redirect pagkatapos mag-save -- tingnan ang safeGivingPath sa
 // lib/giving.ts, na dapat ding may listahan ng bagong landas na ito).
@@ -32,8 +33,8 @@ export async function loadPasalamatPage(searchParams: { local?: string; buwan?: 
   return { ctx, locals, selected, buwan, path, pagePath, defaultDate };
 }
 
-// Hanggahan ng petsa (min/max) sa loob ng napiling buwan -- ginagamit ng Monthly at Extra Pasalamat
-// grid (bawat hanay ay may sariling Petsa pero dapat nasa loob ng buwang napili, gaya ng Taunang at
+// Hanggahan ng petsa (min/max) sa loob ng napiling buwan -- ginagamit ng grid ng Monthly Pasalamat
+// (bawat hanay ay may sariling Petsa pero dapat nasa loob ng buwang napili, gaya ng Taunang at
 // Anniversary Pasalamat na naka-scope na rin sa buwan).
 export function monthBounds(buwan: string): { min: string; max: string } {
   const y = Number(buwan.slice(0, 4));
@@ -48,14 +49,15 @@ export function monthDefaultDate(buwan: string, todayIso: string): string {
   return todayIso >= min && todayIso <= max ? todayIso : min;
 }
 
-// Mga pindutang pill sa itaas ng bawat pahina ng Pasalamat, papunta sa tatlong kapatid na pahina
-// (Monthly, Taunang, Anniversary, Extra) -- karagdagan lang sa submenu ng sidebar, para
-// mabilis ding makalipat habang naka-focus sa isang buwan/local.
+// Mga pindutang pill sa itaas ng bawat pahina ng Pasalamat, papunta sa magkapatid na pahina
+// (Extra -- kasama na ang dating Monthly, Taunang, Anniversary) -- karagdagan lang sa submenu ng
+// sidebar, para mabilis ding makalipat habang naka-focus sa isang buwan/local. Tandaan: "Extra"
+// ang label dito (kasunod ng menu), pero "Monthly Pasalamat" pa rin ang pamagat sa loob mismo ng
+// form/page.
 const PASALAMAT_TABS: { href: string; label: string }[] = [
-  { href: `${GIVING_BASE}/pasalamat`, label: "Monthly" },
+  { href: `${GIVING_BASE}/pasalamat`, label: "Extra" },
   { href: `${GIVING_BASE}/pasalamat/annual`, label: "Taunang" },
   { href: `${GIVING_BASE}/pasalamat/anniversary`, label: "Anniversary" },
-  { href: `${GIVING_BASE}/pasalamat/extra`, label: "Extra" },
 ];
 
 export function PasalamatTabs({ active, buwan, localId }: { active: string; buwan: string; localId?: string }) {

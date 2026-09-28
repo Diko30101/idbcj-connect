@@ -151,16 +151,18 @@ export default async function PortalLayout({ children }: { children: React.React
     if (isLocalFinanceMember || isFinanceMinistryMember) {
       items.push({ href: "/portal/finance/ambagan", label: "Ambagan" });
       items.push({ href: "/portal/finance/tulong", label: "Tulong sa Aral" });
-      // Hiwalay na pahina ang bawat uri ng Pasalamat (Monthly/Birthday, Taunang, Anniversary,
-      // Extra) -- submenu sa ilalim ng "Pasalamat" gamit ang parehong recursive na SidebarGroup.
+      // Hiwalay na pahina ang bawat uri ng Pasalamat (Monthly -- kasama na ang dating Extra,
+      // Taunang, Anniversary) -- submenu sa ilalim ng "Pasalamat" gamit ang parehong recursive na
+      // SidebarGroup. Inalis na ang "Extra Pasalamat" na child dahil kaparehong-kapareho na ng
+      // sarili nitong link ang parent na "Pasalamat" (parehong /portal/finance/pasalamat) --
+      // naa-access pa rin ang pahina lalo pa't naroon din ang PasalamatTabs sa itaas ng bawat
+      // pahina ng Pasalamat. "Monthly Pasalamat Report" pa rin ang pamagat sa loob mismo ng form.
       items.push({
         href: "/portal/finance/pasalamat",
         label: "Pasalamat",
         children: [
-          { href: "/portal/finance/pasalamat", label: "Monthly Pasalamat" },
           { href: "/portal/finance/pasalamat/annual", label: "Taunang Pasalamat" },
           { href: "/portal/finance/pasalamat/anniversary", label: "Anniversary Pasalamat" },
-          { href: "/portal/finance/pasalamat/extra", label: "Extra Pasalamat" },
         ],
       });
     }
@@ -201,7 +203,7 @@ export default async function PortalLayout({ children }: { children: React.React
       hrefs: ["/portal/roster", "/portal/attendance-record", "/portal/attendance-report", "/portal/pagsamba", "/portal/finance/resibo", "/portal/finance/resibo/kaanib", "/portal/finance/local", "/portal/audit"],
       subgroups: [
         {
-          label: "Finance Record",
+          label: "Form Record",
           // Ipasok pagkatapos ng Attendance Record, bago ang Buwanang Resibo.
           after: "/portal/attendance-record",
           hrefs: [
@@ -223,7 +225,7 @@ export default async function PortalLayout({ children }: { children: React.React
     new Set([...def.hrefs, ...(def.subgroups ?? []).flatMap((s) => s.hrefs)]);
   for (const def of GROUP_DEFS) {
     const children = def.hrefs.flatMap((h) => overflow.filter((i) => i.href === h));
-    // Nested na subgroup (hal. "Finance Record" sa loob ng "Local Ministry"):
+    // Nested na subgroup (hal. "Form Record" sa loob ng "Local Ministry"):
     // binubuo lang mula sa mga item na mayroon na ang user -- walang binabagong access control.
     const subgroups: { item: NavItem; after?: string }[] = (def.subgroups ?? []).flatMap((sg) => {
       const sgChildren = sg.hrefs.flatMap((h) => overflow.filter((i) => i.href === h));
