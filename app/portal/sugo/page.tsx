@@ -130,7 +130,7 @@ export default async function SugoPage({
                         )}
                         <td className="py-2 pr-3 align-top">
                           {rec.session_label === "" ? (
-                            <span className="text-xs text-gray-400">Pangunahin</span>
+                            <span className="text-xs text-gray-400">Pangunahin · 9:00 AM</span>
                           ) : (
                             <span className="inline-flex items-center gap-1">
                               {rec.session_label}

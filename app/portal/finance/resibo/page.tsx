@@ -2,12 +2,13 @@ import Link from "next/link";
 import { getAbuluyanContext, denyAbuluyan } from "@/lib/portal";
 import { sendResiboToAdmin } from "./actions";
 import { Empty, Notice, PageHeader, Panel, btnCls, btnGhostCls } from "@/components/portal/ui";
-import { isValidMonth, nextMonth, prevMonth } from "@/lib/abuluyan";
+import { isValidMonth } from "@/lib/abuluyan";
 import { currentMonthPH, fmtPeso } from "@/lib/finance";
 import { pasalamatTypeLabel } from "@/lib/giving";
 import { RESIBO_BASE, groupAmbaganByMember, groupGivingByMember } from "@/lib/resibo";
 import { getResiboSummary } from "./summary";
 import { PrintButton } from "./print-button";
+import { MonthYearNav } from "@/components/portal/month-year-nav";
 import { KAANIB_RESIBO_BASE } from "./kaanib/page";
 
 // Buwanang Resibo: printable monthly receipt per lokal — pinagsasama sa iisang
@@ -62,10 +63,8 @@ export default async function ResiboPage({
         title="Buwanang Resibo"
         subtitle={`Buwan: ${summary.monthLabel} · Lokal: ${summary.localName}`}
         action={
-          <div className="no-print flex flex-wrap gap-2">
-            <Link href={pagePath(prevMonth(buwan), selected.id)} className={btnGhostCls}>
-              ← Nakaraan
-            </Link>
+          <div className="no-print flex flex-wrap items-center gap-2">
+            <MonthYearNav buwan={buwan} basePath={RESIBO_BASE} localId={selected.id} />
             <PrintButton />
             <a
               href={`${RESIBO_BASE}/pdf?buwan=${buwan}&local=${selected.id}`}
@@ -75,9 +74,6 @@ export default async function ResiboPage({
             >
               I-download PDF (Pagsamba/Ambagan/Aral/Pasalamat)
             </a>
-            <Link href={pagePath(nextMonth(buwan), selected.id)} className={btnGhostCls}>
-              Susunod →
-            </Link>
           </div>
         }
       />

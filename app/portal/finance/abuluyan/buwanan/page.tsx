@@ -2,15 +2,11 @@ import Link from "next/link";
 import { getAbuluyanContext, denyAbuluyan } from "@/lib/portal";
 import { sendAbuluyanMonthlySummary } from "../actions";
 import { Empty, Notice, PageHeader, Panel, btnCls, btnGhostCls } from "@/components/portal/ui";
-import {
-  ABULUYAN_BUWANAN_PATH,
-  isValidMonth,
-  nextMonth,
-  prevMonth,
-} from "@/lib/abuluyan";
+import { ABULUYAN_BUWANAN_PATH, isValidMonth } from "@/lib/abuluyan";
 import { currentMonthPH, fmtPeso, monthLabel } from "@/lib/finance";
 import { getMonthlySummary, type AbuluyanSummaryScope } from "./summary";
 import { PrintButton } from "./print-button";
+import { MonthYearNav } from "@/components/portal/month-year-nav";
 
 // Buwanang Ulat ng Abuluyan: printable monthly summary receipt.
 // Church-wide Finance at Admin: lahat ng local. Local Finance: sariling local lang.
@@ -51,14 +47,9 @@ export default async function AbuluyanBuwananPage({
         title="Buwanang Ulat ng Abuluyan"
         subtitle={`Buwan: ${monthLabel(buwan)} · ${scopeLabel}`}
         action={
-          <div className="no-print flex flex-wrap gap-2">
-            <Link href={`${ABULUYAN_BUWANAN_PATH}?buwan=${prevMonth(buwan)}`} className={btnGhostCls}>
-              ← Nakaraan
-            </Link>
+          <div className="no-print flex flex-wrap items-center gap-2">
+            <MonthYearNav buwan={buwan} basePath={ABULUYAN_BUWANAN_PATH} />
             <PrintButton />
-            <Link href={`${ABULUYAN_BUWANAN_PATH}?buwan=${nextMonth(buwan)}`} className={btnGhostCls}>
-              Susunod →
-            </Link>
             <Link href={`/portal/finance/resibo?buwan=${buwan}`} className={btnGhostCls}>
               Buwanang Resibo
             </Link>

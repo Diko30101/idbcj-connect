@@ -2,7 +2,7 @@ import Link from "next/link";
 import { getRosterContext } from "@/lib/portal";
 import { sendAttendanceReportToAdmin } from "./actions";
 import { Empty, Notice, PageHeader, Panel, btnCls, btnGhostCls } from "@/components/portal/ui";
-import { isValidMonth, nextMonth, prevMonth } from "@/lib/abuluyan";
+import { isValidMonth } from "@/lib/abuluyan";
 import { currentMonthPH } from "@/lib/finance";
 import { ATTENDANCE_REPORT_BASE } from "@/lib/attendance-report";
 import { getAttendanceReportSummary, getDraftAttendanceGatherings, buildAttendanceSheet } from "./summary";
@@ -119,13 +119,7 @@ export default async function AttendanceReportPage({
         subtitle={`Buwan: ${summary.monthLabel} · Lokal: ${summary.localName}`}
         action={
           <div className="no-print flex flex-wrap items-center gap-2">
-            <Link href={pagePath(prevMonth(buwan), selected.id)} className={btnGhostCls}>
-              ← Nakaraan
-            </Link>
             <MonthYearNav buwan={buwan} basePath={ATTENDANCE_REPORT_BASE} localId={selected.id} />
-            <Link href={pagePath(nextMonth(buwan), selected.id)} className={btnGhostCls}>
-              Susunod →
-            </Link>
             <PrintButton />
           </div>
         }

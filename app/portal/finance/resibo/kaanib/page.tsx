@@ -2,11 +2,12 @@ import Link from "next/link";
 import { getAbuluyanContext, denyAbuluyan } from "@/lib/portal";
 import { Empty, Notice, PageHeader, Panel } from "@/components/portal/ui";
 import { inputCls, btnCls, btnGhostCls } from "@/components/portal/form-bits";
-import { isValidMonth, nextMonth, prevMonth } from "@/lib/abuluyan";
+import { isValidMonth } from "@/lib/abuluyan";
 import { currentMonthPH, fmtPeso } from "@/lib/finance";
 import { pasalamatTypeLabel } from "@/lib/giving";
 import { getKaanibResiboSummary } from "./summary";
 import { PrintButton } from "../print-button";
+import { MonthYearNav } from "@/components/portal/month-year-nav";
 
 export const KAANIB_RESIBO_BASE = "/portal/finance/resibo/kaanib";
 
@@ -61,7 +62,6 @@ export default async function KaanibResiboPage({
   const buwan = buwanParam && isValidMonth(buwanParam) ? buwanParam : currentMonthPH();
   const summary =
     member != null ? await getKaanibResiboSummary(ctx.supabase, local.id, local.name, member.id, member.full_name, buwan) : null;
-  const pagePath = (b: string) => `${KAANIB_RESIBO_BASE}?member_id=${member!.id}&buwan=${b}`;
 
   return (
     <>
@@ -76,14 +76,9 @@ export default async function KaanibResiboPage({
         subtitle={`Buwanang resibo ng isang kaanib · Lokal: ${local.name}`}
         action={
           summary && (
-            <div className="no-print flex flex-wrap gap-2">
-              <Link href={pagePath(prevMonth(buwan))} className={btnGhostCls}>
-                ← Nakaraan
-              </Link>
+            <div className="no-print flex flex-wrap items-center gap-2">
+              <MonthYearNav buwan={buwan} basePath={KAANIB_RESIBO_BASE} extraQuery={{ member_id: member!.id }} />
               <PrintButton />
-              <Link href={pagePath(nextMonth(buwan))} className={btnGhostCls}>
-                Susunod →
-              </Link>
             </div>
           )
         }

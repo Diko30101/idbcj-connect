@@ -27,12 +27,15 @@ export function MonthYearNav({
   buwan, // YYYY-MM
   basePath,
   localId,
+  extraQuery,
   yearsBack = 5,
   yearsForward = 1,
 }: {
   buwan: string;
   basePath: string;
   localId?: string;
+  // Karagdagang query param na dapat manatili kapag lumipat ng buwan/taon (hal. member_id).
+  extraQuery?: Record<string, string | undefined>;
   yearsBack?: number;
   yearsForward?: number;
 }) {
@@ -46,7 +49,10 @@ export function MonthYearNav({
 
   const go = (newYear: number, newMonth: number) => {
     const nb = `${newYear}-${String(newMonth).padStart(2, "0")}`;
-    router.push(`${basePath}?buwan=${nb}${localId ? `&local=${localId}` : ""}`);
+    const params = new URLSearchParams({ buwan: nb });
+    if (localId) params.set("local", localId);
+    for (const [k, v] of Object.entries(extraQuery ?? {})) if (v) params.set(k, v);
+    router.push(`${basePath}?${params.toString()}`);
   };
 
   return (
