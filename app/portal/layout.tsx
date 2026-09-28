@@ -63,10 +63,15 @@ export default async function PortalLayout({ children }: { children: React.React
   }
   let showLocalMinistry = profile.role === "admin";
   {
-    const needsMinistryCheck = !(isFinance(profile.role) && isStaff(profile.role));
-    // Kinukuha palagi (para sa nav ng Roster); ang lohika ng Finance sa ibaba ay hindi nagbabago (myMinistries ay null kung isFinance ang role)
+    // Laging kinukuha ang aktwal na ministry membership -- ginagamit ito ng Roster nav
+    // AT ng mga Form Record link sa ibaba (Abuluyan/Ambagan/Tulong sa Aral/Pasalamat).
+    // Dati, ni-null out ito kapag "Finance-tier" na ang role (Admin/Secretary/Treasurer/
+    // Local Secretary), sa pag-aakalang hindi na kailangan -- pero mali iyon: nakadepende
+    // ang mga link na ito sa TUNAY na ministry membership (hal. Local Secretary na kasapi
+    // rin ng Local Finance Ministry), hindi lang sa pangkalahatang isFinance()/isStaff() ng
+    // role. Libre lang ayusin ito dahil laging kinukuha na rin ang allMinistries.
     const { data: allMinistries } = await supabase.from("ministry_members").select("ministries(name)").eq("profile_id", profile.id);
-    const myMinistries = needsMinistryCheck ? allMinistries : null;
+    const myMinistries = allMinistries;
     const isRosterMember = ((allMinistries ?? []) as any[]).some((m) => ROSTER_MINISTRY_NAMES.includes(m.ministries?.name));
     // Ang "Local Ministry" na menu ay para lang sa Local Admin Ministry
     // (mga nagtatala at nagpapadala ng local data sa Finance at Administrative Ministry),
