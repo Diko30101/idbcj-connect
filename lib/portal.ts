@@ -17,7 +17,7 @@ import { FINANCE_CATEGORIES, FINANCE_CATEGORY_LABEL, type FinanceCategory } from
 export { CATEGORIES, CATEGORY_LABEL, LOCALITIES, LOCALITY_LABEL, FINANCE_CATEGORIES, FINANCE_CATEGORY_LABEL };
 export type { Category, Locality, FinanceCategory };
 
-export type Role = "admin" | "secretary" | "leader" | "member" | "treasurer" | "local_secretary";
+export type Role = "admin" | "secretary" | "leader" | "member" | "treasurer" | "local_secretary" | "general_treasurer";
 export type MemberStatus = "visitor" | "active" | "inactive";
 
 export type Profile = {
@@ -50,6 +50,7 @@ export const ROLE_LABEL: Record<Role, string> = {
   member: "Member",
   treasurer: "Treasurer",
   local_secretary: "Local Secretary",
+  general_treasurer: "General Treasurer",
 };
 
 export const STATUS_LABEL: Record<MemberStatus, string> = {
@@ -71,13 +72,14 @@ export const KINDS = Object.keys(KIND_LABEL);
 
 export const isStaff = (r: Role) => r === "admin" || r === "secretary" || r === "local_secretary";
 
-// Admin, Secretary, at Treasurer lang ang role na awtomatikong may access sa buong Finance section
-// (Financial Management, Audit Report, Expenses -- lahat ng lokal). SADYANG hindi kasama ang
+// Admin, Secretary, Treasurer, at General Treasurer lang ang role na awtomatikong may access sa
+// buong Finance section (Financial Management, Audit Report, Expenses -- lahat ng lokal), kaparehong
+// antas ng access ng isang kasapi ng Finance Ministry (church-wide). SADYANG hindi kasama ang
 // Local Secretary: ang access ng isang Local Secretary sa financial records ay dapat manggaling sa
 // TUNAY na ministry membership niya (Finance Ministry = buong iglesia, Local Finance Ministry =
 // sariling lokal lang -- tingnan ang LOCAL_FINANCE_MINISTRY_NAME/getAbuluyanContext), hindi dapat
 // basta makita ang buong Finance menu dahil lang "local_secretary" ang role niya.
-export const isFinance = (r: Role) => r === "admin" || r === "secretary" || r === "treasurer";
+export const isFinance = (r: Role) => r === "admin" || r === "secretary" || r === "treasurer" || r === "general_treasurer";
 
 // Mga ministry na ang mga kasapi (at ang mismong ministry) ay Admin lang ang makapagbabago (010 at 018)
 export { PROTECTED_MINISTRY_NAMES, isProtectedMinistryName } from "./ministry-ops";
