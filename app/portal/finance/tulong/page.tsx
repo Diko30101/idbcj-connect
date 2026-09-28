@@ -1,9 +1,10 @@
 import Link from "next/link";
 import { getAbuluyanContext, denyAbuluyan } from "@/lib/portal";
-import { createTulong, updateTulong, submitTulong, submitManyTulong, decideTulong, searchMembers } from "./actions";
+import { createTulong, updateTulong, submitTulong, voidTulong, searchMembers } from "./actions";
 import { Notice, PageHeader, Panel } from "@/components/portal/ui";
 import { AmbaganForm } from "@/components/portal/ambagan-form";
 import { AmbaganList } from "@/components/portal/ambagan-list";
+import { GivingGrid } from "@/components/portal/giving-grid";
 import { GIVING_BASE, type AmbaganRecord } from "@/lib/giving";
 
 // Tulong sa Klase Ministeryal (per-member): Local Finance (sariling local) at church-wide Finance (lahat ng local). Walang ibang nakakakita
@@ -34,7 +35,7 @@ export default async function TulongPage({
   if (selected) {
     const { data } = await supabase
       .from("tulong_klase_records")
-      .select("id, local_id, member_id, period_month, amount, date_received, notes, status, decision_notes")
+      .select("id, local_id, member_id, period_month, amount, date_received, notes, status")
       .eq("local_id", selected.id)
       .order("date_received", { ascending: false })
       .order("created_at", { ascending: false })
@@ -91,16 +92,15 @@ export default async function TulongPage({
           </div>
           <div className="mt-6">
             <Panel title="Mga Naitalang Tulong">
+              <GivingGrid records={records} names={names} mode="simple" />
               <AmbaganList
                 records={records}
                 names={names}
                 timezone={selected.timezone}
                 path={path}
                 mode={ctx.isChurch ? "church" : "local"}
+                actions={{ update: updateTulong, submit: submitTulong, void: voidTulong }}
                 labels={{ monthPhrase: "Tulong para sa", empty: "Wala pang naitatalang Tulong sa Klase Ministeryal.", periodLabel: "Buwan ng tulong" }}
-                actions={{ update: updateTulong, submit: submitTulong, decide: decideTulong }}
-                submitMany={{ action: submitManyTulong }}
-                bulkItemLabel="Tulong sa Klase Ministeryal"
               />
             </Panel>
           </div>
