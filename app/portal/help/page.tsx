@@ -30,7 +30,8 @@ const ACCESS_ROWS: AccessRow[] = [
   { menu: "My Tulong Financial", access: "Sinumang aprubadong Tulong Financial member (borrower), kahit ano pa ang role o ministry niya." },
   { menu: "Finance Report (Local)", access: "Kasapi ng Local Finance Ministry (sariling lokal lang, limitadong access -- iba ito sa Finance Ministry na church-wide)." },
   { menu: "Bible Study", access: "Admin, General Secretary, o kasapi ng Pastoral Ministry." },
-  { menu: "Abuluyan, Buwanang Resibo", access: "Kasapi ng Local Finance Ministry, Finance Ministry, o Admin." },
+  { menu: "Abuluyan", access: "Kasapi ng Local Finance Ministry o Finance Ministry (Admin: makikita pa rin ang datos sa Financial Management, wala na lang shortcut sa menu)." },
+  { menu: "Buwanang Resibo", access: "Kasapi ng Local Finance Ministry, Finance Ministry, o Admin." },
   { menu: "Resibo ng Kaanib", access: "Kasapi ng Local Finance Ministry lang." },
   { menu: "Ambagan, Tulong sa Aral, Pasalamat", access: "Kasapi ng Local Finance Ministry o Finance Ministry." },
   { menu: "Membership Record (Roster), Attendance Record, Attendance Report", access: "Admin, o kasapi ng Administrative Ministry/Local Admin Ministry." },
@@ -39,6 +40,14 @@ const ACCESS_ROWS: AccessRow[] = [
 ];
 
 const GUIDES: GuideSection[] = [
+  {
+    title: "Bell (Mga Abiso) sa itaas ng bawat pahina",
+    body: [
+      "Makikita ng LAHAT ng may account (walang role/ministry gate). May pulang badge na bilang kung may bagong hindi pa nakikita: kasama dito ang hindi pa nababasang Inbox letters, bagong Announcements (hal. pagbabago ng petsa ng klase), bagong iskedyul ng ministry, at bagong Sunday Worship service.",
+      "I-click ang bell para lumabas ang listahan -- may hiwalay na link papunta sa Inbox (may sariling bilang), at listahan ng mga bagong Announcements/iskedyul/serbisyo. \"Nakita na\" ito awtomatiko pagsara ng listahan -- mawawala na sa badge sa susunod, pero hindi ito nakakaapekto sa Inbox (sariling \"nabasa na\" ang proseso ng Inbox).",
+      "Kada isang minuto nag-a-update ang bilang (walang kailangang i-refresh ang pahina).",
+    ],
+  },
   {
     title: "Users -- pagdaragdag at pamamahala ng account",
     body: [

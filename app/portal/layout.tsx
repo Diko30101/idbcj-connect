@@ -156,9 +156,15 @@ export default async function PortalLayout({ children }: { children: React.React
     if (profile.role === "admin" || profile.role === "secretary" || isPastoralMinistryMember) {
       items.push({ href: "/portal/courses", label: "Bible Study" });
     }
+    // Abuluyan: Local Finance at church-wide Finance Ministry lang -- tinanggal na ang Admin dito
+    // (2026-09-29) para tugma sa Ambagan/Tulong sa Aral/Pasalamat sa ibaba, na pareho ring hindi
+    // nakikita ng Admin. Nananatili pa ring may access ang Admin sa datos (Financial Management,
+    // /lahat na pahina) -- shortcut lang sa nav ang tinanggal, hindi ang access sa pahina.
+    if (isLocalFinanceMember || isFinanceMinistryMember) {
+      items.push({ href: "/portal/finance/abuluyan", label: "Abuluyan" });
+    }
     // Isang link; ang pahina ang nagre-redirect ayon sa role (Local Finance, church-wide Finance, o Admin)
     if (isLocalFinanceMember || isFinanceMinistryMember || profile.role === "admin") {
-      items.push({ href: "/portal/finance/abuluyan", label: "Abuluyan" });
       items.push({ href: "/portal/finance/resibo", label: "Buwanang Resibo" });
     }
     /* Resibo ng Kaanib (per-member): Local Finance Ministry lang */ if (isLocalFinanceMember) { items.push({ href: "/portal/finance/resibo/kaanib", label: "Resibo ng Kaanib" }); }    // Ambagan (per-member): Local Finance at church-wide Finance lang; ang pahina ang nagsasala
