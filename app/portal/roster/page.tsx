@@ -34,7 +34,15 @@ export default async function RosterPage({
   const [membersRes, totalRes, activeRes, newRes, pendingRes, latestRes] = await Promise.all([
     query,
     supabase.from("members").select("id", { count: "exact", head: true }).in("local_id", localIds),
-    supabase.from("members").select("id", { count: "exact", head: true }).in("local_id", localIds).eq("status", "Active"),
+    // Ang "Aktibo" ay dapat kumpirmado na (confirmed_at hindi null) -- kung hindi, ang mga bagong
+    // kaanib na naghihintay pa lang ng kumpirmasyon (hal. dahil sa doble/maling naidagdag) ay
+    // nabibilang na agad na "Aktibo" kahit hindi pa talaga tumatanggap ng handog.
+    supabase
+      .from("members")
+      .select("id", { count: "exact", head: true })
+      .in("local_id", localIds)
+      .eq("status", "Active")
+      .not("confirmed_at", "is", null),
     supabase.from("members").select("id", { count: "exact", head: true }).in("local_id", localIds).gte("created_at", monthStart),
     supabase.from("members").select("id", { count: "exact", head: true }).in("local_id", localIds).is("confirmed_at", null),
     supabase.from("members").select("created_at").in("local_id", localIds).order("created_at", { ascending: false }).limit(1),

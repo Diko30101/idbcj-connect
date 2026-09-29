@@ -52,6 +52,8 @@ const GUIDES: GuideSection[] = [
     body: [
       "Ang Roster ay talaan ng LAHAT ng kaanib ng lokal (kasama ang mga walang login account) -- para sa attendance at record-keeping. Iba ito sa Users, na talaan lang ng mga MAY login account.",
       "Ang pagdaragdag ng pangalan sa Roster ay hindi gumagawa ng login account -- kailangan pa rin ng Admin na gumawa niyon sa Users kung kailangan ng account ang taong iyon.",
+      "Bagong kaanib na idinagdag ng hindi Admin (hal. Local Admin Ministry) ay \"Hindi pa kumpirmado\" muna -- ang Admin ang magki-kumpirma (\"Kumpirmahin\") bago ito makatanggap ng handog. Ang bilang na \"Aktibo\" sa itaas ng Roster ay kumpirmado na lang ang binibilang -- hindi pa kabilang ang mga naghihintay pa ng kumpirmasyon.",
+      "Kung doble o maling naidagdag ang bagong kaanib at ayaw nang kumpirmahin ng Admin, may \"Tanggalin\" na buton (Admin lang, at hindi pa kumpirmadong kaanib lang) sa tabi ng \"Kumpirmahin\" para permanenteng alisin ito sa listahan. Kapag kumpirmado na ang kaanib, hindi na ito matatanggal dito -- gamitin na lang ang Status (Inactive/Tiwalag) kung kailangang tanggalin sa aktibong listahan.",
     ],
   },
   {

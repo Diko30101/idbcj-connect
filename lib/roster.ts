@@ -37,6 +37,6 @@ export function safeRosterPath(p: string): string {
 export function rosterErrorMessage(error: { code?: string; message?: string } | null | undefined, fallback: string): string {
   if (!error) return fallback;
   if (error.message?.includes("row-level security")) return fallback;
-  if (["42501", "23514", "P0002"].includes(error.code ?? "") && error.message) return error.message;
+  if (["42501", "23514", "P0002", "23503"].includes(error.code ?? "") && error.message) return error.message;
   return fallback;
 }

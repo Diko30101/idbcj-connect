@@ -2,7 +2,7 @@
 
 import { useState, type FormEvent } from "react";
 import { btnCls, btnGhostCls, inputCls } from "./form-bits";
-import { updateMemberName, setMemberStatus, confirmMember } from "@/app/portal/roster/actions";
+import { updateMemberName, setMemberStatus, confirmMember, deleteMember } from "@/app/portal/roster/actions";
 import { MEMBER_STATUSES, type MemberStatus, type RosterMember } from "@/lib/roster";
 
 type RowMode = "none" | "name" | "status";
@@ -63,6 +63,8 @@ const moreCls =
   "rounded-md px-2 py-1 text-xs font-semibold text-gray-500 hover:bg-emerald-50 hover:text-emerald-700";
 const morePrimaryCls =
   "rounded-md px-2 py-1 text-xs font-semibold text-emerald-700 hover:bg-emerald-100";
+const moreDangerCls =
+  "rounded-md px-2 py-1 text-xs font-semibold text-red-600 hover:bg-red-50";
 
 function ConfirmButton({ member, path }: { member: RosterMember; path: string }) {
   function onSubmit(e: FormEvent<HTMLFormElement>) {
@@ -74,6 +76,28 @@ function ConfirmButton({ member, path }: { member: RosterMember; path: string })
       <input type="hidden" name="id" value={member.id} />
       <button type="submit" className={morePrimaryCls}>
         Kumpirmahin
+      </button>
+    </form>
+  );
+}
+
+// Admin lang, at hindi pa kumpirmadong kaanib lang -- para sa kaso ng doble o maling naidagdag na
+// bagong kaanib na ayaw nang kumpirmahin (tingnan din ang database function na delete_member).
+function DeleteMemberButton({ member, path }: { member: RosterMember; path: string }) {
+  function onSubmit(e: FormEvent<HTMLFormElement>) {
+    if (
+      !window.confirm(
+        `Tanggalin ang kaanib na "${member.full_name}"? Hindi pa ito kumpirmado. Hindi na ito mababawi.`,
+      )
+    )
+      e.preventDefault();
+  }
+  return (
+    <form action={deleteMember} onSubmit={onSubmit}>
+      <input type="hidden" name="path" value={path} />
+      <input type="hidden" name="id" value={member.id} />
+      <button type="submit" className={moreDangerCls}>
+        Tanggalin
       </button>
     </form>
   );
@@ -183,6 +207,7 @@ function ActionButtons({
         </button>
       )}
       {isAdmin && !confirmed && <ConfirmButton member={member} path={path} />}
+      {isAdmin && !confirmed && <DeleteMemberButton member={member} path={path} />}
     </div>
   );
 }

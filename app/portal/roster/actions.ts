@@ -111,6 +111,18 @@ export async function confirmMember(fd: FormData) {
   back(path, "ok", "Nakumpirma ang kaanib. Puwede na itong tumanggap ng handog.");
 }
 
+// Admin lang: delete_member (database function). Hindi pa kumpirmadong kaanib lang ang matatanggal --
+// para sa kaso ng doble o maling naidagdag na bagong kaanib na ayaw nang kumpirmahin.
+export async function deleteMember(fd: FormData) {
+  const ctx = await getRosterContext();
+  const path = target(fd);
+  if (!ctx.isAdmin) back(path, "error", "Ang Admin lang ang makatatanggal ng kaanib.");
+  const { error } = await ctx.supabase.rpc("delete_member", { p_member_id: str(fd, "id") });
+  if (error) back(path, "error", rosterErrorMessage(error, "Hindi natanggal. Subukan ulit."));
+  revalidatePath(ROSTER_BASE, "layout");
+  back(path, "ok", "Natanggal ang kaanib mula sa listahan.");
+}
+
 // CSV na may mga column na full_name at locale. Ang locale ay hinahanap sa pangalan
 // (hindi case-sensitive) sa mga local na sakop ng naka-log in. Nilalaktawan ang mga
 // row na may maling pangalan o hindi kilalang locale.
