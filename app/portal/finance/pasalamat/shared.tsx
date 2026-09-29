@@ -50,12 +50,11 @@ export function monthDefaultDate(buwan: string, todayIso: string): string {
 }
 
 // Mga pindutang pill sa itaas ng bawat pahina ng Pasalamat, papunta sa magkapatid na pahina
-// (Extra -- kasama na ang dating Monthly, Taunang, Anniversary) -- karagdagan lang sa submenu ng
-// sidebar, para mabilis ding makalipat habang naka-focus sa isang buwan/local. Tandaan: "Extra"
-// ang label dito (kasunod ng menu), pero "Monthly Pasalamat" pa rin ang pamagat sa loob mismo ng
-// form/page.
+// (Taunang, Anniversary) -- karagdagan lang sa submenu ng sidebar, para mabilis ding makalipat
+// habang naka-focus sa isang buwan/local. Ang Monthly (/pasalamat, kasama na ang dating Extra) ay
+// hindi kasama rito dahil doon na nakatayo ang mismong pahina kung saan ipinapakita ang mga tab na
+// ito -- gaya rin ng ibang "magkapatid na pahina" na tab sa app na hindi isinasama ang sarili nito.
 const PASALAMAT_TABS: { href: string; label: string }[] = [
-  { href: `${GIVING_BASE}/pasalamat`, label: "Extra" },
   { href: `${GIVING_BASE}/pasalamat/annual`, label: "Taunang" },
   { href: `${GIVING_BASE}/pasalamat/anniversary`, label: "Anniversary" },
 ];

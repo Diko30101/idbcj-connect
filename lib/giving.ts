@@ -28,16 +28,15 @@ export type AmbaganRecord = {
 export type MemberChoice = { id: string; full_name: string; local_name: string; status: string };
 
 export const GIVING_BASE = "/portal/finance";
-// Ang Pasalamat ay hiwalay na pahina bawat uri (Monthly/overview, Taunang, Anniversary, Extra) --
-// kailangang nakalista silang lahat dito para tanggapin ng safeGivingPath (target ng redirect
-// pagkatapos mag-save) ang bawat isa.
+// Ang Pasalamat ay hiwalay na pahina bawat uri (Monthly -- kasama na ang dating Extra, Taunang,
+// Anniversary) -- kailangang nakalista silang lahat dito para tanggapin ng safeGivingPath (target
+// ng redirect pagkatapos mag-save) ang bawat isa.
 export const GIVING_PATHS = [
   `${GIVING_BASE}/ambagan`,
   `${GIVING_BASE}/tulong`,
   `${GIVING_BASE}/pasalamat`,
   `${GIVING_BASE}/pasalamat/annual`,
   `${GIVING_BASE}/pasalamat/anniversary`,
-  `${GIVING_BASE}/pasalamat/extra`,
 ];
 export const GIVING_AMOUNT_MAX = 9999999999.99; // numeric(12,2)
 export const GIVING_NOTES_MAX = 500;
