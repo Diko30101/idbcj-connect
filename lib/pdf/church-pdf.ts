@@ -344,12 +344,41 @@ function drawPagsambaWeekBlock(page: PDFPage, fonts: ChurchFonts, topY: number, 
 
   const sugoTxt = week.sugo || "—";
   const abuluyanTxt = week.abuluyan === null ? "—" : week.abuluyan.toLocaleString("en-PH", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-  const statsLine =
-    `Sugo :  ${sugoTxt}` +
-    `      Dumalo:  ${week.dumalo}` +
-    `      Panauhin:  ${week.panauhin}` +
-    `      Abuluyan:  ${abuluyanTxt}`;
-  page.drawText(truncateToWidth(fonts.sans, 9, statsLine, contentW - 10), { x: MARGIN + 5, y: ly, size: 9, font: fonts.sans });
+
+  // Apat na hanay na justified sa buong lapad ng kahon (2026-09-30): dati'y iisang string na may
+  // fixed na bilang ng literal na espasyo sa pagitan (magkadikit at hindi pantay kapag mahaba ang
+  // Sugo). Ngayon, bawat field ay may sariling "column" -- mas malapad ang Sugo (pangalan, posibleng
+  // mahaba), makitid lang ang Dumalo/Panauhin (bilang), at ang Abuluyan ay right-aligned sa kanang
+  // dulo para laging "umaabot hanggang sa dulo" ang buong hanay, kahit anong laki ng halaga.
+  const statsSize = 9;
+  const rowX = MARGIN + 5;
+  const rowW = contentW - 10;
+  const sugoColW = Math.round(rowW * 0.42);
+  const dumaloColW = Math.round(rowW * 0.18);
+  const panauhinColW = Math.round(rowW * 0.18);
+  const abuluyanColW = rowW - sugoColW - dumaloColW - panauhinColW;
+  const sugoX = rowX;
+  const dumaloX = sugoX + sugoColW;
+  const panauhinX = dumaloX + dumaloColW;
+  const abuluyanX = panauhinX + panauhinColW;
+
+  const drawStatCell = (x: number, colW: number, label: string, value: string, rightAlign: boolean) => {
+    const labelW = fonts.sansBold.widthOfTextAtSize(label, statsSize);
+    const maxValueW = Math.max(10, colW - labelW - 4);
+    const val = truncateToWidth(fonts.sans, statsSize, value, maxValueW);
+    page.drawText(label, { x, y: ly, size: statsSize, font: fonts.sansBold });
+    if (rightAlign) {
+      const valW = fonts.sans.widthOfTextAtSize(val, statsSize);
+      page.drawText(val, { x: x + colW - valW, y: ly, size: statsSize, font: fonts.sans });
+    } else {
+      page.drawText(val, { x: x + labelW + 4, y: ly, size: statsSize, font: fonts.sans });
+    }
+  };
+
+  drawStatCell(sugoX, sugoColW, "Sugo :", sugoTxt, false);
+  drawStatCell(dumaloX, dumaloColW, "Dumalo:", String(week.dumalo), false);
+  drawStatCell(panauhinX, panauhinColW, "Panauhin:", String(week.panauhin), false);
+  drawStatCell(abuluyanX, abuluyanColW, "Abuluyan:", abuluyanTxt, true);
 
   return boxBottom;
 }
