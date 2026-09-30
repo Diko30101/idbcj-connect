@@ -635,21 +635,6 @@ export default async function PortalHome({
         </section>
       )}
 
-      {staff && (
-        <div className="mb-6 grid grid-cols-3 gap-3">
-          {[
-            ["Active", stat("active")],
-            ["Visitors", stat("visitor")],
-            ["Inactive", stat("inactive")],
-          ].map(([label, n]) => (
-            <div key={label as string} className="rounded-xl border border-gray-200 bg-white p-4 text-center shadow-sm">
-              <div className="text-2xl font-bold text-emerald-800">{n}</div>
-              <div className="text-xs font-medium uppercase tracking-wide text-gray-500">{label}</div>
-            </div>
-          ))}
-        </div>
-      )}
-
       {/* Announcement — full width sa itaas ng main column; walang right sidebar.
           Mga card nasa 2-column grid sa ibaba para hindi mahaba ang scroll. */}
       <Panel title="Announcements / Mga Anunsyo" className="mb-6">
