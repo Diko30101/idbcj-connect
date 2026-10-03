@@ -1,0 +1,1 @@
+[{"def": "UNIQUE (name)", "name": "thanksgiving_types_name_key", "table": "thanksgiving_types"}, {"def": "PRIMARY KEY (id)", "name": "thanksgiving_types_pkey", "table": "thanksgiving_types"}]

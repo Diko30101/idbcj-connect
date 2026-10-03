@@ -1,0 +1,1 @@
+{"table": "public.financial_records", "columns": ["id", "record_month", "locality", "category", "amount", "note", "created_by", "updated_by", "created_at", "updated_at", "local_id"], "taken_at": "2026-09-24T00:19:43.756819+00:00", "row_count": 144, "sum_amount": 103300.00}

@@ -1,0 +1,218 @@
+From 7596e248e0cd150e9a712d6f63533820578e3518 Mon Sep 17 00:00:00 2001
+From: Amie <amie@idbcj.local>
+Date: Fri, 2 Oct 2026 13:32:19 -0600
+Subject: [PATCH 1/2] Livestream page: auto-embed ng IDBCJ YouTube live stream
+
+---
+ app/livestream/page.tsx          | 55 ++++++++++++++++++++++++++++++++
+ components/livestream-player.tsx | 17 ++++++++++
+ 2 files changed, 72 insertions(+)
+ create mode 100644 app/livestream/page.tsx
+ create mode 100644 components/livestream-player.tsx
+
+diff --git a/app/livestream/page.tsx b/app/livestream/page.tsx
+new file mode 100644
+index 0000000..97eef61
+--- /dev/null
++++ b/app/livestream/page.tsx
+@@ -0,0 +1,55 @@
++import type { Metadata } from "next";
++import Image from "next/image";
++import { LivestreamPlayer } from "@/components/livestream-player";
++
++export const revalidate = 60;
++
++export const metadata: Metadata = {
++  title: "Live Stream | IDBCJ",
++  description: "Watch the IDBCJ Sunday livestream live.",
++};
++
++// Palitan ng tunay na YouTube Channel ID (magsisimula sa "UC").
++// Makikita sa YouTube Studio → Settings → Channel → Advanced settings.
++const CHANNEL_ID = "UC2w4L4NiiVrcGlE0c1XW-Hw";
++
++export default function LivestreamPage() {
++  return (
++    <div className="min-h-screen bg-slate-50 font-sans">
++      {/* --- HERO --- */}
++      <section className="relative w-full py-12 px-4 md:px-12">
++        <div className="absolute inset-0">
++          <Image
++            src="/background.jpg"
++            alt=""
++            fill
++            sizes="100vw"
++            className="object-cover brightness-25"
++            priority
++          />
++          <div className="absolute inset-0 bg-emerald-900/80 mix-blend-multiply" />
++        </div>
++
++        <div className="relative z-10 max-w-7xl mx-auto text-white">
++          <h1 className="text-4xl md:text-5xl font-extrabold">Live Stream</h1>
++          <p className="mt-3 text-lg text-emerald-50 max-w-2xl">
++            Watch our Sunday worship live, wherever you are.
++          </p>
++          <p className="mt-1 text-sm text-emerald-100 italic max-w-2xl">
++            Mapanood nang live ang ating pagsamba tuwing Linggo, saan ka man naroroon.
++          </p>
++        </div>
++      </section>
++
++      {/* --- PLAYER --- */}
++      <section className="max-w-5xl mx-auto py-12 px-6">
++        <LivestreamPlayer channelId={CHANNEL_ID} />
++        <p className="mt-6 text-center text-sm text-slate-500">
++          Kung walang live ngayon, ipinapakita ang pinakahuling stream.
++          <br />
++          <span className="italic">If nothing is live right now, the most recent stream is shown.</span>
++        </p>
++      </section>
++    </div>
++  );
++}
+diff --git a/components/livestream-player.tsx b/components/livestream-player.tsx
+new file mode 100644
+index 0000000..e2a0780
+--- /dev/null
++++ b/components/livestream-player.tsx
+@@ -0,0 +1,17 @@
++"use client";
++
++// YouTube live embed: awtomatikong ipinapakita ang kasalukuyang live
++// stream ng channel. Kung walang live, ang pinakahuling stream ang lalabas.
++export function LivestreamPlayer({ channelId }: { channelId: string }) {
++  return (
++    <div className="relative w-full aspect-video bg-black rounded-xl overflow-hidden shadow-lg">
++      <iframe
++        src={`https://www.youtube-nocookie.com/embed/live_stream?channel=${channelId}&rel=0`}
++        title="IDBCJ Live Stream"
++        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
++        allowFullScreen
++        className="absolute inset-0 w-full h-full"
++      />
++    </div>
++  );
++}
+-- 
+2.43.0
+
+
+From 61aac0f08e8a9e2af8d207e9363ae19febb0bf84 Mon Sep 17 00:00:00 2001
+From: Amie <amie@idbcj.local>
+Date: Fri, 2 Oct 2026 13:32:47 -0600
+Subject: [PATCH 2/2] Livestream: members-only sa portal (requirePortalAccess),
+ tinanggal ang public page
+
+---
+ app/livestream/page.tsx        | 55 ----------------------------------
+ app/portal/livestream/page.tsx | 35 ++++++++++++++++++++++
+ 2 files changed, 35 insertions(+), 55 deletions(-)
+ delete mode 100644 app/livestream/page.tsx
+ create mode 100644 app/portal/livestream/page.tsx
+
+diff --git a/app/livestream/page.tsx b/app/livestream/page.tsx
+deleted file mode 100644
+index 97eef61..0000000
+--- a/app/livestream/page.tsx
++++ /dev/null
+@@ -1,55 +0,0 @@
+-import type { Metadata } from "next";
+-import Image from "next/image";
+-import { LivestreamPlayer } from "@/components/livestream-player";
+-
+-export const revalidate = 60;
+-
+-export const metadata: Metadata = {
+-  title: "Live Stream | IDBCJ",
+-  description: "Watch the IDBCJ Sunday livestream live.",
+-};
+-
+-// Palitan ng tunay na YouTube Channel ID (magsisimula sa "UC").
+-// Makikita sa YouTube Studio → Settings → Channel → Advanced settings.
+-const CHANNEL_ID = "UC2w4L4NiiVrcGlE0c1XW-Hw";
+-
+-export default function LivestreamPage() {
+-  return (
+-    <div className="min-h-screen bg-slate-50 font-sans">
+-      {/* --- HERO --- */}
+-      <section className="relative w-full py-12 px-4 md:px-12">
+-        <div className="absolute inset-0">
+-          <Image
+-            src="/background.jpg"
+-            alt=""
+-            fill
+-            sizes="100vw"
+-            className="object-cover brightness-25"
+-            priority
+-          />
+-          <div className="absolute inset-0 bg-emerald-900/80 mix-blend-multiply" />
+-        </div>
+-
+-        <div className="relative z-10 max-w-7xl mx-auto text-white">
+-          <h1 className="text-4xl md:text-5xl font-extrabold">Live Stream</h1>
+-          <p className="mt-3 text-lg text-emerald-50 max-w-2xl">
+-            Watch our Sunday worship live, wherever you are.
+-          </p>
+-          <p className="mt-1 text-sm text-emerald-100 italic max-w-2xl">
+-            Mapanood nang live ang ating pagsamba tuwing Linggo, saan ka man naroroon.
+-          </p>
+-        </div>
+-      </section>
+-
+-      {/* --- PLAYER --- */}
+-      <section className="max-w-5xl mx-auto py-12 px-6">
+-        <LivestreamPlayer channelId={CHANNEL_ID} />
+-        <p className="mt-6 text-center text-sm text-slate-500">
+-          Kung walang live ngayon, ipinapakita ang pinakahuling stream.
+-          <br />
+-          <span className="italic">If nothing is live right now, the most recent stream is shown.</span>
+-        </p>
+-      </section>
+-    </div>
+-  );
+-}
+diff --git a/app/portal/livestream/page.tsx b/app/portal/livestream/page.tsx
+new file mode 100644
+index 0000000..024a3f6
+--- /dev/null
++++ b/app/portal/livestream/page.tsx
+@@ -0,0 +1,35 @@
++import type { Metadata } from "next";
++import { requirePortalAccess } from "@/lib/portal";
++import { LivestreamPlayer } from "@/components/livestream-player";
++
++export const revalidate = 60;
++
++export const metadata: Metadata = {
++  title: "Live Stream | IDBCJ",
++  description: "Watch the IDBCJ Sunday livestream live. Members only.",
++};
++
++// YouTube Channel ID ng IDBCJ
++const CHANNEL_ID = "UC2w4L4NiiVrcGlE0c1XW-Hw";
++
++export default async function PortalLivestreamPage() {
++  // Members lang na naka-login sa portal ang makakapasok dito
++  await requirePortalAccess();
++
++  return (
++    <div className="max-w-5xl mx-auto py-8 px-4">
++      <h1 className="text-3xl font-extrabold text-slate-900">Live Stream</h1>
++      <p className="mt-2 text-slate-600">
++        Mapanood nang live ang ating pagsamba tuwing Linggo.
++      </p>
++
++      <div className="mt-6">
++        <LivestreamPlayer channelId={CHANNEL_ID} />
++      </div>
++
++      <p className="mt-6 text-center text-sm text-slate-500">
++        Kung walang live ngayon, ipinapakita ang pinakahuling stream.
++      </p>
++    </div>
++  );
++}
+-- 
+2.43.0
+

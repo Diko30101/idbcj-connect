@@ -12,6 +12,9 @@ export const metadata: Metadata = {
 // YouTube Channel ID ng IDBCJ
 const CHANNEL_ID = "UC2w4L4NiiVrcGlE0c1XW-Hw";
 
+// Pinakahuling in-upload na video (fallback kapag walang live)
+const FALLBACK_VIDEO_ID = "mrSxVztHbZY";
+
 export default async function PortalLivestreamPage() {
   // Members lang na naka-login sa portal ang makakapasok dito
   await requirePortalAccess();
@@ -24,7 +27,7 @@ export default async function PortalLivestreamPage() {
       </p>
 
       <div className="mt-6">
-        <LivestreamPlayer channelId={CHANNEL_ID} />
+        <LivestreamPlayer channelId={CHANNEL_ID} fallbackVideoId={FALLBACK_VIDEO_ID} />
       </div>
 
       <p className="mt-6 text-center text-sm text-slate-500">

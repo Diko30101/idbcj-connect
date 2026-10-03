@@ -1,0 +1,1 @@
+[{"name": "weekly-local-finance-report", "active": true, "command": "select public.send_weekly_local_finance_report();", "schedule": "0 23 * * 0"}, {"name": "weekly-sunday-service", "active": true, "command": "select public.ensure_weekly_sunday_service();", "schedule": "0 16 * * 6"}]

@@ -1,0 +1,240 @@
+SAKLAW: --branches | mga commit: 182 | mga file na tinamaan: 296 | mga linyang idinagdag: 42590
+Mga may-akda/committer sa metadata:
+  Rodel Villaverde <dikovillaverde@gmail.com>  (179)
+  Diko30101 <126369599+Diko30101@users.noreply.github.com>  (3)
+  GitHub <noreply@github.com>  (3)
+Mga termino ng production na hinanap: email 11, telepono 4, petsa 4, username 7, lungsod 8, pangalan/salita 28
+
+## Binary na file: 25 na tama
+   4e9ecb7  app/favicon.ico  x1  | First commit | binary
+   4e9ecb7  app/opengraph-image.png  x1  | First commit | binary
+   4e9ecb7  app/twitter-image.png  x1  | First commit | binary
+   96d53c9  public/logo.png  x1  | Update home page design | binary
+   4ecb5f9  public/founder.jpg  x1  | Update home page design | binary
+   17d33f3  public/background.jpg  x1  | Update home page design | binary
+   227ea8b  public/rod.png  x1  | Add working contact form | binary
+   807103d  public/abon.jpg  x1  | Force redirect to update password page | binary
+   e1e5e77  app/favicon.ico  x1  | Move Login to menu and join Us to hero | binary
+   e1e5e77  app/icon.png  x1  | Move Login to menu and join Us to hero | binary
+   e1e5e77  public/founder.jpg  x1  | Move Login to menu and join Us to hero | binary
+   e1e5e77  public/icon.png  x1  | Move Login to menu and join Us to hero | binary
+   e1e5e77  public/sermon-pic.jpg  x1  | Move Login to menu and join Us to hero | binary
+   3582a99  public/mangubat-felicisimo.jpg  x1  | Website: neutral introduction, Ministries updates, | binary
+   3582a99  public/mangubat.jpg  x1  | Website: neutral introduction, Ministries updates, | binary
+   3582a99  public/mencias-ariel.jpg  x1  | Website: neutral introduction, Ministries updates, | binary
+   3582a99  public/villaverde-jimmy.jpg  x1  | Website: neutral introduction, Ministries updates, | binary
+   0c4e737  public/logo-seal.png  x1  | Home: sharper logo on Our Ministries card | binary
+   6bec252  Claude outputs/home-desktop.png  x1  | Redesign: dropdown menu, new footer, Home, I'm New | binary
+   6bec252  Claude outputs/imnew-desktop.png  x1  | Redesign: dropdown menu, new footer, Home, I'm New | binary
+   6bec252  public/ariel.jpg  x1  | Redesign: dropdown menu, new footer, Home, I'm New | binary
+   6bec252  public/brodabon.png  x1  | Redesign: dropdown menu, new footer, Home, I'm New | binary
+   6bec252  public/filing.jpg  x1  | Redesign: dropdown menu, new footer, Home, I'm New | binary
+   6bec252  public/jimmy.jpg  x1  | Redesign: dropdown menu, new footer, Home, I'm New | binary
+   5cadb44  Claude outputs/light-home.png  x1  | Lighter green theme | binary
+## Email: **TOTOONG email ng account sa production**: 7 na tama
+   e0e7be9  components/contact-form.tsx  x1  linya 49  | Update home page design | +: di***@gmail.com
+   7e730f4  components/contact-form.tsx  x1  | Contact forms: fix subject, add error message, pri | -(inalis): di***@gmail.com
+   c561275  supabase/001_portal_schema.sql  x1  linya 482  | Member portal: consent, directory, attendance, min | +: di***@gmail.com
+   6bec252  Claude outputs/001_portal_schema.sql	  x1  linya 482  | Redesign: dropdown menu, new footer, Home, I'm New | +: di***@gmail.com
+   6bec252  _backups/contact-form.tsx.2026-09-20.bak  x1  linya 49  | Redesign: dropdown menu, new footer, Home, I'm New | +: di***@gmail.com
+   9d7106d  docs/runbooks/resend-setup.md  x1  linya 49  | Draft migrations 010-013 and 015, RLS tests, plan  | +: di***@gmail.com
+   1e55d1d  docs/runbooks/resend-setup.md  x1  | Remove Admin email from runbook; use fictitious na | -(inalis): di***@gmail.com
+## Email: gawa-gawang test (@test/@seed.invalid): 2 na tama
+   9d7106d  docs/superpowers/plans/2026-09-23-giving-records-database.md  x1  linya 123  | Draft migrations 010-013 and 015, RLS tests, plan  | +: %***@test.invalid
+   4fa00ae  docs/superpowers/plans/2026-09-23-giving-records-database.md  x1  | 010: Admin-only Finance/Local Finance/Pastoral mem | -(inalis): %***@test.invalid
+## Email: iba pa: 12 na tama
+   4e9ecb7  components/forgot-password-form.tsx  x1  linya 79  | First commit | +: m***@example.com
+   4e9ecb7  components/login-form.tsx  x1  linya 100  | First commit | +: m***@example.com
+   4e9ecb7  components/sign-up-form.tsx  x1  linya 74  | First commit | +: m***@example.com
+   e0e7be9  components/contact-form.tsx  x1  linya 67  | Update home page design | +: yo***@example.com
+   13ea722  app/forgot-password/page.tsx  x1  linya 59  | Move Login to menu and join Us to hero | +: na***@example.com
+   13ea722  components/login-form.tsx  x2  linya 73  | Move Login to menu and join Us to hero | -(inalis): m***@example.com ; +: m***@example.com
+   227ea8b  app/contact/page.tsx  x1  linya 71  | Add working contact form | +: jo***@example.com
+   2ce139a  components/login-form.tsx  x1  | Username login, member categories, Add Member with | -(inalis): m***@example.com
+   6bec252  _backups/contact-form.tsx.2026-09-20.bak  x1  linya 67  | Redesign: dropdown menu, new footer, Home, I'm New | +: yo***@example.com
+   6bec252  _backups/contact-page.tsx.2026-09-20.bak  x1  linya 91  | Redesign: dropdown menu, new footer, Home, I'm New | +: jo***@example.com
+   9d7106d  docs/runbooks/resend-setup.md  x1  linya 50  | Draft migrations 010-013 and 015, RLS tests, plan  | +: ul***@send.idbcj.org
+## Email: trailer ng Co-Authored-By (noreply@anthropic.com): 100 na tama
+   be35f54  (mensahe ng commit)  x1  | Add birthday reminders panel to member dashboard | mensahe: no***@anthropic.com
+   a08b48d  (mensahe ng commit)  x1  | Sync package-lock.json project name with package.j | mensahe: no***@anthropic.com
+   c8cb624  (mensahe ng commit)  x1  | Add design spec for DB-backed sermon library and e | mensahe: no***@anthropic.com
+   e2cd5d4  (mensahe ng commit)  x1  | Add implementation plan for DB-backed sermon libra | mensahe: no***@anthropic.com
+   e2cd5d4  docs/superpowers/plans/2026-09-22-sermons-events-implementation.md  x8  linya 203,332,550,710,1003,1116  | Add implementation plan for DB-backed sermon libra | +: no***@anthropic.com
+   0a26e6a  (mensahe ng commit)  x1  | Add sermons and events tables with RLS (migration, | mensahe: no***@anthropic.com
+   744c00f  (mensahe ng commit)  x1  | Move sermon library to Supabase-backed data access | mensahe: no***@anthropic.com
+   dd89f2e  (mensahe ng commit)  x1  | Read public sermon pages from Supabase instead of  | mensahe: no***@anthropic.com
+   8746333  (mensahe ng commit)  x1  | Add server actions for managing sermons | mensahe: no***@anthropic.com
+   daa2ef8  (mensahe ng commit)  x1  | Add sermon admin pages under /portal/sermons | mensahe: no***@anthropic.com
+   24013f2  (mensahe ng commit)  x1  | Add server actions for managing special events | mensahe: no***@anthropic.com
+   7520da8  (mensahe ng commit)  x1  | Add event admin pages under /portal/events | mensahe: no***@anthropic.com
+   920b0f2  (mensahe ng commit)  x1  | Show all 3 worship locales and DB-driven special e | mensahe: no***@anthropic.com
+   cfed360  (mensahe ng commit)  x1  | Add income vs expense pie chart widget to portal H | mensahe: no***@anthropic.com
+   b225c0d  (mensahe ng commit)  x1  | Add period label subtitle to Financial Report widg | mensahe: no***@anthropic.com
+   8e0effc  (mensahe ng commit)  x1  | Ignore personal Claude Code local settings overrid | mensahe: no***@anthropic.com
+   4dc4f68  (mensahe ng commit)  x1  | Add design spec for Bible Study Courses feature | mensahe: no***@anthropic.com
+   4317128  (mensahe ng commit)  x1  | Add implementation plan for Bible Study Courses fe | mensahe: no***@anthropic.com
+   4317128  docs/superpowers/plans/2026-09-22-bible-study-courses.md  x7  linya 167,223,327,501,602,742  | Add implementation plan for Bible Study Courses fe | +: no***@anthropic.com
+   d861118  (mensahe ng commit)  x1  | Ignore superpowers scratch workspace directory | mensahe: no***@anthropic.com
+   9c4aab8  (mensahe ng commit)  x1  | Add courses and lessons tables with RLS (migration | mensahe: no***@anthropic.com
+   412f042  (mensahe ng commit)  x1  | Add requirePastoralAccess for Bible Study Courses | mensahe: no***@anthropic.com
+   6f88f5b  (mensahe ng commit)  x1  | Add quiz mini-syntax parser for Bible Study lesson | mensahe: no***@anthropic.com
+   8406453  (mensahe ng commit)  x1  | Add server actions for managing Bible Study course | mensahe: no***@anthropic.com
+   00ddfad  (mensahe ng commit)  x1  | Add Bible Study courses list page | mensahe: no***@anthropic.com
+   18fb36f  (mensahe ng commit)  x1  | Add Bible Study course detail page (edit course, m | mensahe: no***@anthropic.com
+   0658d6e  (mensahe ng commit)  x1  | Add lesson edit page and Bible Study nav item | mensahe: no***@anthropic.com
+   aea1e42  (mensahe ng commit)  x1  | Fix final review findings for Bible Study Courses  | mensahe: no***@anthropic.com
+   ba64cac  (mensahe ng commit)  x1  | Add "More" dropdown to portal nav to fix mobile ov | mensahe: no***@anthropic.com
+   40527dc  (mensahe ng commit)  x1  | Merge branch 'feature/nav-more-dropdown' | mensahe: no***@anthropic.com
+   58916f7  (mensahe ng commit)  x1  | Add design spec for Bible Study Courses access tig | mensahe: no***@anthropic.com
+   348f5e8  (mensahe ng commit)  x1  | Add implementation plan for Bible Study Courses ac | mensahe: no***@anthropic.com
+   348f5e8  docs/superpowers/plans/2026-09-22-bible-study-progress.md  x5  linya 162,256,364,542,710  | Add implementation plan for Bible Study Courses ac | +: no***@anthropic.com
+   258b286  (mensahe ng commit)  x1  | Tighten Bible Study write access to staff, add les | mensahe: no***@anthropic.com
+   ab9fb41  (mensahe ng commit)  x1  | Restrict Bible Study writes to staff, add quiz gra | mensahe: no***@anthropic.com
+   15fc24e  (mensahe ng commit)  x1  | Hide course create form from non-staff on Bible St | mensahe: no***@anthropic.com
+   a73aac9  (mensahe ng commit)  x1  | Restore query-error surfacing on Bible Study cours | mensahe: no***@anthropic.com
+   faf56ea  (mensahe ng commit)  x1  | Hide staff-only course forms and add per-lesson st | mensahe: no***@anthropic.com
+   b70610d  (mensahe ng commit)  x1  | Add member quiz-taking view for Bible Study lesson | mensahe: no***@anthropic.com
+   3ccba1c  (mensahe ng commit)  x1  | Fix final-review findings: gate completions query  | mensahe: no***@anthropic.com
+   … at 42 pa
+## Lungsod/tirahan ng kaanib (mula sa production): 123 na tama
+   4ecb5f9  app/about/page.tsx  x1  linya 45  | Update home page design | +: lungsod
+   f366465  app/events/page.tsx  x4  linya 16,25,34,43  | Fix typescript error in confirm route | +: lungsod
+   1cf0503  app/about/page.tsx  x1  | Update link to /auth/login | -(inalis): lungsod
+   1cf0503  app/history/page.tsx  x1  linya 54  | Update link to /auth/login | +: lungsod
+   3582a99  app/ministries/page.tsx  x4  linya 77,95,113,131  | Website: neutral introduction, Ministries updates, | +: lungsod
+   f42d916  app/ministries/page.tsx  x4  linya 95,131  | Website: neutral introduction, Ministries updates, | -(inalis): lungsod ; +: lungsod
+   41d9fa3  app/events/page.tsx  x5  linya 13  | Website: intro pages, ministers, events with live  | +: lungsod ; -(inalis): lungsod
+   d18c6f2  app/ministries/page.tsx  x2  linya 46  | Sharper logo on Home card, add location to Presidi | +: lungsod
+   6bec252  _backups/events-page.tsx.2026-09-20-b.bak  x1  linya 14  | Redesign: dropdown menu, new footer, Home, I'm New | +: lungsod
+   6bec252  _backups/events-page.tsx.2026-09-20.bak  x4  linya 16,25,34,43  | Redesign: dropdown menu, new footer, Home, I'm New | +: lungsod
+   6bec252  _backups/history-page.tsx.2026-09-20-b.bak  x1  linya 54  | Redesign: dropdown menu, new footer, Home, I'm New | +: lungsod
+   6bec252  _backups/history-page.tsx.2026-09-20-c.bak  x1  linya 54  | Redesign: dropdown menu, new footer, Home, I'm New | +: lungsod
+   6bec252  _backups/history-page.tsx.2026-09-20-d.bak  x1  linya 54  | Redesign: dropdown menu, new footer, Home, I'm New | +: lungsod
+   6bec252  _backups/history-page.tsx.2026-09-20-e.bak  x1  linya 54  | Redesign: dropdown menu, new footer, Home, I'm New | +: lungsod
+   6bec252  _backups/history-page.tsx.2026-09-20-f.bak  x1  linya 54  | Redesign: dropdown menu, new footer, Home, I'm New | +: lungsod
+   6bec252  _backups/history-page.tsx.2026-09-20-g.bak  x1  linya 54  | Redesign: dropdown menu, new footer, Home, I'm New | +: lungsod
+   6bec252  _backups/history-page.tsx.2026-09-20-h.bak  x1  linya 54  | Redesign: dropdown menu, new footer, Home, I'm New | +: lungsod
+   6bec252  _backups/history-page.tsx.2026-09-20-i.bak  x1  linya 54  | Redesign: dropdown menu, new footer, Home, I'm New | +: lungsod
+   6bec252  _backups/history-page.tsx.2026-09-20-j.bak  x1  linya 54  | Redesign: dropdown menu, new footer, Home, I'm New | +: lungsod
+   6bec252  _backups/history-page.tsx.2026-09-20.bak  x1  linya 54  | Redesign: dropdown menu, new footer, Home, I'm New | +: lungsod
+   6bec252  _backups/ministries-page.tsx.2026-09-20-e.bak  x1  linya 82  | Redesign: dropdown menu, new footer, Home, I'm New | +: lungsod
+   6bec252  _backups/ministries-page.tsx.2026-09-20-f.bak  x1  linya 77  | Redesign: dropdown menu, new footer, Home, I'm New | +: lungsod
+   6bec252  _backups/ministries-page.tsx.2026-09-20-g.bak  x2  linya 77,95  | Redesign: dropdown menu, new footer, Home, I'm New | +: lungsod
+   6bec252  _backups/ministries-page.tsx.2026-09-20-h.bak  x3  linya 77,95,113  | Redesign: dropdown menu, new footer, Home, I'm New | +: lungsod
+   6bec252  _backups/ministries-page.tsx.2026-09-20-i.bak  x4  linya 77,95,113,131  | Redesign: dropdown menu, new footer, Home, I'm New | +: lungsod
+   6bec252  _backups/ministries-page.tsx.2026-09-20-j.bak  x4  linya 77,95,113,131  | Redesign: dropdown menu, new footer, Home, I'm New | +: lungsod
+   6bec252  _backups/ministries-page.tsx.2026-09-20-k.bak  x4  linya 77,95,113,131  | Redesign: dropdown menu, new footer, Home, I'm New | +: lungsod
+   6bec252  _backups/ministries-page.tsx.2026-09-20-l.bak  x4  linya 77,95,113,131  | Redesign: dropdown menu, new footer, Home, I'm New | +: lungsod
+   6bec252  _backups/ministries-page.tsx.2026-09-20-m.bak  x4  linya 77,95,113,131  | Redesign: dropdown menu, new footer, Home, I'm New | +: lungsod
+   6bec252  _backups/ministries-page.tsx.2026-09-20-n.bak  x4  linya 77,95,113,131  | Redesign: dropdown menu, new footer, Home, I'm New | +: lungsod
+   6bec252  _backups/ministries-page.tsx.2026-09-20-o.bak  x4  linya 75,93,111,129  | Redesign: dropdown menu, new footer, Home, I'm New | +: lungsod
+   6bec252  _backups/ministries-page.tsx.2026-09-20-p.bak  x4  linya 82,100,118,136  | Redesign: dropdown menu, new footer, Home, I'm New | +: lungsod
+   6bec252  lib/worship.ts  x1  linya 10  | Redesign: dropdown menu, new footer, Home, I'm New | +: lungsod
+   8ac380e  (mensahe ng commit)  x1  | Add Batangas worship; Medina, Magallanes, Cavite | mensahe: lungsod
+   8ac380e  app/im-new/page.tsx  x6  linya 18,79,85,91  | Add Batangas worship; Medina, Magallanes, Cavite | +: lungsod
+   8ac380e  app/page.tsx  x3  linya 57,60,64  | Add Batangas worship; Medina, Magallanes, Cavite | +: lungsod
+   8ac380e  components/footer.tsx  x3  linya 51,52,53  | Add Batangas worship; Medina, Magallanes, Cavite | +: lungsod
+   8ac380e  lib/worship.ts  x5  linya 12,16,19,23  | Add Batangas worship; Medina, Magallanes, Cavite | +: lungsod
+   fe958bc  (mensahe ng commit)  x1  | Batangas worship; Medina, Magallanes, Cavite; FB g | mensahe: lungsod
+   dc88f4c  lib/locality.ts  x3  linya 7,8,9  | Add member locality for attendance research by loc | +: lungsod
+   … at 12 pa
+## Mapanganib na uri/pangalan ng FILE: 50 na tama
+   6bec252  _backups/about-page.tsx.2026-09-20-b.bak  x1  | Redesign: dropdown menu, new footer, Home, I'm New | tugma sa /\.(csv|xlsx?|sqlite3?|db|dump|bak)$/i
+   6bec252  _backups/about-page.tsx.2026-09-20-c.bak  x1  | Redesign: dropdown menu, new footer, Home, I'm New | tugma sa /\.(csv|xlsx?|sqlite3?|db|dump|bak)$/i
+   6bec252  _backups/about-page.tsx.2026-09-20-d.bak  x1  | Redesign: dropdown menu, new footer, Home, I'm New | tugma sa /\.(csv|xlsx?|sqlite3?|db|dump|bak)$/i
+   6bec252  _backups/about-page.tsx.2026-09-20-e.bak  x1  | Redesign: dropdown menu, new footer, Home, I'm New | tugma sa /\.(csv|xlsx?|sqlite3?|db|dump|bak)$/i
+   6bec252  _backups/about-page.tsx.2026-09-20-f.bak  x1  | Redesign: dropdown menu, new footer, Home, I'm New | tugma sa /\.(csv|xlsx?|sqlite3?|db|dump|bak)$/i
+   6bec252  _backups/about-page.tsx.2026-09-20-g.bak  x1  | Redesign: dropdown menu, new footer, Home, I'm New | tugma sa /\.(csv|xlsx?|sqlite3?|db|dump|bak)$/i
+   6bec252  _backups/about-page.tsx.2026-09-20.bak  x1  | Redesign: dropdown menu, new footer, Home, I'm New | tugma sa /\.(csv|xlsx?|sqlite3?|db|dump|bak)$/i
+   6bec252  _backups/contact-form.tsx.2026-09-20.bak  x1  | Redesign: dropdown menu, new footer, Home, I'm New | tugma sa /\.(csv|xlsx?|sqlite3?|db|dump|bak)$/i
+   6bec252  _backups/contact-page.tsx.2026-09-20.bak  x1  | Redesign: dropdown menu, new footer, Home, I'm New | tugma sa /\.(csv|xlsx?|sqlite3?|db|dump|bak)$/i
+   6bec252  _backups/dashboard-page.tsx.2026-09-20.bak  x1  | Redesign: dropdown menu, new footer, Home, I'm New | tugma sa /\.(csv|xlsx?|sqlite3?|db|dump|bak)$/i
+   6bec252  _backups/events-page.tsx.2026-09-20-b.bak  x1  | Redesign: dropdown menu, new footer, Home, I'm New | tugma sa /\.(csv|xlsx?|sqlite3?|db|dump|bak)$/i
+   6bec252  _backups/events-page.tsx.2026-09-20.bak  x1  | Redesign: dropdown menu, new footer, Home, I'm New | tugma sa /\.(csv|xlsx?|sqlite3?|db|dump|bak)$/i
+   6bec252  _backups/history-page.tsx.2026-09-20-b.bak  x1  | Redesign: dropdown menu, new footer, Home, I'm New | tugma sa /\.(csv|xlsx?|sqlite3?|db|dump|bak)$/i
+   6bec252  _backups/history-page.tsx.2026-09-20-c.bak  x1  | Redesign: dropdown menu, new footer, Home, I'm New | tugma sa /\.(csv|xlsx?|sqlite3?|db|dump|bak)$/i
+   6bec252  _backups/history-page.tsx.2026-09-20-d.bak  x1  | Redesign: dropdown menu, new footer, Home, I'm New | tugma sa /\.(csv|xlsx?|sqlite3?|db|dump|bak)$/i
+   6bec252  _backups/history-page.tsx.2026-09-20-e.bak  x1  | Redesign: dropdown menu, new footer, Home, I'm New | tugma sa /\.(csv|xlsx?|sqlite3?|db|dump|bak)$/i
+   6bec252  _backups/history-page.tsx.2026-09-20-f.bak  x1  | Redesign: dropdown menu, new footer, Home, I'm New | tugma sa /\.(csv|xlsx?|sqlite3?|db|dump|bak)$/i
+   6bec252  _backups/history-page.tsx.2026-09-20-g.bak  x1  | Redesign: dropdown menu, new footer, Home, I'm New | tugma sa /\.(csv|xlsx?|sqlite3?|db|dump|bak)$/i
+   6bec252  _backups/history-page.tsx.2026-09-20-h.bak  x1  | Redesign: dropdown menu, new footer, Home, I'm New | tugma sa /\.(csv|xlsx?|sqlite3?|db|dump|bak)$/i
+   6bec252  _backups/history-page.tsx.2026-09-20-i.bak  x1  | Redesign: dropdown menu, new footer, Home, I'm New | tugma sa /\.(csv|xlsx?|sqlite3?|db|dump|bak)$/i
+   6bec252  _backups/history-page.tsx.2026-09-20-j.bak  x1  | Redesign: dropdown menu, new footer, Home, I'm New | tugma sa /\.(csv|xlsx?|sqlite3?|db|dump|bak)$/i
+   6bec252  _backups/history-page.tsx.2026-09-20.bak  x1  | Redesign: dropdown menu, new footer, Home, I'm New | tugma sa /\.(csv|xlsx?|sqlite3?|db|dump|bak)$/i
+   6bec252  _backups/layout.tsx.2026-09-20.bak  x1  | Redesign: dropdown menu, new footer, Home, I'm New | tugma sa /\.(csv|xlsx?|sqlite3?|db|dump|bak)$/i
+   6bec252  _backups/ministries-page.tsx.2026-09-20-b.bak  x1  | Redesign: dropdown menu, new footer, Home, I'm New | tugma sa /\.(csv|xlsx?|sqlite3?|db|dump|bak)$/i
+   6bec252  _backups/ministries-page.tsx.2026-09-20-c.bak  x1  | Redesign: dropdown menu, new footer, Home, I'm New | tugma sa /\.(csv|xlsx?|sqlite3?|db|dump|bak)$/i
+   6bec252  _backups/ministries-page.tsx.2026-09-20-d.bak  x1  | Redesign: dropdown menu, new footer, Home, I'm New | tugma sa /\.(csv|xlsx?|sqlite3?|db|dump|bak)$/i
+   6bec252  _backups/ministries-page.tsx.2026-09-20-e.bak  x1  | Redesign: dropdown menu, new footer, Home, I'm New | tugma sa /\.(csv|xlsx?|sqlite3?|db|dump|bak)$/i
+   6bec252  _backups/ministries-page.tsx.2026-09-20-f.bak  x1  | Redesign: dropdown menu, new footer, Home, I'm New | tugma sa /\.(csv|xlsx?|sqlite3?|db|dump|bak)$/i
+   6bec252  _backups/ministries-page.tsx.2026-09-20-g.bak  x1  | Redesign: dropdown menu, new footer, Home, I'm New | tugma sa /\.(csv|xlsx?|sqlite3?|db|dump|bak)$/i
+   6bec252  _backups/ministries-page.tsx.2026-09-20-h.bak  x1  | Redesign: dropdown menu, new footer, Home, I'm New | tugma sa /\.(csv|xlsx?|sqlite3?|db|dump|bak)$/i
+   6bec252  _backups/ministries-page.tsx.2026-09-20-i.bak  x1  | Redesign: dropdown menu, new footer, Home, I'm New | tugma sa /\.(csv|xlsx?|sqlite3?|db|dump|bak)$/i
+   6bec252  _backups/ministries-page.tsx.2026-09-20-j.bak  x1  | Redesign: dropdown menu, new footer, Home, I'm New | tugma sa /\.(csv|xlsx?|sqlite3?|db|dump|bak)$/i
+   6bec252  _backups/ministries-page.tsx.2026-09-20-k.bak  x1  | Redesign: dropdown menu, new footer, Home, I'm New | tugma sa /\.(csv|xlsx?|sqlite3?|db|dump|bak)$/i
+   6bec252  _backups/ministries-page.tsx.2026-09-20-l.bak  x1  | Redesign: dropdown menu, new footer, Home, I'm New | tugma sa /\.(csv|xlsx?|sqlite3?|db|dump|bak)$/i
+   6bec252  _backups/ministries-page.tsx.2026-09-20-m.bak  x1  | Redesign: dropdown menu, new footer, Home, I'm New | tugma sa /\.(csv|xlsx?|sqlite3?|db|dump|bak)$/i
+   6bec252  _backups/ministries-page.tsx.2026-09-20-n.bak  x1  | Redesign: dropdown menu, new footer, Home, I'm New | tugma sa /\.(csv|xlsx?|sqlite3?|db|dump|bak)$/i
+   6bec252  _backups/ministries-page.tsx.2026-09-20-o.bak  x1  | Redesign: dropdown menu, new footer, Home, I'm New | tugma sa /\.(csv|xlsx?|sqlite3?|db|dump|bak)$/i
+   6bec252  _backups/ministries-page.tsx.2026-09-20-p.bak  x1  | Redesign: dropdown menu, new footer, Home, I'm New | tugma sa /\.(csv|xlsx?|sqlite3?|db|dump|bak)$/i
+   6bec252  _backups/ministries-page.tsx.2026-09-20.bak  x1  | Redesign: dropdown menu, new footer, Home, I'm New | tugma sa /\.(csv|xlsx?|sqlite3?|db|dump|bak)$/i
+   6bec252  _backups/page.tsx.2026-09-20-b.bak  x1  | Redesign: dropdown menu, new footer, Home, I'm New | tugma sa /\.(csv|xlsx?|sqlite3?|db|dump|bak)$/i
+   … at 10 pa
+## POSTGRES_PASSWORD: 1 na tama
+   4fa00ae  migrations/scratch/run.sh  x1  linya 26  | 010: Admin-only Finance/Local Finance/Pastoral mem | +: POST…********ch
+## Pangalan ng kaanib (mula sa production): 885 na tama
+   9fba74a  app/page.tsx  x1  linya 51  | Update home page design | +: pangalan
+   efa1c8f  app/page.tsx  x2  linya 51  | Update home page design | -(inalis): pangalan ; +: pangalan
+   4528189  app/page.tsx  x1  | Update home page design | -(inalis): pangalan
+   542110d  app/page.tsx  x1  linya 61  | Update home page design | +: pangalan
+   4ecb5f9  app/about/page.tsx  x7  linya 31,36,45,59,70,102  | Update home page design | +: pangalan
+   17d33f3  app/page.tsx  x5  linya 93,99,111,157  | Update home page design | -(inalis): pangalan ; +: pangalan
+   e0e7be9  components/contact-form.tsx  x1  linya 49  | Update home page design | +: pangalan
+   e3d4882  app/sermons/page.tsx  x2  linya 14,44  | Add Bunny Video player | +: pangalan
+   e11884a  app/page.tsx  x2  linya 56  | Update link to /auth/login | -(inalis): pangalan ; +: pangalan
+   ab0c7ea  app/sermons/page.tsx  x2  linya 14  | Add reset password page and fix callback redirect | -(inalis): pangalan ; +: pangalan
+   227ea8b  app/ministries/page.tsx  x4  linya 38,46  | Add working contact form | +: pangalan
+   c9620aa  app/sermons/page.tsx  x4  linya 24,34,44  | Add reset password page and fix callback redirect | +: pangalan ; -(inalis): pangalan
+   6c3a572  app/sermons/page.tsx  x3  | Move Login to menu and join Us to hero | -(inalis): pangalan
+   e1e5e77  app/sermons/page.tsx  x2  linya 23,32  | Move Login to menu and join Us to hero | +: pangalan
+   1cf0503  app/about/page.tsx  x9  linya 32,51  | Update link to /auth/login | -(inalis): pangalan ; +: pangalan
+   1cf0503  app/history/page.tsx  x7  linya 40,45,54,68,79,111  | Update link to /auth/login | +: pangalan
+   c9e122d  app/history/page.tsx  x2  linya 114  | Clarify founding/registration years and correct 20 | -(inalis): pangalan ; +: pangalan
+   7e730f4  components/contact-form.tsx  x1  | Contact forms: fix subject, add error message, pri | -(inalis): pangalan
+   84a8c2f  app/history/page.tsx  x3  linya 79  | Site updates: wording, contact forms, keep-alive | -(inalis): pangalan ; +: pangalan
+   84a8c2f  app/page.tsx  x2  linya 68  | Site updates: wording, contact forms, keep-alive | -(inalis): pangalan ; +: pangalan
+   52d1822  app/history/page.tsx  x2  | Website: neutral introduction, remove other-group  | -(inalis): pangalan
+   52d1822  app/page.tsx  x2  linya 67  | Website: neutral introduction, remove other-group  | -(inalis): pangalan ; +: pangalan
+   37ad4b2  app/about/page.tsx  x2  | Website: neutral introduction, About Us redesign,  | -(inalis): pangalan
+   3582a99  app/ministries/page.tsx  x50  linya 36,44,63,67,68,75  | Website: neutral introduction, Ministries updates, | -(inalis): pangalan ; +: pangalan
+   3582a99  app/page.tsx  x1  | Website: neutral introduction, Ministries updates, | -(inalis): pangalan
+   48ca216  app/sermons/page.tsx  x3  | Sermon library: list page, sermon pages, video pla | -(inalis): pangalan
+   48ca216  lib/sermons.ts  x3  linya 40,51,62  | Sermon library: list page, sermon pages, video pla | +: pangalan
+   c561275  supabase/001_portal_schema.sql  x1  linya 482  | Member portal: consent, directory, attendance, min | +: pangalan
+   55f0691  app/page.tsx  x6  linya 101,103,112  | Home: move Our Foundation below Connect With Us | -(inalis): pangalan ; +: pangalan
+   8e22296  app/history/page.tsx  x1  | Navbar, login return, Leadership page, public Cont | -(inalis): pangalan
+   2ce139a  app/portal/members/member-actions.ts  x2  linya 60  | Username login, member categories, Add Member with | +: pangalan
+   2ce139a  lib/username.ts  x3  linya 26  | Username login, member categories, Add Member with | +: pangalan
+   6bec252  Claude outputs/001_portal_schema.sql	  x1  linya 482  | Redesign: dropdown menu, new footer, Home, I'm New | +: pangalan
+   6bec252  _backups/about-page.tsx.2026-09-20-b.bak  x2  linya 32,51  | Redesign: dropdown menu, new footer, Home, I'm New | +: pangalan
+   6bec252  _backups/about-page.tsx.2026-09-20-c.bak  x2  linya 32,51  | Redesign: dropdown menu, new footer, Home, I'm New | +: pangalan
+   6bec252  _backups/about-page.tsx.2026-09-20-d.bak  x2  linya 32,51  | Redesign: dropdown menu, new footer, Home, I'm New | +: pangalan
+   6bec252  _backups/about-page.tsx.2026-09-20.bak  x2  linya 32,51  | Redesign: dropdown menu, new footer, Home, I'm New | +: pangalan
+   6bec252  _backups/contact-form.tsx.2026-09-20.bak  x1  linya 49  | Redesign: dropdown menu, new footer, Home, I'm New | +: pangalan
+   6bec252  _backups/history-page.tsx.2026-09-20-b.bak  x7  linya 40,45,54,68,79,111  | Redesign: dropdown menu, new footer, Home, I'm New | +: pangalan
+   6bec252  _backups/history-page.tsx.2026-09-20-c.bak  x7  linya 40,45,54,68,79,111  | Redesign: dropdown menu, new footer, Home, I'm New | +: pangalan
+   … at 52 pa
+## Production URL (supabase/vercel): 26 na tama
+   4e9ecb7  README.md  x7  linya 1,2,30,38,46,87  | First commit | +: https://demo-nextjs-with-supabase.vercel.app/ ; +: https://demo-nextjs-with-supabase.ve
+   4e9ecb7  app/page.tsx  x1  linya 45  | First commit | +: https://supabase.com/?utm_source=create-next-app&utm_medium=
+   4e9ecb7  app/protected/layout.tsx  x1  linya 42  | First commit | +: https://supabase.com/?utm_source=create-next-app&utm_medium=
+   4e9ecb7  components/deploy-button.tsx  x1  linya 8  | First commit | +: https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgi
+   4e9ecb7  components/forgot-password-form.tsx  x1  linya 34  | First commit | +: https://supabase.com/dashboard/project/_/auth/url-configurat
+   4e9ecb7  components/hero.tsx  x2  linya 9,24  | First commit | +: https://supabase.com/?utm_source=create-next-app&utm_medium=
+   4e9ecb7  components/tutorial/connect-supabase-steps.tsx  x2  linya 10,33  | First commit | +: https://app.supabase.com/project/_/settings/api
+   4e9ecb7  components/tutorial/fetch-data-steps.tsx  x7  linya 59,70,88,97,114,143  | First commit | +: https://supabase.com/dashboard/project/_/editor ; +: https://supabase.com/dashboard/pro
+   4e9ecb7  components/tutorial/sign-up-user-steps.tsx  x2  linya 28,68  | First commit | +: https://supabase.com/dashboard/project/_/auth/url-configurat ; +: https://supabase.com/
+   e9c2bc7  /dev/null  x1  | Delete broken protected page and fix auth callback | -(inalis): https://supabase.com/?utm_source=create-next-app&utm_medium=
+   96d53c9  app/page.tsx  x1  | Update home page design | -(inalis): https://supabase.com/?utm_source=create-next-app&utm_medium=
+## Telepono: pattern lang (suriin: maaaring hindi telepono): 1 na tama
+   4cac159  tests/integration/access.test.mjs  x1  linya 50  | Add integration tests: anon, ordinary member, JWT  | +: 4102…****00

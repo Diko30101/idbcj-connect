@@ -1,0 +1,88 @@
+SAKLAW: origin/main..main | mga commit: 51 | mga file na tinamaan: 81 | mga linyang idinagdag: 9490
+Mga may-akda/committer sa metadata:
+  Rodel Villaverde <dikovillaverde@gmail.com>  (51)
+Mga termino ng production na hinanap: email 11, telepono 4, petsa 4, username 7, lungsod 8, pangalan/salita 28
+
+## Email: **TOTOONG email ng account sa production**: 2 na tama
+   9d7106d  docs/runbooks/resend-setup.md  x1  linya 49  | Draft migrations 010-013 and 015, RLS tests, plan  | +: di***@gmail.com
+   1e55d1d  docs/runbooks/resend-setup.md  x1  | Remove Admin email from runbook; use fictitious na | -(inalis): di***@gmail.com
+## Email: gawa-gawang test (@test/@seed.invalid): 2 na tama
+   9d7106d  docs/superpowers/plans/2026-09-23-giving-records-database.md  x1  linya 123  | Draft migrations 010-013 and 015, RLS tests, plan  | +: %***@test.invalid
+   4fa00ae  docs/superpowers/plans/2026-09-23-giving-records-database.md  x1  | 010: Admin-only Finance/Local Finance/Pastoral mem | -(inalis): %***@test.invalid
+## Email: iba pa: 1 na tama
+   9d7106d  docs/runbooks/resend-setup.md  x1  linya 50  | Draft migrations 010-013 and 015, RLS tests, plan  | +: ul***@send.idbcj.org
+## Email: trailer ng Co-Authored-By (noreply@anthropic.com): 53 na tama
+   85fba34  (mensahe ng commit)  x1  | Add locals table, migrate locality enum to scalabl | mensahe: no***@anthropic.com
+   86b3e88  (mensahe ng commit)  x1  | Add finance/attendance schema (009) and session no | mensahe: no***@anthropic.com
+   1bc147d  (mensahe ng commit)  x1  | Add Abuluyan encoding page for Local Finance Minis | mensahe: no***@anthropic.com
+   5efa6ea  (mensahe ng commit)  x1  | Add design spec for Ambagan, Tulong sa Klase Minis | mensahe: no***@anthropic.com
+   1eb54e1  (mensahe ng commit)  x1  | Record answers to spec open questions | mensahe: no***@anthropic.com
+   4ed9441  (mensahe ng commit)  x1  | Fix stale references and add tests for currency, s | mensahe: no***@anthropic.com
+   211608d  (mensahe ng commit)  x1  | Spec: record answers 5-9, separate finance_audit_l | mensahe: no***@anthropic.com
+   9d7106d  (mensahe ng commit)  x1  | Draft migrations 010-013 and 015, RLS tests, plan  | mensahe: no***@anthropic.com
+   4fa00ae  (mensahe ng commit)  x1  | 010: Admin-only Finance/Local Finance/Pastoral mem | mensahe: no***@anthropic.com
+   6cfdbc8  (mensahe ng commit)  x1  | scratch: force LF line endings for run.sh and SQL | mensahe: no***@anthropic.com
+   871bf8c  (mensahe ng commit)  x1  | tests: fix x9 (RLS returns 0 rows), add x9b/x9c fo | mensahe: no***@anthropic.com
+   d309209  (mensahe ng commit)  x1  | Add 016 member confirmation (option A): Admin must | mensahe: no***@anthropic.com
+   a858474  (mensahe ng commit)  x1  | 016: reset confirmation on identity change by non- | mensahe: no***@anthropic.com
+   52957af  (mensahe ng commit)  x1  | Add Plan B (app) for approval; correct deployment- | mensahe: no***@anthropic.com
+   0866cbe  (mensahe ng commit)  x1  | Add script-driven, md5-verified backup tooling and | mensahe: no***@anthropic.com
+   1e55d1d  (mensahe ng commit)  x1  | Remove Admin email from runbook; use fictitious na | mensahe: no***@anthropic.com
+   e6ce4f2  (mensahe ng commit)  x1  | Add scan_history.mjs: secret and PII scan over a g | mensahe: no***@anthropic.com
+   e6ce4f2  migrations/scratch/scan_history.mjs  x2  linya 92  | Add scan_history.mjs: secret and PII scan over a g | +: no***@anthropic.com
+   d8e2715  (mensahe ng commit)  x1  | Add local Supabase stack smoke test (ES256 verifie | mensahe: no***@anthropic.com
+   718d55e  (mensahe ng commit)  x1  | Add local Supabase stack tooling: stack wrapper, b | mensahe: no***@anthropic.com
+   974d8f1  (mensahe ng commit)  x1  | Add baseline fidelity check against the production | mensahe: no***@anthropic.com
+   746345e  (mensahe ng commit)  x1  | Add local_cycle.sh: full local cycle (baseline, fi | mensahe: no***@anthropic.com
+   77a6d40  (mensahe ng commit)  x1  | Add integration test harness: helpers, synthetic u | mensahe: no***@anthropic.com
+   4cac159  (mensahe ng commit)  x1  | Add integration tests: anon, ordinary member, JWT  | mensahe: no***@anthropic.com
+   f600ba4  (mensahe ng commit)  x1  | Add integration tests: giving records scope, workf | mensahe: no***@anthropic.com
+   0337476  (mensahe ng commit)  x1  | Add integration tests: Inactive permission, confir | mensahe: no***@anthropic.com
+   40bbf65  (mensahe ng commit)  x1  | Add 018: protect Finance, Local Finance and Pastor | mensahe: no***@anthropic.com
+   94458ed  (mensahe ng commit)  x1  | Add SQL tests m1-m12 for 018 (delete, rename, look | mensahe: no***@anthropic.com
+   7752aa2  (mensahe ng commit)  x1  | Include 018 in local_cycle.sh (with rollback hash  | mensahe: no***@anthropic.com
+   f7f02ab  (mensahe ng commit)  x1  | Add integration tests for 018: delete and rename o | mensahe: no***@anthropic.com
+   749ab22  (mensahe ng commit)  x1  | Add ministry-ops: protected-ministry names and min | mensahe: no***@anthropic.com
+   c7d1c32  (mensahe ng commit)  x1  | Use ministry-ops in the ministry actions: count af | mensahe: no***@anthropic.com
+   188c123  (mensahe ng commit)  x1  | Hide member and delete controls of protected minis | mensahe: no***@anthropic.com
+   31168a7  (mensahe ng commit)  x1  | Add Release 0 tests in two DB states (before 010,  | mensahe: no***@anthropic.com
+   e935e92  (mensahe ng commit)  x1  | Add e2e page check for ministries/[id] and members | mensahe: no***@anthropic.com
+   c9363a4  (mensahe ng commit)  x1  | Make the local baseline match production for profi | mensahe: no***@anthropic.com
+   245a70e  (mensahe ng commit)  x1  | Widen the schema snapshot scope to ministries, pro | mensahe: no***@anthropic.com
+   099bc11  (mensahe ng commit)  x1  | Add Phase 1 apply runbook (010-013, 016, 018, 015) | mensahe: no***@anthropic.com
+   2e6e127  (mensahe ng commit)  x1  | Runbook: record the all-commits bundle and the sca | mensahe: no***@anthropic.com
+   54e8c0a  (mensahe ng commit)  x1  | Add history-scrub helpers (email replacement tree- | mensahe: no***@anthropic.com
+   … at 12 pa
+## Lungsod/tirahan ng kaanib (mula sa production): 24 na tama
+   85fba34  supabase/006_finance_attendance_locals.sql  x1  linya 60  | Add locals table, migrate locality enum to scalabl | +: lungsod
+   85fba34  supabase/008_locals_and_ministry_leader_constraint.sql  x2  linya 15,41  | Add locals table, migrate locality enum to scalabl | +: lungsod
+   5efa6ea  docs/superpowers/specs/2026-09-23-giving-records-design.md  x5  linya 52,135,251,257,274  | Add design spec for Ambagan, Tulong sa Klase Minis | +: lungsod
+   1eb54e1  docs/superpowers/specs/2026-09-23-giving-records-design.md  x2  | Record answers to spec open questions | -(inalis): lungsod
+   9d7106d  migrations/tests/giving_rls_tests.sql  x4  linya 93,156,162,183  | Draft migrations 010-013 and 015, RLS tests, plan  | +: lungsod
+   4fa00ae  docs/superpowers/specs/2026-09-23-giving-records-design.md  x1  linya 339  | 010: Admin-only Finance/Local Finance/Pastoral mem | +: lungsod
+   4fa00ae  migrations/tests/giving_rls_tests.sql  x1  linya 478  | 010: Admin-only Finance/Local Finance/Pastoral mem | +: lungsod
+   52957af  docs/superpowers/plans/2026-09-23-giving-records-app.md  x1  linya 198  | Add Plan B (app) for approval; correct deployment- | +: lungsod
+   f600ba4  tests/integration/giving.test.mjs  x1  linya 17  | Add integration tests: giving records scope, workf | +: lungsod
+   099bc11  docs/superpowers/plans/2026-09-23-giving-records-phase1-apply-runbook.md  x1  linya 34  | Add Phase 1 apply runbook (010-013, 016, 018, 015) | +: lungsod
+   f97e616  migrations/tests/giving_rls_tests_production.sql  x5  linya 132,208,214,235,729  | Add production variant of the SQL suite (Task 7 A1 | +: lungsod
+## POSTGRES_PASSWORD: 1 na tama
+   4fa00ae  migrations/scratch/run.sh  x1  linya 26  | 010: Admin-only Finance/Local Finance/Pastoral mem | +: POST…********ch
+## Pangalan ng kaanib (mula sa production): 142 na tama
+   86b3e88  supabase/NOTES_finance_attendance.md  x12  linya 32,34,35  | Add finance/attendance schema (009) and session no | +: pangalan
+   5efa6ea  docs/superpowers/specs/2026-09-23-giving-records-design.md  x20  linya 84,85,96,151,234,251  | Add design spec for Ambagan, Tulong sa Klase Minis | +: pangalan
+   1eb54e1  docs/superpowers/specs/2026-09-23-giving-records-design.md  x8  linya 233,272  | Record answers to spec open questions | -(inalis): pangalan ; +: pangalan
+   4ed9441  docs/superpowers/specs/2026-09-23-giving-records-design.md  x4  linya 234  | Fix stale references and add tests for currency, s | -(inalis): pangalan ; +: pangalan
+   211608d  docs/superpowers/specs/2026-09-23-giving-records-design.md  x4  linya 267  | Spec: record answers 5-9, separate finance_audit_l | -(inalis): pangalan ; +: pangalan
+   9d7106d  docs/runbooks/resend-setup.md  x1  linya 49  | Draft migrations 010-013 and 015, RLS tests, plan  | +: pangalan
+   9d7106d  docs/superpowers/plans/2026-09-23-giving-records-database.md  x10  linya 22,211,214  | Draft migrations 010-013 and 015, RLS tests, plan  | +: pangalan
+   9d7106d  migrations/tests/giving_rls_tests.sql  x4  linya 377,381  | Draft migrations 010-013 and 015, RLS tests, plan  | +: pangalan
+   9d7106d  supabase/010_finance_access_audit.sql  x12  linya 15,441,442  | Draft migrations 010-013 and 015, RLS tests, plan  | +: pangalan
+   4fa00ae  docs/superpowers/plans/2026-09-23-giving-records-database.md  x2  linya 115  | 010: Admin-only Finance/Local Finance/Pastoral mem | +: pangalan
+   4fa00ae  migrations/scratch/01_prod_like_seed.sql  x23  linya 3,28,29,30,31,32  | 010: Admin-only Finance/Local Finance/Pastoral mem | +: pangalan
+   d309209  migrations/tests/giving_rls_tests.sql  x6  linya 506,507  | Add 016 member confirmation (option A): Admin must | +: pangalan
+   52957af  docs/superpowers/plans/2026-09-23-giving-records-app.md  x4  linya 60,241  | Add Plan B (app) for approval; correct deployment- | +: pangalan
+   1e55d1d  docs/runbooks/resend-setup.md  x1  | Remove Admin email from runbook; use fictitious na | -(inalis): pangalan
+   1e55d1d  migrations/scratch/01_prod_like_seed.sql  x21  | Remove Admin email from runbook; use fictitious na | -(inalis): pangalan
+   f97e616  migrations/tests/giving_rls_tests_production.sql  x10  linya 449,453,533,534  | Add production variant of the SQL suite (Task 7 A1 | +: pangalan
+## Telepono: pattern lang (suriin: maaaring hindi telepono): 1 na tama
+   4cac159  tests/integration/access.test.mjs  x1  linya 50  | Add integration tests: anon, ordinary member, JWT  | +: 4102…****00
