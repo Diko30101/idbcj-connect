@@ -1,0 +1,200 @@
+diff --git a/app/portal/livestream/page.tsx b/app/portal/livestream/page.tsx
+index 024a3f6..483ec30 100644
+--- a/app/portal/livestream/page.tsx
++++ b/app/portal/livestream/page.tsx
+@@ -1,4 +1,5 @@
+ import type { Metadata } from "next";
++import { revalidatePath } from "next/cache";
+ import { requirePortalAccess } from "@/lib/portal";
+ import { LivestreamPlayer } from "@/components/livestream-player";
+ 
+@@ -12,9 +13,52 @@ export const metadata: Metadata = {
+ // YouTube Channel ID ng IDBCJ
+ const CHANNEL_ID = "UC2w4L4NiiVrcGlE0c1XW-Hw";
+ 
++async function getSetting(key: string): Promise<string> {
++  const { getSupabase } = await import("@/lib/portal");
++  const supabase = await getSupabase();
++  const { data } = await supabase
++    .from("site_settings")
++    .select("value")
++    .eq("key", key)
++    .single();
++  return (data?.value ?? "").trim();
++}
++
++async function saveLivestreamSettings(formData: FormData) {
++  "use server";
++  const { requireRoles, str, getSupabase } = await import("@/lib/portal");
++  const ctx = await requireRoles(["admin"]);
++
++  const videoId = str(formData, "video_id").trim();
++  const match = videoId.match(/(?:v=|youtu\.be\/|embed\/)([A-Za-z0-9_-]{11})/);
++  const cleanId = match ? match[1] : videoId;
++  if (cleanId && !/^[A-Za-z0-9_-]{11}$/.test(cleanId)) {
++    throw new Error("Hindi valid ang YouTube video ID.");
++  }
++
++  const backupUrl = str(formData, "backup_url").trim();
++  if (backupUrl && !/^https?:\/\/.+/.test(backupUrl)) {
++    throw new Error("Hindi valid ang backup URL.");
++  }
++
++  const supabase = await getSupabase();
++  const { error } = await supabase.from("site_settings").upsert(
++    [
++      { key: "livestream_fallback_video_id", value: cleanId, updated_by: ctx.profile.id },
++      { key: "livestream_backup_url", value: backupUrl, updated_by: ctx.profile.id },
++    ],
++    { onConflict: "key" }
++  );
++  if (error) throw new Error("Hindi na-save: " + error.message);
++  revalidatePath("/portal/livestream");
++}
++
+ export default async function PortalLivestreamPage() {
+   // Members lang na naka-login sa portal ang makakapasok dito
+-  await requirePortalAccess();
++  const ctx = await requirePortalAccess();
++  const fallbackVideoId = await getSetting("livestream_fallback_video_id");
++  const backupUrl = await getSetting("livestream_backup_url");
++  const isAdmin = ctx.profile.role === "admin";
+ 
+   return (
+     <div className="max-w-5xl mx-auto py-8 px-4">
+@@ -24,12 +68,83 @@ export default async function PortalLivestreamPage() {
+       </p>
+ 
+       <div className="mt-6">
+-        <LivestreamPlayer channelId={CHANNEL_ID} />
++        <LivestreamPlayer channelId={CHANNEL_ID} fallbackVideoId={fallbackVideoId || undefined} />
+       </div>
+ 
+       <p className="mt-6 text-center text-sm text-slate-500">
+-        Kung walang live ngayon, ipinapakita ang pinakahuling stream.
++        Kung walang live ngayon, ipinapakita ang pinakahuling video.
+       </p>
++
++      {backupUrl && (
++        <p className="mt-4 text-center text-sm">
++          <a
++            href={backupUrl}
++            target="_blank"
++            rel="noopener noreferrer"
++            className="text-emerald-700 underline hover:text-emerald-900"
++          >
++            Kung hindi gumagana ang video sa itaas, panoorin dito (backup link)
++          </a>
++        </p>
++      )}
++
++      {isAdmin && (
++        <form
++          action={saveLivestreamSettings}
++          className="mt-8 rounded-xl border border-slate-200 bg-white p-4 shadow-sm space-y-4"
++        >
++          <h2 className="text-sm font-bold text-slate-800">Admin: Livestream Settings</h2>
++
++          <div>
++            <label className="text-xs font-semibold text-slate-600">Fallback YouTube Video</label>
++            <p className="mt-1 text-xs text-slate-500">
++              I-paste ang YouTube video ID o buong URL ng video na ipapakita kapag walang live.
++              {fallbackVideoId ? (
++                <> Kasalukuyan: <code className="font-mono bg-slate-100 px-1 rounded">{fallbackVideoId}</code></>
++              ) : (
++                " Wala pang naka-set."
++              )}
++            </p>
++            <div className="mt-2 flex gap-2">
++              <input
++                type="text"
++                name="video_id"
++                placeholder="Hal. mrSxVztHbZY o https://youtu.be/mrSxVztHbZY"
++                defaultValue={fallbackVideoId}
++                className="flex-1 rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
++              />
++            </div>
++          </div>
++
++          <div>
++            <label className="text-xs font-semibold text-slate-600">Backup Stream Link (Restream)</label>
++            <p className="mt-1 text-xs text-slate-500">
++              I-paste ang Restream "Share stream via link" URL bilang backup kapag hindi gumagana ang YouTube.
++              {backupUrl ? (
++                <> Kasalukuyan: <code className="font-mono bg-slate-100 px-1 rounded break-all">{backupUrl}</code></>
++              ) : (
++                " Wala pang naka-set."
++              )}
++            </p>
++            <div className="mt-2 flex gap-2">
++              <input
++                type="url"
++                name="backup_url"
++                placeholder="Hal. https://app.restream.io/s/xxxx-xxxx-xxxx-xxxx"
++                defaultValue={backupUrl}
++                className="flex-1 rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
++              />
++            </div>
++          </div>
++
++          <button
++            type="submit"
++            className="rounded-lg bg-emerald-700 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-800"
++          >
++            I-save
++          </button>
++        </form>
++      )}
+     </div>
+   );
+ }
+diff --git a/components/livestream-player.tsx b/components/livestream-player.tsx
+index e2a0780..cf8b169 100644
+--- a/components/livestream-player.tsx
++++ b/components/livestream-player.tsx
+@@ -1,17 +1,42 @@
+ "use client";
+ 
++import { useState } from "react";
++
+ // YouTube live embed: awtomatikong ipinapakita ang kasalukuyang live
+-// stream ng channel. Kung walang live, ang pinakahuling stream ang lalabas.
+-export function LivestreamPlayer({ channelId }: { channelId: string }) {
++// stream ng channel. Kung walang live, ang fallback video ang lalabas.
++export function LivestreamPlayer({
++  channelId,
++  fallbackVideoId,
++}: {
++  channelId: string;
++  fallbackVideoId?: string;
++}) {
++  const [useFallback, setUseFallback] = useState(false);
++
++  // Kung may fallback at nag-fail ang live embed, ipakita ang fallback video
++  const src = useFallback && fallbackVideoId
++    ? `https://www.youtube-nocookie.com/embed/${fallbackVideoId}?rel=0`
++    : `https://www.youtube-nocookie.com/embed/live_stream?channel=${channelId}&rel=0`;
++
+   return (
+     <div className="relative w-full aspect-video bg-black rounded-xl overflow-hidden shadow-lg">
+       <iframe
+-        src={`https://www.youtube-nocookie.com/embed/live_stream?channel=${channelId}&rel=0`}
++        key={src}
++        src={src}
+         title="IDBCJ Live Stream"
+         allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+         allowFullScreen
+         className="absolute inset-0 w-full h-full"
++        onError={() => setUseFallback(true)}
+       />
++      {fallbackVideoId && !useFallback && (
++        <button
++          onClick={() => setUseFallback(true)}
++          className="absolute bottom-4 right-4 bg-black/70 text-white text-sm px-3 py-1.5 rounded-lg hover:bg-black/90"
++        >
++          Panoorin ang pinakahuling video
++        </button>
++      )}
+     </div>
+   );
+ }

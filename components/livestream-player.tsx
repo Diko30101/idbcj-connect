@@ -2,8 +2,6 @@
 
 import { useState } from "react";
 
-// YouTube live embed: awtomatikong ipinapakita ang kasalukuyang live
-// stream ng channel. Kung walang live, ang fallback video ang lalabas.
 export function LivestreamPlayer({
   channelId,
   fallbackVideoId,
@@ -13,7 +11,6 @@ export function LivestreamPlayer({
 }) {
   const [useFallback, setUseFallback] = useState(false);
 
-  // Kung may fallback at nag-fail ang live embed, ipakita ang fallback video
   const src = useFallback && fallbackVideoId
     ? `https://www.youtube-nocookie.com/embed/${fallbackVideoId}?rel=0`
     : `https://www.youtube-nocookie.com/embed/live_stream?channel=${channelId}&rel=0`;
@@ -27,7 +24,6 @@ export function LivestreamPlayer({
         allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
         allowFullScreen
         className="absolute inset-0 w-full h-full"
-        onError={() => setUseFallback(true)}
       />
       {fallbackVideoId && !useFallback && (
         <button
