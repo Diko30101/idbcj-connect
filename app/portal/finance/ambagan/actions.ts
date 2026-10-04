@@ -150,7 +150,7 @@ export async function decideAmbagan(fd: FormData) {
 }
 
 // I-save ang buong grid (Pangalan × Linggo I–V) ng isang buwan sa isang local, parang papel na form:
-// isang field bawat cell na "amt__<memberId>__<petsa>". Blangkong cell = walang ginawang record
+// isang field bawat cell na "amt__<memberId>::<petsa>". Blangkong cell = walang ginawang record
 // (hindi paglabag; parehong patakaran ng isa-isang form dati). May halaga na = bago o na-update na
 // draft. Naka-lock na (naipadala na/aprubado na) ang cell na may kasama nang naipadalang record —
 // hindi na ito nababago dito, kagaya rin ng dati.
@@ -190,7 +190,7 @@ export async function saveAmbaganGrid(fd: FormData) {
   for (const [key, rawValue] of fd.entries()) {
     if (!key.startsWith("amt__")) continue;
     if (++cellCount > 1000) break; // hindi dapat abutin ito sa normal na paggamit
-    const [, memberId, date] = key.split("__");
+    const [memberId, date] = key.slice("amt__".length).split("::");
     if (!memberId || !date || !eligibleIds.has(memberId) || !validDates.has(date)) continue;
     const amount = parseGivingAmount(String(rawValue));
     if (amount === "invalid") continue; // blangko o 0: walang ginawang record, tulad ng dati
