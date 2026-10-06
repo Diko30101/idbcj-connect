@@ -1,7 +1,7 @@
 "use client";
 
 import { saveBalanceSnapshot } from "@/app/portal/actions";
-import { btnCls, inputCls } from "@/components/portal/ui";
+import { btnCls, inputCls } from "@/components/portal/form-bits";
 import type { BalanceSnapshot } from "@/lib/finance";
 
 function pesoInputValue(n: number) {
