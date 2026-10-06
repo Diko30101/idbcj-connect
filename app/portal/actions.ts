@@ -1129,3 +1129,34 @@ export async function getUnreadInboxCount(): Promise<{ count: number }> {
   const count = ((unreadRecipients ?? []) as any[]).filter((r) => !deletedIds.has(r.letter_id)).length;
   return { count };
 }
+
+// ---------------------------------------------------------------
+// BALANSE NG PANGASIWAAN (kasalukuyang balanse ng mga account ng iglesia)
+// Bawat update ay BAGONG snapshot — hindi binabago o binubura ang nakaraan.
+// ---------------------------------------------------------------
+const BALANCE_ACCOUNTS = ["bpi", "bdo", "cash"] as const;
+
+export async function saveBalanceSnapshot(fd: FormData) {
+  const { supabase, user } = await requireFinanceSectionAccess();
+  const path = "/portal/finance/balances";
+  const accountKey = str(fd, "account_key");
+  const accountLabel = str(fd, "account_label") || accountKey.toUpperCase();
+  const asOf = str(fd, "as_of");
+  if (!(BALANCE_ACCOUNTS as readonly string[]).includes(accountKey))
+    back(path, "error", "Di-wastong account.");
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(asOf)) back(path, "error", "Di-wastong petsa.");
+  const balance = Number(str(fd, "balance").replace(/[,\s₱]/g, ""));
+  if (!Number.isFinite(balance) || balance < 0) back(path, "error", "Di-wastong halaga.");
+
+  const { error } = await supabase.from("pangasiwaan_balance_snapshots").insert({
+    account_key: accountKey,
+    account_label: accountLabel,
+    balance: balance.toFixed(2),
+    as_of: asOf,
+    updated_by: user.id,
+  });
+  if (error) back(path, "error", "Hindi na-save: " + error.message);
+  revalidatePath("/portal/finance/balances", "layout");
+  revalidatePath("/portal", "layout");
+  back(path, "ok", `Na-save ang bagong balanse ng ${accountLabel}.`);
+}

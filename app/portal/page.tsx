@@ -110,6 +110,43 @@ export default async function PortalHome({
     }
   }
 
+  // ---- Balanse ng Pangasiwaan: pinakabagong snapshot bawat account ----
+  type BalanceItem = {
+    account_key: string;
+    account_label: string;
+    balance: number;
+    as_of: string;
+    created_at: string;
+    updatedByName: string | null;
+  };
+  let balances: BalanceItem[] = [];
+  if (financeAccess) {
+    const { data: balData } = await supabase
+      .from("pangasiwaan_balance_snapshots")
+      .select(
+        "account_key, account_label, balance, as_of, created_at, profiles!pangasiwaan_balance_snapshots_updated_by_fkey(full_name)"
+      )
+      .order("created_at", { ascending: false })
+      .limit(30);
+    const seen = new Set<string>();
+    for (const r of ((balData ?? []) as any[])) {
+      if (seen.has(r.account_key)) continue;
+      seen.add(r.account_key);
+      balances.push({
+        account_key: r.account_key,
+        account_label: r.account_label,
+        balance: Number(r.balance),
+        as_of: r.as_of,
+        created_at: r.created_at,
+        updatedByName: r.profiles?.full_name ?? null,
+      });
+    }
+    const balOrder = ["bpi", "bdo", "cash"];
+    balances.sort((a, b) => balOrder.indexOf(a.account_key) - balOrder.indexOf(b.account_key));
+  }
+  const balancesTotal = balances.reduce((s, b) => s + b.balance, 0);
+  const latestBalance = balances.length > 0 ? [...balances].sort((a, b) => b.created_at.localeCompare(a.created_at))[0] : null;
+
   // ---- Tulong Financial buod (Admin + Finance Ministry) ----
   let tulongTotalLent = 0;
   let tulongTotalPaid = 0;
@@ -668,6 +705,34 @@ export default async function PortalHome({
         {financeAccess && !isAdmin && (
           <Panel title="Financial Report — Buod" subtitle={financePeriodLabel}>
             <FinanceSummaryPie year={financeYear} income={financeIncome} expense={financeExpense} />
+          </Panel>
+        )}
+
+        {financeAccess && balances.length > 0 && (
+          <Panel title="💰 Balanse ng Pangasiwaan" subtitle="Kasalukuyang balanse ng iglesia">
+            <div className="space-y-2 text-sm">
+              {balances.map((b) => (
+                <div key={b.account_key} className="flex items-center justify-between gap-2">
+                  <span className="text-gray-700">{b.account_label}</span>
+                  <span className="font-semibold text-gray-900">{fmtPeso(b.balance)}</span>
+                </div>
+              ))}
+            </div>
+            <div className="mt-3 flex items-center justify-between border-t border-gray-200 pt-3">
+              <span className="text-sm font-semibold text-gray-800">KABUUAN</span>
+              <span className="text-base font-bold text-emerald-800">{fmtPeso(balancesTotal)}</span>
+            </div>
+            {latestBalance && (
+              <div className="mt-2 text-xs text-gray-400">
+                Huling na-update: {fmtDate(latestBalance.created_at)}
+                {latestBalance.updatedByName ? ` · ni ${latestBalance.updatedByName}` : ""}
+              </div>
+            )}
+            <div className="mt-3 text-right">
+              <Link href="/portal/finance/balances" className="text-sm font-semibold text-emerald-700 hover:underline">
+                Buksan ang Balanse →
+              </Link>
+            </div>
           </Panel>
         )}
 

@@ -106,6 +106,7 @@ export default async function PortalLayout({ children }: { children: React.React
     if (isFinance(profile.role) || isFinanceMinistryMember) {
       const financeChildren: NavItem[] = [
         { href: "/portal/finance", label: "Financial Management" },
+        { href: "/portal/finance/balances", label: "Balanse ng Pangasiwaan" },
         { href: "/portal/finance/report", label: "Audit Report" },
         { href: "/portal/finance/expenses", label: "Expenses" },
       ];
