@@ -7,8 +7,16 @@ import { hasEnvVars } from "../utils";
 // Bukas din ang mga pahina ng login at pag-reset ng password, para makapasok ang member.
 const PUBLIC_PATHS = ["/im-new", "/about", "/history", "/contact", "/login", "/auth", "/forgot-password", "/reset-password"];
 
+// Bukas din ang borrower login ng Tulong Financial: ang borrower ay WALANG portal
+// account (username/password mula sa Finance Ministry), kaya ang /tulong-financial/login
+// at /tulong-financial mismo ay hindi dapat i-redirect sa /auth/login. Eksaktong mga
+// path lang ito — ang /tulong-financial/finance ay nananatiling protektado
+// (Finance Ministry lang, sa pamamagitan ng page guard).
+const PUBLIC_EXACT_PATHS = ["/tulong-financial", "/tulong-financial/login"];
+
 function isPublicPath(pathname: string) {
   if (pathname === "/") return true;
+  if (PUBLIC_EXACT_PATHS.includes(pathname)) return true;
   return PUBLIC_PATHS.some((p) => pathname === p || pathname.startsWith(p + "/"));
 }
 
