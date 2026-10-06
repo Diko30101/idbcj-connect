@@ -1,5 +1,18 @@
 // Ligtas gamitin sa browser at sa server (walang server-only import dito)
 
+// Isang snapshot ng balanse ng Pangasiwaan (BPI, BDO, Cash on hand).
+// Nasa shared lib ito (hindi sa page) para magamit ng client components
+// nang hindi humihila ng server-only modules sa browser bundle.
+export type BalanceSnapshot = {
+  id: string;
+  account_key: string;
+  account_label: string;
+  balance: number;
+  as_of: string;
+  created_at: string;
+  updatedByName: string | null;
+};
+
 export type FinanceCategory = "abuluyan" | "ambagan" | "tulong_sa_aral" | "pasalamat";
 
 export const FINANCE_CATEGORIES: FinanceCategory[] = ["abuluyan", "ambagan", "tulong_sa_aral", "pasalamat"];

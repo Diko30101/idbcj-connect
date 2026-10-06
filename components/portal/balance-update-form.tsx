@@ -2,7 +2,7 @@
 
 import { saveBalanceSnapshot } from "@/app/portal/actions";
 import { btnCls, inputCls } from "@/components/portal/ui";
-import type { BalanceSnapshot } from "@/app/portal/finance/balances/page";
+import type { BalanceSnapshot } from "@/lib/finance";
 
 function pesoInputValue(n: number) {
   return n.toLocaleString("en-PH", { minimumFractionDigits: 2, maximumFractionDigits: 2 });

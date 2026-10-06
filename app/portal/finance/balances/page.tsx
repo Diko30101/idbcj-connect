@@ -1,17 +1,7 @@
 import { requireFinanceSectionAccess, fmtDate } from "@/lib/portal";
-import { fmtPeso } from "@/lib/finance";
+import { fmtPeso, type BalanceSnapshot } from "@/lib/finance";
 import { Empty, Notice, PageHeader, Panel } from "@/components/portal/ui";
 import { BalanceUpdateForm } from "@/components/portal/balance-update-form";
-
-export type BalanceSnapshot = {
-  id: string;
-  account_key: string;
-  account_label: string;
-  balance: number;
-  as_of: string;
-  created_at: string;
-  updatedByName: string | null;
-};
 
 const ACCOUNT_ORDER = ["bpi", "bdo", "cash"];
 
