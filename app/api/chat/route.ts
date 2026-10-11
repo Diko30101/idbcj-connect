@@ -69,8 +69,9 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ reply });
   } catch (error) {
     console.error("Chat API error:", error);
+    const msg = error instanceof Error ? error.message : "Unknown";
     return NextResponse.json(
-      { error: "May problema sa ngayon." },
+      { error: "May problema sa ngayon.", debug: msg.substring(0, 100) },
       { status: 500 }
     );
   }
