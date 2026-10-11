@@ -47,7 +47,7 @@ export async function POST(req: NextRequest) {
         "X-Title": "IDBCJ Website Chat",
       },
       body: JSON.stringify({
-        model: "google/gemma-3-27b-it:free",
+        model: "google/gemma-4-31b-it:free",
         messages: [
           { role: "system", content: SYSTEM_PROMPT },
           ...recentMessages,
@@ -58,6 +58,8 @@ export async function POST(req: NextRequest) {
     });
 
     if (!response.ok) {
+      const errText = await response.text();
+      console.error(`OpenRouter error ${response.status}: ${errText.substring(0, 200)}`);
       throw new Error(`OpenRouter error: ${response.status}`);
     }
 
