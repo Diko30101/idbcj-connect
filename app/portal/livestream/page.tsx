@@ -55,6 +55,28 @@ export default async function PortalLivestreamPage() {
   const backupUrl = await getSetting("livestream_backup_url");
   const isAdmin = ctx.profile.role === "admin";
 
+  // I-record ang attendance ng member (isang beses bawat araw)
+  const { getSupabase } = await import("@/lib/portal");
+  const supabase = await getSupabase();
+  await supabase.from("livestream_attendance").upsert(
+    { profile_id: ctx.profile.id, service_date: new Date().toISOString().split("T")[0] },
+    { onConflict: "profile_id,service_date", ignoreDuplicates: true }
+  );
+
+  // Para sa admin: kunin ang attendance ngayong araw
+  let todayAttendance: { full_name: string; attended_at: string }[] = [];
+  if (isAdmin) {
+    const { data } = await supabase
+      .from("livestream_attendance")
+      .select("attended_at, profiles!inner(full_name)")
+      .eq("service_date", new Date().toISOString().split("T")[0])
+      .order("attended_at", { ascending: true });
+    todayAttendance = (data || []).map((r: any) => ({
+      full_name: r.profiles.full_name || "Hindi kilala",
+      attended_at: r.attended_at,
+    }));
+  }
+
   return (
     <div className="max-w-5xl mx-auto py-8 px-4">
       <h1 className="text-3xl font-extrabold text-slate-900">Live Stream</h1>
@@ -74,6 +96,27 @@ export default async function PortalLivestreamPage() {
             Kung hindi gumagana ang video sa itaas, panoorin dito (backup link)
           </a>
         </p>
+      )}
+      {isAdmin && (
+        <div className="mt-8 rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+          <h2 className="text-sm font-bold text-slate-800">
+            Online Attendance ngayong araw ({todayAttendance.length})
+          </h2>
+          {todayAttendance.length === 0 ? (
+            <p className="mt-2 text-sm text-slate-500">Wala pang nanonood ngayon.</p>
+          ) : (
+            <ul className="mt-2 space-y-1">
+              {todayAttendance.map((a, i) => (
+                <li key={i} className="text-sm text-slate-700">
+                  {a.full_name}
+                  <span className="ml-2 text-xs text-slate-400">
+                    {new Date(a.attended_at).toLocaleTimeString("en-PH", { hour: "2-digit", minute: "2-digit" })}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
       )}
       {isAdmin && (
         <form action={saveLivestreamSettings}
