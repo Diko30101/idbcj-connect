@@ -38,40 +38,51 @@ export async function POST(req: NextRequest) {
     // Limit conversation history to last 10 messages to control cost
     const recentMessages = messages.slice(-10);
 
-    const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "Authorization": `Bearer ${process.env.OPENROUTER_API_KEY}`,
-        "HTTP-Referer": "https://idbcj.org",
-        "X-Title": "IDBCJ Website Chat",
-      },
-      body: JSON.stringify({
-        model: "google/gemma-4-31b-it:free",
-        messages: [
-          { role: "system", content: SYSTEM_PROMPT },
-          ...recentMessages,
-        ],
-        max_tokens: 500,
-        temperature: 0.7,
-      }),
-    });
+    // Subukan ang primary model, kung rate-limited ay mag-fallback sa iba
+    const models = [
+      "google/gemma-4-31b-it:free",
+      "google/gemma-4-26b-a4b-it:free",
+      "nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free",
+    ];
 
-    if (!response.ok) {
-      const errText = await response.text();
-      console.error(`OpenRouter error ${response.status}: ${errText.substring(0, 200)}`);
-      throw new Error(`OpenRouter error: ${response.status}`);
+    let data;
+    let lastError = "";
+    for (const model of models) {
+      const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${process.env.OPENROUTER_API_KEY}`,
+          "HTTP-Referer": "https://idbcj.org",
+          "X-Title": "IDBCJ Website Chat",
+        },
+        body: JSON.stringify({
+          model,
+          messages: [
+            { role: "system", content: SYSTEM_PROMPT },
+            ...recentMessages,
+          ],
+          max_tokens: 500,
+          temperature: 0.7,
+        }),
+      });
+
+      if (response.ok) {
+        data = await response.json();
+        break;
+      }
+      lastError = `Model ${model}: ${response.status}`;
+      if (response.status !== 429) break; // Kung hindi rate limit, huwag nang mag-fallback
     }
 
-    const data = await response.json();
+    if (!data) throw new Error(lastError || "All models failed");
     const reply = data.choices?.[0]?.message?.content || "Paumanhin, hindi ko nasagot iyan.";
 
     return NextResponse.json({ reply });
   } catch (error) {
     console.error("Chat API error:", error);
-    const msg = error instanceof Error ? error.message : "Unknown";
     return NextResponse.json(
-      { error: "May problema sa ngayon.", debug: msg.substring(0, 100) },
+      { error: "May problema sa ngayon." },
       { status: 500 }
     );
   }
