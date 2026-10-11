@@ -1,5 +1,48 @@
 import { NextRequest, NextResponse } from "next/server";
 
+// FAQ knowledge base — keyword matching para sa mabilis at tumpak na sagot
+// Walang AI call, walang rate limit, walang gastos
+const FAQ: { keywords: string[]; reply: string }[] = [
+  {
+    keywords: ["oras", "time", "kailan", "when", "pagsamba", "worship", "service", "gather"],
+    reply: `Ang aming pagsamba tuwing Sunday:\n• Medina, Magallanes, Cavite: 9:00 AM\n• Sta. Teresita, Sto. Tomas, Batangas: 9:00 AM at 3:00 PM\n• Fort McMurray, Alberta, Canada: 7:00 PM`,
+  },
+  {
+    keywords: ["saan", "where", "lugar", "lokal", "location", "address", "matatagpuan"],
+    reply: `May tatlong lokal kami:\n• Medina, Magallanes, Cavite, Philippines\n• Sta. Teresita, Sto. Tomas, Batangas, Philippines\n• Fort McMurray, Alberta, Canada`,
+  },
+  {
+    keywords: ["livestream", "live", "stream", "online", "youtube", "mapapanood"],
+    reply: `Ang Sunday worship sa Medina ay naka-livestream sa IDBCJ YouTube channel at sa online church website. Makikita rin ito sa private Facebook group (para sa members lang).`,
+  },
+  {
+    keywords: ["history", "kasaysayan", "founded", "itatag", "founder", "santiago", "1954", "1958"],
+    reply: `Ang Iglesia ng Dios na Buhay kay Cristo Jesus (IDBCJ) ay itinatag noong 1954 ni Mr. Avelino C. Santiago at rehistrado sa SEC noong 1958 (SEC Reg. No. 13708).`,
+  },
+  {
+    keywords: ["member", "miyembro", "portal", "login", "sign in", "connect"],
+    reply: `Para sa mga miyembro: mag-sign in sa IDBCJ Connect portal para sa announcements, ministries, prayer requests, at member profile. I-click ang "Members Login" sa homepage.`,
+  },
+  {
+    keywords: ["contact", "message", "prayer request", "makipag-ugnayan", "tanong"],
+    reply: `Maaari kang magpadala ng mensahe sa pamamagitan ng "Send Us a Message" form sa ibaba ng homepage — para sa prayer requests, questions, o pagbati.`,
+  },
+  {
+    keywords: ["kumusta", "hello", "hi", "hey", "magandang"],
+    reply: `Kumusta! Ako ang AI assistant ng IDBCJ. May tanong ka ba tungkol sa aming iglesia, oras ng pagsamba, o mga lokal?`,
+  },
+];
+
+function findFaqReply(text: string): string | null {
+  const lower = text.toLowerCase();
+  for (const faq of FAQ) {
+    if (faq.keywords.some((kw) => lower.includes(kw))) {
+      return faq.reply;
+    }
+  }
+  return null;
+}
+
 const SYSTEM_PROMPT = `Ikaw ang AI assistant ng IDBCJ.org website. Sumasagot ka sa mga tanong ng mga bumibisita sa homepage.
 
 TUNGKOL SA IDBCJ:
@@ -35,10 +78,18 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Invalid messages" }, { status: 400 });
     }
 
-    // Limit conversation history to last 10 messages to control cost
+    // Hakbang 1: Subukan muna ang FAQ — mabilis, libre, walang rate limit
+    const lastUserMsg = [...messages].reverse().find((m) => m.role === "user");
+    if (lastUserMsg?.content) {
+      const faqReply = findFaqReply(lastUserMsg.content);
+      if (faqReply) {
+        return NextResponse.json({ reply: faqReply, source: "faq" });
+      }
+    }
+
+    // Hakbang 2: Kung walang FAQ match, saka lang tatawag sa AI
     const recentMessages = messages.slice(-10);
 
-    // Subukan ang primary model, kung rate-limited ay mag-fallback sa iba
     const models = [
       "google/gemma-4-31b-it:free",
       "google/gemma-4-26b-a4b-it:free",
@@ -72,13 +123,13 @@ export async function POST(req: NextRequest) {
         break;
       }
       lastError = `Model ${model}: ${response.status}`;
-      if (response.status !== 429) break; // Kung hindi rate limit, huwag nang mag-fallback
+      if (response.status !== 429) break;
     }
 
     if (!data) throw new Error(lastError || "All models failed");
     const reply = data.choices?.[0]?.message?.content || "Paumanhin, hindi ko nasagot iyan.";
 
-    return NextResponse.json({ reply });
+    return NextResponse.json({ reply, source: "ai" });
   } catch (error) {
     console.error("Chat API error:", error);
     return NextResponse.json(
