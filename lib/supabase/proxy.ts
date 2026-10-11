@@ -12,7 +12,7 @@ const PUBLIC_PATHS = ["/im-new", "/about", "/history", "/contact", "/login", "/a
 // at /tulong-financial mismo ay hindi dapat i-redirect sa /auth/login. Eksaktong mga
 // path lang ito — ang /tulong-financial/finance ay nananatiling protektado
 // (Finance Ministry lang, sa pamamagitan ng page guard).
-const PUBLIC_EXACT_PATHS = ["/tulong-financial", "/tulong-financial/login"];
+const PUBLIC_EXACT_PATHS = ["/tulong-financial", "/tulong-financial/login", "/api/chat"];
 
 function isPublicPath(pathname: string) {
   if (pathname === "/") return true;
