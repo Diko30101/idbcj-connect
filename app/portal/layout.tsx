@@ -214,6 +214,7 @@ export default async function PortalLayout({ children }: { children: React.React
     "/portal/announcements",
     "/portal/members",
     "/portal/courses",
+    "/portal/livestream",
     "/portal/profile",
     "/tulong-financial",
     "/portal/tulong-financial",
