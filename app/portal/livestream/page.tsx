@@ -12,6 +12,26 @@ export const metadata: Metadata = {
 
 const DEFAULT_CHANNEL_ID = "UC2w4L4NiIVrcGiE0c1XW-Hw";
 
+// Awtomatikong hanapin ang kasalukuyang live video gamit ang YouTube Data API.
+// Kailangan ng YOUTUBE_API_KEY sa environment variables. Kapag wala o walang
+// live, magbabalik ng null at gagamitin ang channel live endpoint.
+async function getAutoLiveVideoId(channelId: string): Promise<string | null> {
+  const apiKey = process.env.YOUTUBE_API_KEY;
+  if (!apiKey) return null;
+  try {
+    const res = await fetch(
+      `https://www.googleapis.com/youtube/v3/search?part=snippet&channelId=${channelId}&eventType=live&type=video&maxResults=1&key=${apiKey}`,
+      { next: { revalidate: 60 } }
+    );
+    if (!res.ok) return null;
+    const data = await res.json();
+    const videoId = data?.items?.[0]?.id?.videoId;
+    return typeof videoId === "string" ? videoId : null;
+  } catch {
+    return null;
+  }
+}
+
 async function getSetting(key: string): Promise<string> {
   const { getSupabase } = await import("@/lib/portal");
   const supabase = await getSupabase();
@@ -66,7 +86,10 @@ export default async function PortalLivestreamPage() {
   const fallbackVideoId = await getSetting("livestream_fallback_video_id");
   const backupUrl = await getSetting("livestream_backup_url");
   const channelId = (await getSetting("livestream_channel_id")) || DEFAULT_CHANNEL_ID;
-  const liveVideoId = await getSetting("livestream_live_video_id");
+  const manualLiveVideoId = await getSetting("livestream_live_video_id");
+  // Priority: manual override > YouTube API auto-detect > channel live endpoint
+  const autoLiveVideoId = manualLiveVideoId ? null : await getAutoLiveVideoId(channelId);
+  const liveVideoId = manualLiveVideoId || autoLiveVideoId || "";
   const isAdmin = ctx.profile.role === "admin";
 
   // I-record ang attendance ng member (isang beses bawat araw)
@@ -159,7 +182,7 @@ export default async function PortalLivestreamPage() {
             </p>
             <input type="text" name="live_video_id"
               placeholder="Hal. https://www.youtube.com/watch?v=xxxx o blangko kung walang live"
-              defaultValue={liveVideoId}
+              defaultValue={manualLiveVideoId}
               className="mt-2 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500" />
           </div>
           <div>
