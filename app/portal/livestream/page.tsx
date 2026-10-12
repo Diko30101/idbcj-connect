@@ -10,7 +10,7 @@ export const metadata: Metadata = {
   description: "Watch the IDBCJ Sunday livestream live. Members only.",
 };
 
-const CHANNEL_ID = "UC2w4L4NiiVrcGlE0c1XW-Hw";
+const DEFAULT_CHANNEL_ID = "UC2w4L4NiIVrcGiE0c1XW-Hw";
 
 async function getSetting(key: string): Promise<string> {
   const { getSupabase } = await import("@/lib/portal");
@@ -37,11 +37,16 @@ async function saveLivestreamSettings(formData: FormData) {
   if (backupUrl && !/^https?:\/\/.+/.test(backupUrl)) {
     throw new Error("Hindi valid ang backup URL.");
   }
+  const channelId = str(formData, "channel_id").trim() || DEFAULT_CHANNEL_ID;
+  if (!/^UC[A-Za-z0-9_-]{22}$/.test(channelId)) {
+    throw new Error("Hindi valid ang YouTube channel ID.");
+  }
   const supabase = await getSupabase();
   const { error } = await supabase.from("site_settings").upsert(
     [
       { key: "livestream_fallback_video_id", value: cleanId, updated_by: ctx.profile.id },
       { key: "livestream_backup_url", value: backupUrl, updated_by: ctx.profile.id },
+      { key: "livestream_channel_id", value: channelId, updated_by: ctx.profile.id },
     ],
     { onConflict: "key" }
   );
@@ -53,6 +58,7 @@ export default async function PortalLivestreamPage() {
   const ctx = await requirePortalAccess();
   const fallbackVideoId = await getSetting("livestream_fallback_video_id");
   const backupUrl = await getSetting("livestream_backup_url");
+  const channelId = (await getSetting("livestream_channel_id")) || DEFAULT_CHANNEL_ID;
   const isAdmin = ctx.profile.role === "admin";
 
   // I-record ang attendance ng member (isang beses bawat araw)
@@ -84,7 +90,7 @@ export default async function PortalLivestreamPage() {
         Mapanood nang live ang ating pagsamba tuwing Linggo.
       </p>
       <div className="mt-6">
-        <LivestreamPlayer channelId={CHANNEL_ID} fallbackVideoId={fallbackVideoId || undefined} />
+        <LivestreamPlayer channelId={channelId} fallbackVideoId={fallbackVideoId || undefined} />
       </div>
       <p className="mt-6 text-center text-sm text-slate-500">
         Kung walang live ngayon, ipinapakita ang pinakahuling video.
@@ -122,6 +128,16 @@ export default async function PortalLivestreamPage() {
         <form action={saveLivestreamSettings}
           className="mt-8 rounded-xl border border-slate-200 bg-white p-4 shadow-sm space-y-4">
           <h2 className="text-sm font-bold text-slate-800">Admin: Livestream Settings</h2>
+          <div>
+            <label className="text-xs font-semibold text-slate-600">YouTube Channel ID</label>
+            <p className="mt-1 text-xs text-slate-500">
+              Ang channel ID ng IDBCJ YouTube channel (nagsisimula sa UC).
+            </p>
+            <input type="text" name="channel_id"
+              placeholder="Hal. UC2w4L4NiIVrcGiE0c1XW-Hw"
+              defaultValue={channelId}
+              className="mt-2 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500" />
+          </div>
           <div>
             <label className="text-xs font-semibold text-slate-600">Fallback YouTube Video</label>
             <p className="mt-1 text-xs text-slate-500">
