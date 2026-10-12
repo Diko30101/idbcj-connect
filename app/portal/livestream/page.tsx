@@ -41,12 +41,19 @@ async function saveLivestreamSettings(formData: FormData) {
   if (!/^UC[A-Za-z0-9_-]{22}$/.test(channelId)) {
     throw new Error("Hindi valid ang YouTube channel ID.");
   }
+  const liveVideoId = str(formData, "live_video_id").trim();
+  const liveMatch = liveVideoId.match(/(?:v=|youtu\.be\/|embed\/|live\/)([A-Za-z0-9_-]{11})/);
+  const cleanLiveId = liveMatch ? liveMatch[1] : liveVideoId;
+  if (cleanLiveId && !/^[A-Za-z0-9_-]{11}$/.test(cleanLiveId)) {
+    throw new Error("Hindi valid ang live video ID.");
+  }
   const supabase = await getSupabase();
   const { error } = await supabase.from("site_settings").upsert(
     [
       { key: "livestream_fallback_video_id", value: cleanId, updated_by: ctx.profile.id },
       { key: "livestream_backup_url", value: backupUrl, updated_by: ctx.profile.id },
       { key: "livestream_channel_id", value: channelId, updated_by: ctx.profile.id },
+      { key: "livestream_live_video_id", value: cleanLiveId, updated_by: ctx.profile.id },
     ],
     { onConflict: "key" }
   );
@@ -59,6 +66,7 @@ export default async function PortalLivestreamPage() {
   const fallbackVideoId = await getSetting("livestream_fallback_video_id");
   const backupUrl = await getSetting("livestream_backup_url");
   const channelId = (await getSetting("livestream_channel_id")) || DEFAULT_CHANNEL_ID;
+  const liveVideoId = await getSetting("livestream_live_video_id");
   const isAdmin = ctx.profile.role === "admin";
 
   // I-record ang attendance ng member (isang beses bawat araw)
@@ -90,7 +98,12 @@ export default async function PortalLivestreamPage() {
         Mapanood nang live ang ating pagsamba tuwing Linggo.
       </p>
       <div className="mt-6">
-        <LivestreamPlayer channelId={channelId} fallbackVideoId={fallbackVideoId || undefined} />
+        <LivestreamPlayer channelId={channelId} fallbackVideoId={fallbackVideoId || undefined} liveVideoId={liveVideoId || undefined} />
+      {liveVideoId && (
+        <p className="mt-2 text-center text-sm font-semibold text-red-600">
+          ● LIVE ngayon
+        </p>
+      )}
       </div>
       <p className="mt-6 text-center text-sm text-slate-500">
         Kung walang live ngayon, ipinapakita ang pinakahuling video.
@@ -136,6 +149,17 @@ export default async function PortalLivestreamPage() {
             <input type="text" name="channel_id"
               placeholder="Hal. UC2w4L4NiIVrcGiE0c1XW-Hw"
               defaultValue={channelId}
+              className="mt-2 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500" />
+          </div>
+          <div>
+            <label className="text-xs font-semibold text-slate-600">Live Video ID (kapag nag-live)</label>
+            <p className="mt-1 text-xs text-slate-500">
+              I-paste ang YouTube live URL kapag nagsimula ang livestream para agad itong lumabas.
+              Burahin kapag tapos na ang live para bumalik sa awtomatiko.
+            </p>
+            <input type="text" name="live_video_id"
+              placeholder="Hal. https://www.youtube.com/watch?v=xxxx o blangko kung walang live"
+              defaultValue={liveVideoId}
               className="mt-2 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500" />
           </div>
           <div>
