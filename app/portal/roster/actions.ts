@@ -111,8 +111,9 @@ export async function confirmMember(fd: FormData) {
   back(path, "ok", "Nakumpirma ang kaanib. Puwede na itong tumanggap ng handog.");
 }
 
-// Admin lang: delete_member (database function). Hindi pa kumpirmadong kaanib lang ang matatanggal --
-// para sa kaso ng doble o maling naidagdag na bagong kaanib na ayaw nang kumpirmahin.
+// Admin lang: delete_member (database function, 053). Para sa doble o maling naidagdag na entry.
+// Hindi buburahin ng database ang kaanib kung may anumang talang naka-link (handog, attendance,
+// Tulong) -- may malinaw na error sa ganoong kaso; ang Status ang tamang daan para roon.
 export async function deleteMember(fd: FormData) {
   const ctx = await getRosterContext();
   const path = target(fd);

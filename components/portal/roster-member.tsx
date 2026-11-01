@@ -81,13 +81,17 @@ function ConfirmButton({ member, path }: { member: RosterMember; path: string })
   );
 }
 
-// Admin lang, at hindi pa kumpirmadong kaanib lang -- para sa kaso ng doble o maling naidagdag na
-// bagong kaanib na ayaw nang kumpirmahin (tingnan din ang database function na delete_member).
+// Admin lang. Para sa doble o maling naidagdag na entry. Ang database function na delete_member
+// (053) ang huling harang: hindi nito buburahin ang kaanib kung may anumang talang naka-link
+// (handog, attendance, Tulong) -- sa ganoong kaso ay may malinaw na error na ipapakita.
 function DeleteMemberButton({ member, path }: { member: RosterMember; path: string }) {
+  const confirmed = member.confirmed_at !== null;
   function onSubmit(e: FormEvent<HTMLFormElement>) {
     if (
       !window.confirm(
-        `Tanggalin ang kaanib na "${member.full_name}"? Hindi pa ito kumpirmado. Hindi na ito mababawi.`,
+        confirmed
+          ? `Tanggalin nang permanente ang kaanib na "${member.full_name}"? Puwede lang ito kung wala pang anumang tala (handog, attendance, Tulong) na naka-link sa entry na ito. Hindi na ito mababawi.`
+          : `Tanggalin ang kaanib na "${member.full_name}"? Hindi pa ito kumpirmado. Hindi na ito mababawi.`,
       )
     )
       e.preventDefault();
@@ -118,35 +122,45 @@ function InlineForms({
 }) {
   if (mode === "name") {
     return (
-      <form action={updateMemberName} className="grid gap-3 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-end">
-        <input type="hidden" name="path" value={path} />
-        <input type="hidden" name="id" value={member.id} />
-        <label className="grid gap-1.5">
-          <span className="text-sm font-medium text-gray-700">Pangalan</span>
-          <input
-            name="full_name"
-            defaultValue={member.full_name}
-            maxLength={200}
-            required
-            autoComplete="off"
-            className={inputCls}
-          />
-          {!isAdmin && member.confirmed_at !== null && (
-            <span className="text-xs text-amber-700">
-              Kung magbabago ang pangalan (hindi lang ang laki ng titik o espasyo), mawawala ang kumpirmasyon at
-              kailangang kumpirmahin muli ng Admin.
-            </span>
-          )}
-        </label>
-        <div className="flex gap-2">
-          <button type="submit" className={btnCls}>
-            I-save
-          </button>
-          <button type="button" className={btnGhostCls} onClick={onClose}>
-            Kanselahin
-          </button>
-        </div>
-      </form>
+      <>
+        <form action={updateMemberName} className="grid gap-3 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-end">
+          <input type="hidden" name="path" value={path} />
+          <input type="hidden" name="id" value={member.id} />
+          <label className="grid gap-1.5">
+            <span className="text-sm font-medium text-gray-700">Pangalan</span>
+            <input
+              name="full_name"
+              defaultValue={member.full_name}
+              maxLength={200}
+              required
+              autoComplete="off"
+              className={inputCls}
+            />
+            {!isAdmin && member.confirmed_at !== null && (
+              <span className="text-xs text-amber-700">
+                Kung magbabago ang pangalan (hindi lang ang laki ng titik o espasyo), mawawala ang kumpirmasyon at
+                kailangang kumpirmahin muli ng Admin.
+              </span>
+            )}
+          </label>
+          <div className="flex gap-2">
+            <button type="submit" className={btnCls}>
+              I-save
+            </button>
+            <button type="button" className={btnGhostCls} onClick={onClose}>
+              Kanselahin
+            </button>
+          </div>
+        </form>
+        {isAdmin && (
+          <div className="mt-3 flex flex-wrap items-center justify-between gap-2 border-t border-emerald-900/10 pt-3">
+            <p className="text-xs text-gray-500">
+              Doble o maling entry? Tanggalin ito nang permanente — puwede lang kung wala pang naka-link na tala.
+            </p>
+            <DeleteMemberButton member={member} path={path} />
+          </div>
+        )}
+      </>
     );
   }
   if (mode === "status" && isAdmin) {
