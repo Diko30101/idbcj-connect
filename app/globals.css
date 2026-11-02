@@ -66,3 +66,67 @@
     @apply bg-background text-foreground;
   }
 }
+
+/* SUHAY content (mula sa WordPress export, 2026-11-02): scoped styles para sa
+   katawan ng mga aralin/gabay na ipinapakita sa /portal/suhay. Tema ng
+   idbcj.org: emerald + gold, Noto Serif na pamagat. */
+.suhay-content {
+  line-height: 1.7;
+  color: #1f2937;
+}
+.suhay-content h1,
+.suhay-content h2,
+.suhay-content h3,
+.suhay-content h4 {
+  font-family: var(--font-noto-serif), Georgia, serif;
+  color: #083e31;
+  line-height: 1.3;
+  margin: 1.4em 0 0.5em;
+}
+.suhay-content h2 {
+  border-bottom: 2px solid #d1fae5;
+  padding-bottom: 0.3rem;
+}
+.suhay-content p {
+  margin: 0.7em 0;
+}
+.suhay-content img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 10px;
+}
+.suhay-content audio {
+  width: 100%;
+  margin: 0.8rem 0;
+}
+.suhay-content blockquote {
+  border-left: 4px solid #eda100;
+  background: #fffbeb;
+  margin: 1rem 0;
+  padding: 0.8rem 1rem;
+  border-radius: 0 10px 10px 0;
+}
+.suhay-content table {
+  border-collapse: collapse;
+  width: 100%;
+  margin: 1rem 0;
+}
+.suhay-content th,
+.suhay-content td {
+  border: 1px solid #dceae4;
+  padding: 0.5rem 0.7rem;
+  text-align: left;
+}
+.suhay-content th {
+  background: #ecfdf5;
+}
+.suhay-content a {
+  color: #047857;
+  text-decoration: underline;
+}
+.suhay-content ul,
+.suhay-content ol {
+  padding-left: 1.4rem;
+  margin: 0.7em 0;
+  list-style: revert;
+}

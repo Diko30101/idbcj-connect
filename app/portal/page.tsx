@@ -700,6 +700,24 @@ export default async function PortalHome({
         </div>
       </Panel>
 
+      <Panel title="📚 SUHAY — Pag-aaral ng Biblia" subtitle="Programa para sa mga estudyanteng ministro" className="mb-6">
+        <p className="text-sm text-gray-600">
+          Ang 22 aralin ng SUHAY sa 6 na yugto, kasama ang mga gabay sa pag-aaral
+          at ang narasyon (audio) ng bawat aralin — nasa loob na ng portal.
+        </p>
+        <div className="mt-3 flex flex-wrap gap-2 text-sm">
+          <Link href="/portal/suhay" className="rounded-lg bg-emerald-700 px-4 py-2 font-semibold text-white hover:bg-emerald-800">
+            Buksan ang SUHAY →
+          </Link>
+          <Link href="/portal/suhay/panimula" className="rounded-lg border border-emerald-200 px-4 py-2 font-semibold text-emerald-800 hover:bg-emerald-50">
+            Panimula
+          </Link>
+          <Link href="/portal/suhay/gabay-sa-mapagkakatiwalaang-salin-ng-biblia" className="rounded-lg border border-emerald-200 px-4 py-2 font-semibold text-emerald-800 hover:bg-emerald-50">
+            Gabay sa Salin ng Biblia
+          </Link>
+        </div>
+      </Panel>
+
       {/* Mga card sa ibaba ng announcement, sa iisang main column — 2 column sa desktop, 1 sa mobile */}
       <div className="grid gap-6 md:grid-cols-2">
         {financeAccess && !isAdmin && (

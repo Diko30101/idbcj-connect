@@ -49,6 +49,7 @@ export default async function PortalLayout({ children }: { children: React.React
     { href: "/portal/inbox", label: "Inbox", badge: unreadCount > 0 ? unreadCount : undefined },
     { href: "/portal/announcements", label: "Announcements" },
     { href: "/portal/livestream", label: "Live Stream" },
+    { href: "/portal/suhay", label: "SUHAY" },
     { href: "/portal/prayer", label: "Prayer" },
     { href: "/portal/profile", label: "My Profile" },
   ];
