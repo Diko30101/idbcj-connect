@@ -216,6 +216,7 @@ export default async function PortalLayout({ children }: { children: React.React
     "/portal/members",
     "/portal/courses",
     "/portal/livestream",
+    "/portal/suhay",
     "/portal/profile",
     "/tulong-financial",
     "/portal/tulong-financial",
@@ -243,6 +244,22 @@ export default async function PortalLayout({ children }: { children: React.React
       ],
     },
   ];
+  // SUHAY: mga kasapi lang ng Pastoral Ministry ang makakakita ng menu
+  // item (walang role override); sa iba ay tuluyang tinatanggal dito.
+  {
+    const { data: myMinistries } = await supabase
+      .from("ministry_members")
+      .select("ministries(name)")
+      .eq("profile_id", profile.id);
+    const myNames = ((myMinistries ?? []) as any[])
+      .map((m) => m.ministries?.name)
+      .filter(Boolean);
+    if (!myNames.includes(PASTORAL_MINISTRY_NAME)) {
+      const i = items.findIndex((x) => x.href === "/portal/suhay");
+      if (i >= 0) items.splice(i, 1);
+    }
+  }
+
   const alwaysVisible = items.filter((i) => ALWAYS_VISIBLE_HREFS.has(i.href));
   const finance = items.find((i) => i.href === "/portal/finance");
   const overflow = items.filter((i) => !ALWAYS_VISIBLE_HREFS.has(i.href) && i.href !== "/portal/finance");

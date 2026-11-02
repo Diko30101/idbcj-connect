@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { requirePortalAccess } from "@/lib/portal";
+import { requireSuhayAccess } from "@/lib/portal";
 import {
   getSuhayPage,
   suhayLessons,
@@ -14,7 +14,7 @@ export default async function SuhayPage({
 }: {
   params: Promise<{ slug: string }>;
 }) {
-  await requirePortalAccess();
+  await requireSuhayAccess();
   const { slug } = await params;
 
   const page = getSuhayPage(slug);

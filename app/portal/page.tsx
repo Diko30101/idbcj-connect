@@ -1,4 +1,4 @@
-import Link from "next/link";import { requirePortalAccess, isStaff, isFinanceMember, fmtDate, todayPH, KIND_LABEL, FINANCE_MINISTRY_NAME } from "@/lib/portal";
+import Link from "next/link";import { requirePortalAccess, isStaff, isFinanceMember, isPastoralMember, fmtDate, todayPH, KIND_LABEL, FINANCE_MINISTRY_NAME } from "@/lib/portal";
 import { yearToDateLabel, fmtPeso, monthLabel, FINANCE_CATEGORIES, FINANCE_CATEGORY_LABEL, type FinanceCategory } from "@/lib/finance";
 import { getYearlyCollections, summarizeCollections, type CollectionRow } from "@/lib/finance-collections";
 import { Empty, Notice, Panel, RoleBadge, StatusBadge } from "@/components/portal/ui";
@@ -81,6 +81,7 @@ export default async function PortalHome({
     }
   }
   const financeAccess = isFinanceMember(profile.role, myMinistryNames);
+  const suhayAccess = isPastoralMember(myMinistryNames);
   // Tulong Financial buod: Admin o kasapi ng Finance Ministry (buong iglesia).
   const tulongAccess = isAdmin || myMinistryNames.includes(FINANCE_MINISTRY_NAME);
   const financeYear = today.slice(0, 4);
@@ -700,6 +701,7 @@ export default async function PortalHome({
         </div>
       </Panel>
 
+      {suhayAccess && (
       <Panel title="📚 SUHAY — Pag-aaral ng Biblia" subtitle="Programa para sa mga estudyanteng ministro" className="mb-6">
         <p className="text-sm text-gray-600">
           Ang 22 aralin ng SUHAY sa 6 na yugto, kasama ang mga gabay sa pag-aaral
@@ -717,6 +719,7 @@ export default async function PortalHome({
           </Link>
         </div>
       </Panel>
+      )}
 
       {/* Mga card sa ibaba ng announcement, sa iisang main column — 2 column sa desktop, 1 sa mobile */}
       <div className="grid gap-6 md:grid-cols-2">

@@ -388,6 +388,25 @@ export const PASTORAL_MINISTRY_NAME = "Pastoral Ministry";
 // SADYANG hindi kasama ang Local Secretary dito (kaya hindi isStaff() ang
 // ginagamit) -- limitado sa Pastoral Ministry members ang view/quiz access,
 // maliban sa Admin/Secretary.
+// SUHAY access (desisyon ni Rod, 2026-11-02): mga kasapi LAMANG ng
+// "Pastoral Ministry" — WALANG Admin o Secretary override, hindi kagaya ng
+// requirePastoralAccess ng Bible Study Courses na may staff override.
+// Boolean na bersyon para sa pagpapakita/pagtatago ng link at panel.
+export const isPastoralMember = (ministryNames: string[]) =>
+  ministryNames.includes(PASTORAL_MINISTRY_NAME);
+
+// Gate ng mga pahina ng SUHAY (/portal/suhay): Pastoral Ministry members
+// lang; ang iba ay ibinabalik sa portal home na may mensahe ng walang access.
+export async function requireSuhayAccess() {
+  const ctx = await requirePortalAccess();
+  const { supabase, profile } = ctx;
+  const { data } = await supabase.from("ministry_members").select("ministries(name)").eq("profile_id", profile.id);
+  const isMember = ((data ?? []) as any[]).some((m) => m.ministries?.name === PASTORAL_MINISTRY_NAME);
+  if (!isMember)
+    redirect("/portal?error=" + encodeURIComponent("Wala kang access sa pahinang iyon."));
+  return ctx;
+}
+
 export async function requirePastoralAccess() {
   const ctx = await requirePortalAccess();
   const { supabase, profile } = ctx;

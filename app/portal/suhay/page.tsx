@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { requirePortalAccess } from "@/lib/portal";
+import { requireSuhayAccess } from "@/lib/portal";
 import { Panel } from "@/components/portal/ui";
 import {
   suhayLessons,
@@ -10,9 +10,10 @@ import {
 } from "@/lib/suhay";
 
 // SUHAY hub: ang pintuan ng programa ng pag-aaral ng Biblia para sa mga
-// estudyanteng ministro. Nasa loob ng portal, kaya ang portal login ang bantay.
+// estudyanteng ministro. Access: mga kasapi lamang ng Pastoral Ministry
+// (requireSuhayAccess — walang Admin/Secretary override).
 export default async function SuhayHub() {
-  await requirePortalAccess();
+  await requireSuhayAccess();
 
   const welcome = suhayWelcome();
   const welcomeHtml = welcome ? await resolveSuhayMedia(welcome.html) : "";
